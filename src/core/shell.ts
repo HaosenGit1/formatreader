@@ -16,7 +16,7 @@ import { assertUniqueIds, pickViewer, withTrials } from './registry';
 import type { OpenContext, OpenedView, ViewerEntry, ViewerModule } from './viewer';
 
 const s = strings({
-  readAny: { en: 'Open any file — no app needed', zh: '打开任何文件，无需安装软件' },
+  readAny: { en: "Can't open a file? No app needed, just read it here.", zh: '打不开文件？无需安装软件，在这里直接读。' },
   openAnother: { en: 'Open another', zh: '换个文件' },
   fullscreen: { en: 'Full screen', zh: '全屏' },
   exitFullscreen: { en: 'Exit full screen', zh: '退出全屏' },
