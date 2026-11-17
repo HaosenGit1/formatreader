@@ -17,8 +17,6 @@ const s = strings({
   unlock: { en: 'Open', zh: '打开' },
   wrong: { en: 'That password did not work.', zh: '密码不正确。' },
   empty: { en: 'This archive is empty.', zh: '这个压缩包是空的。' },
-  name: { en: 'Name', zh: '名称' },
-  size: { en: 'Size', zh: '大小' },
   noPages: { en: 'No comic pages (images) were found in this archive.', zh: '这个压缩包里没有找到漫画页（图片）。' },
   cannot: { en: 'This file could not be extracted:', zh: '无法解压这个文件：' },
   encrypted: { en: 'It is encrypted in a way that cannot be opened here (e.g. encrypted RAR5).', zh: '它使用了这里无法打开的加密方式（例如加密的 RAR5）。' },
@@ -74,33 +72,64 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
     }
   };
 
+  interface Folder {
+    name: string;
+    folders: Map<string, Folder>;
+    files: Entry[];
+    count: number;
+  }
+  /** Paths → folder tree (any depth). */
+  const buildTree = (list: Entry[]): Folder => {
+    const root: Folder = { name: '', folders: new Map(), files: [], count: 0 };
+    for (const e of list) {
+      const parts = e.path.split('/').filter(Boolean);
+      let node = root;
+      node.count++;
+      for (const part of parts.slice(0, -1)) {
+        let next = node.folders.get(part);
+        if (!next) node.folders.set(part, (next = { name: part, folders: new Map(), files: [], count: 0 }));
+        next.count++;
+        node = next;
+      }
+      node.files.push(e);
+    }
+    return root;
+  };
+
+  const folderEl = (folder: Folder, depth: number): HTMLElement =>
+    h(
+      'ul',
+      { class: depth ? 'tree-sub' : 'tree', role: depth ? 'group' : 'tree' },
+      ...[...folder.folders.values()]
+        .sort((a, b) => natural(a.name, b.name))
+        .map((f) => {
+          const details = h(
+            'details',
+            {},
+            h('summary', {}, h('span', { class: 'tree-folder' }, f.name), h('span', { class: 'tree-count' }, String(f.count))),
+            folderEl(f, depth + 1),
+          ) as HTMLDetailsElement;
+          // Top levels start open; deeper ones open on click.
+          details.open = depth < 2;
+          return h('li', { role: 'treeitem' }, details);
+        }),
+      ...[...folder.files]
+        .sort((a, b) => natural(a.name, b.name))
+        .map((e) =>
+          h(
+            'li',
+            { role: 'treeitem' },
+            h('button', { type: 'button', class: 'archive-open', title: e.path, onclick: () => openEntry(e) }, h('span', { class: 'tree-file' }, e.name), h('span', { class: 'tree-size' }, formatBytes(e.size))),
+          ),
+        ),
+    );
+
   const showList = () => {
     if (!entries.length) {
       body.replaceChildren(h('p', { class: 'archive-empty' }, s('empty')));
       return;
     }
-    const sorted = [...entries].sort((a, b) => natural(a.path, b.path));
-    body.replaceChildren(
-      h('p', { class: 'archive-hint' }, s('hint')),
-      error,
-      h(
-        'table',
-        { class: 'archive-list' },
-        h('thead', {}, h('tr', {}, h('th', {}, s('name')), h('th', { class: 'num' }, s('size')))),
-        h(
-          'tbody',
-          {},
-          ...sorted.map((e) =>
-            h(
-              'tr',
-              {},
-              h('td', {}, h('button', { type: 'button', class: 'archive-open', title: e.path, onclick: () => openEntry(e) }, h('span', { class: 'archive-dir' }, e.path.slice(0, e.path.length - e.name.length)), e.name)),
-              h('td', { class: 'num' }, formatBytes(e.size)),
-            ),
-          ),
-        ),
-      ),
-    );
+    body.replaceChildren(h('p', { class: 'archive-hint' }, s('hint')), error, folderEl(buildTree(entries), 0));
   };
 
   const openComic = async () => {
@@ -113,7 +142,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
       contents[`${String(i + 1).padStart(4, '0')}-${p.name}`] = [data, { level: 0 }];
     }
     const cbz = zipSync(contents);
-    ctx.openFile(new File([cbz as BlobPart], file.name.replace(/\.(cbr|cb7|cbt)$/i, '') + '.cbz'));
+    ctx.openFile(new File([cbz as BlobPart], file.name.replace(/\.(cbr|cb7|cbt)$/i, '') + '.cbz'), { replace: true });
   };
 
   const load = async () => {

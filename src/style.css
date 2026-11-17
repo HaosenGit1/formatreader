@@ -605,3 +605,33 @@ select {
   max-width: 76%;
   white-space: pre-line; /* honour the break after the question */
 }
+
+/* "Opened from" trail: outer.zip › inner.7z › current file */
+.trail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+  margin-bottom: 2px;
+  font-size: 12px;
+}
+
+.trail-link {
+  max-width: 220px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trail-link:hover {
+  text-decoration: underline;
+}
+
+.trail-sep {
+  color: var(--muted);
+}

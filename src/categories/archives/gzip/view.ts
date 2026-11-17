@@ -20,6 +20,6 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   const data = await new Response(stream).blob();
   const fallback = file.name.replace(/\.t?gz$/i, (m) => (m.toLowerCase() === '.tgz' ? '.tar' : '')) || 'file';
   const name = storedName(head) ?? fallback;
-  ctx.openFile(new File([data], name));
+  ctx.openFile(new File([data], name), { replace: true });
   return {};
 }

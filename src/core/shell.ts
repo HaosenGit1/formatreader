@@ -25,11 +25,14 @@ const s = strings({
   larger: { en: 'Larger text', zh: '放大文字' },
   pasted: { en: 'Pasted text', zh: '粘贴的文字' },
   failed: { en: 'This file could not be opened', zh: '无法打开这个文件' },
+  trail: { en: 'Opened from', zh: '打开自' },
 });
 
 interface Current {
   name: string;
   size: number;
+  /** The file being shown (kept so it can be reopened from the trail). */
+  file?: File;
   entry: ViewerEntry;
   view: OpenedView;
 }
@@ -45,6 +48,13 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
 
   let current: Current | null = null;
   let token = 0;
+  /**
+   * Files we came through to reach the current one, outermost first: e.g.
+   * [project.zip, inner.7z] while showing report.docx from inside inner.7z.
+   * Opening a file from inside another (archive, email attachment, .gz) adds
+   * to it; dropping or choosing a file starts afresh.
+   */
+  let trail: File[] = [];
 
   // ---- reading size (A− / A+), remembered per browser
   let fontScale = 1;
@@ -127,7 +137,20 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     return h(
       'div',
       { class: 'toolbar' },
-      h('div', { class: 'file' }, h('div', { class: 'file-name', title }, title), h('div', { class: 'file-meta' }, [...meta, formatBytes(c.size)].join(' · '))),
+      h(
+        'div',
+        { class: 'file' },
+        // The way back when this file was opened from inside another one.
+        trail.length
+          ? h(
+              'nav',
+              { class: 'trail', 'aria-label': s('trail') },
+              ...trail.flatMap((f, i) => [h('button', { type: 'button', class: 'trail-link', title: f.name, onclick: () => backTo(i) }, f.name), h('span', { class: 'trail-sep', 'aria-hidden': 'true' }, '›')]),
+            )
+          : null,
+        h('div', { class: 'file-name', title }, title),
+        h('div', { class: 'file-meta' }, [...meta, formatBytes(c.size)].join(' · ')),
+      ),
       h('div', { class: 'tools' }, ...tools),
     );
   }
@@ -179,7 +202,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     const cover = h('div', { class: 'loading-cover' }, loadingView());
     app.replaceChildren(header(), page, cover);
 
-    const ctx: OpenContext = { mount, format, fontScale: () => fontScale, refreshChrome, openFile: (f) => void openFile(f) };
+    const ctx: OpenContext = { mount, format, fontScale: () => fontScale, refreshChrome, openFile: (f, o) => openInside(f, o?.replace) };
     let view: OpenedView;
     try {
       const mod = await entry.load();
@@ -193,13 +216,33 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
       view.destroy?.();
       return;
     }
-    current = { name, size, entry, view };
+    current = { name, size, entry, view, file: shownFile ?? undefined };
+    shownFile = null;
     refreshChrome();
     cover.remove();
     window.scrollTo(0, 0);
   }
 
-  async function openFile(file: File) {
+  /** The file `show()` is about to display (set by openFile). */
+  let shownFile: File | null = null;
+
+  /** Open a file found inside the current one, remembering the way back. */
+  function openInside(file: File, replace = false) {
+    // A viewer may hand over while it is still opening (current not set yet).
+    const from = current?.file ?? shownFile;
+    if (from && !replace) trail.push(from);
+    void openFile(file, true);
+  }
+
+  /** Go back up the trail to the file at `index`. */
+  function backTo(index: number) {
+    const target = trail[index];
+    trail = trail.slice(0, index);
+    void openFile(target, true);
+  }
+
+  async function openFile(file: File, keepTrail = false) {
+    if (!keepTrail) trail = [];
     closeCurrent();
     const my = ++token;
     app.replaceChildren(loadingView());
@@ -213,6 +256,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     }
     if (my !== token) return;
     const entry = pickViewer(viewers, { format, name: file.name, ext: extOf(file.name), head }) ?? infoEntry;
+    shownFile = file;
     warm(entry); // its libraries download while the page is being laid out and the file read
     await show(entry, file.name, file.size, format, (mod, ctx) => mod.open(file, ctx), my);
   }

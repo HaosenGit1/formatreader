@@ -10,52 +10,85 @@
   font-size: 13px;
 }
 
-.archive-list {
-  width: 100%;
-  border-collapse: collapse;
+.tree,
+.tree-sub {
+  margin: 0;
+  padding: 0;
+  list-style: none;
   font-size: 14px;
 }
 
-.archive-list th {
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--line);
+.tree-sub {
+  margin-left: 9px;
+  padding-left: 12px;
+  border-left: 1px solid var(--line);
+}
+
+.tree summary {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 4px;
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+}
+
+.tree summary::-webkit-details-marker {
+  display: none;
+}
+
+.tree summary::before {
+  content: '▸';
+  width: 1em;
+  color: var(--muted);
+  font-weight: 400;
+  transition: transform 0.15s;
+}
+
+.tree details[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.tree-folder::before {
+  content: '📁 ';
+}
+
+.tree-count {
   color: var(--muted);
   font-size: 12px;
-  font-weight: 600;
-  text-align: left;
-}
-
-.archive-list td {
-  padding: 2px 10px;
-  border-bottom: 1px solid var(--line);
-}
-
-.archive-list .num {
-  width: 110px;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-  text-align: right;
+  font-weight: 400;
 }
 
 .archive-open {
-  display: block;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
   width: 100%;
-  padding: 7px 0;
-  overflow: hidden;
+  padding: 6px 4px 6px 1.4em;
   border: 0;
+  border-radius: 6px;
   background: none;
   cursor: pointer;
   text-align: left;
+}
+
+.archive-open:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.tree-file {
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.archive-open:hover {
-  color: var(--accent);
-}
-
-.archive-dir {
+.tree-size {
+  flex: none;
   color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .archive-lock {

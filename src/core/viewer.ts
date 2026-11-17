@@ -30,9 +30,11 @@ export interface OpenContext {
   refreshChrome(): void;
   /**
    * Open another file in FormatReader (e.g. an email attachment or a file
-   * inside an archive). It replaces the current view, like dropping it.
+   * inside an archive). The toolbar then shows the way back ("Opened from").
+   * `replace`: show this file *instead of* the current one, with no step
+   * back to it (for viewers that only unwrap, like .gz or CBR → CBZ).
    */
-  openFile(file: File): void;
+  openFile(file: File, options?: { replace?: boolean }): void;
 }
 
 export interface OpenedView {
