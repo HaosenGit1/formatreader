@@ -116,7 +116,7 @@ function tableView(text: string, delimiter: string): HTMLElement {
     tbody,
     rows,
     (r, idx) => h('tr', {}, h('td', { class: 'rownum' }, String(idx + 1)), ...Array.from({ length: width }, (_, c) => h('td', { dir: 'auto' }, r[c] ?? ''))),
-    300,
+    100,
   );
   const name = delimiter === '\t' ? 'Tab' : delimiter === ',' ? 'Comma' : `"${delimiter}"`;
   return h(

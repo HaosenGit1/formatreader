@@ -9,6 +9,7 @@ import { repairMojibake, type RepairResult } from './words/encoding/mojibake';
 import { ENCODING_CHOICES, encodingName } from './words/encoding/names';
 import { classifyText, type TextKind } from './words/text-kind';
 import { renderText } from './words/views';
+import { BOOK_FORMATS, openBook, type BookController } from './words/book-view';
 
 // ---------------------------------------------------------------------------
 // State
@@ -17,6 +18,7 @@ import { renderText } from './words/views';
 type Doc =
   | { type: 'text'; name: string; size: number; bytes: Uint8Array | null; detected: EncodingResult | null; encoding: string; text: string; repair: RepairResult | null; showOriginal: boolean; kind: TextKind; source: boolean }
   | { type: 'pdf'; name: string; size: number; url: string }
+  | { type: 'book'; name: string; size: number; format: string; book: BookController & { restyle: () => void } }
   | { type: 'info'; name: string; size: number; head: Uint8Array; format: FormatInfo | null }
   | { type: 'error'; name: string; size: number; message: string };
 
@@ -41,13 +43,33 @@ applyFontScale();
 // Opening files and text
 // ---------------------------------------------------------------------------
 
-async function openFile(file: File) {
+function closeCurrent() {
   if (doc?.type === 'pdf') URL.revokeObjectURL(doc.url);
+  if (doc?.type === 'book') doc.book.destroy();
+}
+
+async function openFile(file: File) {
+  closeCurrent();
+  doc = null;
   const token = ++renderToken;
   showLoading(file.name);
   try {
     const format = await detectFormat(file, file.name);
     if (token !== renderToken) return;
+
+    const isFb2 = /\.fb2$/i.test(file.name);
+    if ((format && BOOK_FORMATS.has(format.id)) || isFb2) {
+      // Build the page around the reader first: the reader is opened in place and never moved.
+      const mount = h('div', { class: 'book-mount' }, h('div', { class: 'loading' }, h('div', { class: 'spinner', 'aria-hidden': 'true' }), `${t('reading')} ${file.name}`));
+      const bar = h('div', { class: 'toolbar' });
+      app.replaceChildren(header(), h('main', { class: 'doc doc-book' }, bar, mount));
+      const book = (await openBook(file, mount, () => fontScale)) as BookController & { restyle: () => void };
+      if (token !== renderToken) return book.destroy();
+      doc = { type: 'book', name: file.name, size: file.size, format: format?.name ?? 'FictionBook', book };
+      document.title = `${book.title} — FormatReader`;
+      bar.replaceWith(toolbar(doc));
+      return;
+    }
 
     if (format?.id === 'pdf') {
       doc = { type: 'pdf', name: file.name, size: file.size, url: URL.createObjectURL(file) };
@@ -84,6 +106,7 @@ async function openFile(file: File) {
 }
 
 function openPastedText(text: string) {
+  closeCurrent();
   ++renderToken;
   const repair = repairMojibake(text);
   doc = {
@@ -114,7 +137,7 @@ function header(): HTMLElement {
     { class: 'site-header' },
     h(
       'button',
-      { class: 'brand', type: 'button', onclick: () => { doc = null; render(); } },
+      { class: 'brand', type: 'button', onclick: () => { closeCurrent(); doc = null; render(); } },
       h('span', { class: 'brand-mark', 'aria-hidden': 'true' }, 'F'),
       h('span', { class: 'brand-name' }, 'FormatReader'),
     ),
@@ -198,7 +221,9 @@ function toolbar(d: Doc): HTMLElement {
     );
   }
 
-  if (d.type === 'text') {
+  if (d.type === 'book') items.push(...d.book.tools());
+
+  if (d.type === 'text' || d.type === 'book') {
     items.push(
       h(
         'div',
@@ -212,7 +237,12 @@ function toolbar(d: Doc): HTMLElement {
   return h(
     'div',
     { class: 'toolbar' },
-    h('div', { class: 'file' }, h('div', { class: 'file-name', title: d.name }, d.name), h('div', { class: 'file-meta' }, fileMeta(d))),
+    h(
+      'div',
+      { class: 'file' },
+      h('div', { class: 'file-name', title: d.name }, d.type === 'book' ? d.book.title : d.name),
+      h('div', { class: 'file-meta' }, fileMeta(d)),
+    ),
     h('div', { class: 'tools' }, ...items, h('button', { type: 'button', class: 'btn', onclick: () => fileInput.click() }, t('openAnother'))),
   );
 }
@@ -220,6 +250,7 @@ function toolbar(d: Doc): HTMLElement {
 function fileMeta(d: Doc): string {
   const parts = [formatBytes(d.size)];
   if (d.type === 'pdf') parts.unshift('PDF');
+  if (d.type === 'book') parts.unshift(...[d.book.author, d.format].filter(Boolean));
   if (d.type === 'info' && d.format) parts.unshift(d.format.name);
   if (d.type === 'text') parts.unshift(kindLabel(d.kind));
   return parts.join(' · ');
@@ -255,6 +286,7 @@ function languageName(id: string): string {
 function setFont(delta: number) {
   fontScale = Math.min(2, Math.max(0.7, Math.round((fontScale + delta) * 10) / 10));
   applyFontScale();
+  if (doc?.type === 'book') doc.book.restyle();
   try {
     localStorage.setItem('fr.fontScale', String(fontScale));
   } catch {
@@ -310,6 +342,12 @@ async function render() {
     return;
   }
   const d = doc;
+  if (d.type === 'book') {
+    // Only refresh the chrome around the reader; moving the reader would reload the book.
+    app.querySelector('.site-header')?.replaceWith(header());
+    app.querySelector('.toolbar')?.replaceWith(toolbar(d));
+    return;
+  }
   document.title = `${d.name} — FormatReader`;
 
   let body: HTMLElement;

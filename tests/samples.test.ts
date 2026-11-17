@@ -28,8 +28,19 @@ const EXPECT: Record<string, string> = {
   'double-encoded.txt': '这是一段被错误编码后又保存了的中文',
 };
 
+const BOOKS: Record<string, string> = { 'sample-book.epub': 'epub', 'sample-comic.cbz': 'cbz' };
+
+describe('book samples are recognised as books', () => {
+  for (const [name, id] of Object.entries(BOOKS)) {
+    test(name, async () => {
+      const bytes = new Uint8Array(readFileSync(join(dir, name)));
+      expect((await detectFormat(new Blob([bytes]), name))?.id).toBe(id);
+    });
+  }
+});
+
 describe('every sample opens as readable text', () => {
-  for (const name of files) {
+  for (const name of files.filter((f) => !BOOKS[f])) {
     test(name, async () => {
       const bytes = new Uint8Array(readFileSync(join(dir, name)));
       expect(await detectFormat(new Blob([bytes]), name)).toBeNull();

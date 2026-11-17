@@ -69,6 +69,7 @@ export function infoView(fileSize: number, head: Uint8Array, format: FormatInfo 
           strings.length ? h('pre', { class: 'strings' }, strings.join('\n')) : h('p', { class: 'muted' }, t('noText')),
         )
       : null,
-    h('section', { class: 'info-section' }, h('h3', {}, t('firstBytes')), h('pre', { class: 'hex', dir: 'ltr' }, hexDump(head))),
+    // Raw bytes only help when we couldn't tell what the file is.
+    !format ? h('section', { class: 'info-section' }, h('h3', {}, t('firstBytes')), h('pre', { class: 'hex', dir: 'ltr' }, hexDump(head))) : null,
   );
 }
