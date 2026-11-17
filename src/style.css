@@ -582,3 +582,11 @@ select {
   display: none;
 }
 
+
+/* The circle's sentence may wrap: keep it balanced and inside the circle. */
+.circle-text {
+  max-width: 80%;
+  line-height: 1.2;
+  text-align: center;
+  text-wrap: balance;
+}

@@ -16,8 +16,7 @@ import { assertUniqueIds, pickViewer, withTrials } from './registry';
 import type { OpenContext, OpenedView, ViewerEntry, ViewerModule } from './viewer';
 
 const s = strings({
-  // The slogan reads the same for every visitor.
-  readAny: { en: 'Just Read it!', zh: 'Just Read it!' },
+  readAny: { en: 'Open any file — no app needed', zh: '打开任何文件，无需安装软件' },
   openAnother: { en: 'Open another', zh: '换个文件' },
   fullscreen: { en: 'Full screen', zh: '全屏' },
   exitFullscreen: { en: 'Exit full screen', zh: '退出全屏' },
