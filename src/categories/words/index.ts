@@ -93,6 +93,13 @@ export const wordsViewers: ViewerEntry[] = [
     load: () => import('./text/palm-view'),
   },
   {
+    id: 'words/legacy',
+    category: 'words',
+    mimes: /^application\/(msword|vnd\.ms-powerpoint|vnd\.ms-works)$/,
+    accepts: ({ format }) => ['doc', 'ppt', 'wps', 'dps', 'dot', 'pps', 'pot'].includes(format?.id ?? ''),
+    load: () => import('./legacy/view'),
+  },
+  {
     id: 'words/pdf',
     category: 'words',
     mimes: /^application\/pdf$/,

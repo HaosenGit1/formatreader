@@ -1,0 +1,49 @@
+/* Old Office files (text only) */
+.legacy-note {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.view-legacy {
+  padding: 14px 16px 40px;
+  background: var(--surface-2);
+}
+
+.legacy-slides {
+  display: grid;
+  gap: 16px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.legacy-slide {
+  padding: 22px 28px;
+  border-radius: 8px;
+  background: #fff;
+  color: #111;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12), 0 8px 24px rgb(0 0 0 / 0.06);
+  font-size: calc(16px * var(--reader-scale));
+}
+
+.legacy-slide-no {
+  margin-bottom: 8px;
+  color: #8a8a93;
+  font-size: 12px;
+}
+
+.legacy-slide h2 {
+  margin: 0 0 10px;
+  font-size: 1.5em;
+}
+
+.legacy-slide ul {
+  margin: 0;
+  padding-left: 1.3em;
+  line-height: 1.6;
+}
+
+.legacy-empty {
+  color: #8a8a93;
+}
