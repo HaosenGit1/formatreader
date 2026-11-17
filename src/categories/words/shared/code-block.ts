@@ -22,13 +22,20 @@ export function preloadHighlighter(language?: string): Promise<unknown> {
   return language ? highlighter(language).catch(() => null) : hljsPromise;
 }
 
+/** Our own grammars for languages highlight.js doesn't ship. */
+const customLanguages: Partial<Record<string, () => Promise<{ default: Parameters<Hljs['registerLanguage']>[1] }>>> = {
+  hcl: () => import('./langs/hcl'),
+  solidity: () => import('./langs/solidity'),
+};
+
 async function highlighter(language: string): Promise<Hljs | null> {
-  const key = Object.keys(languageModules).find((k) => k.endsWith(`/${language}.js`));
-  if (!key) return null;
+  const custom = customLanguages[language];
+  const key = custom ? null : Object.keys(languageModules).find((k) => k.endsWith(`/${language}.js`));
+  if (!custom && !key) return null;
   hljsPromise ??= import('highlight.js/lib/core').then((m) => m.default);
   const hljs = await hljsPromise;
   if (!hljs.getLanguage(language)) {
-    const mod = (await languageModules[key]()) as { default: Parameters<Hljs['registerLanguage']>[1] };
+    const mod = custom ? await custom() : ((await languageModules[key!]()) as { default: Parameters<Hljs['registerLanguage']>[1] });
     hljs.registerLanguage(language, mod.default);
   }
   return hljs;
@@ -88,3 +95,12 @@ export async function codeView(text: string, language: string): Promise<HTMLElem
   return h('div', { class: 'view view-code' }, h('div', { class: 'meta' }, `${formatCount(htmlLines.length)} ${s('lines')}`), h('pre', {}, code));
 }
 
+
+/** A highlighted block without line numbers (e.g. a notebook cell). */
+export async function highlightBlock(text: string, language: string): Promise<HTMLElement> {
+  const code = h('code', { class: 'hljs', dir: 'ltr' });
+  const hljs = text.length <= HIGHLIGHT_LIMIT ? await highlighter(language) : null;
+  if (hljs) code.innerHTML = hljs.highlight(text, { language, ignoreIllegals: true }).value;
+  else code.textContent = text;
+  return h('pre', { class: 'code-plain' }, code);
+}

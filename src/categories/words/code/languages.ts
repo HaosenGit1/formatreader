@@ -24,7 +24,7 @@ const CODE: Record<string, string> = {
   sv: 'verilog', vhd: 'vhdl', vhdl: 'vhdl', f: 'fortran', f90: 'fortran', f95: 'fortran', for: 'fortran',
   pas: 'delphi', dpr: 'delphi', pp: 'delphi', ada: 'ada', adb: 'ada', ads: 'ada', cob: 'plaintext',
   // No highlighter yet: still shown as code (line numbers), without colours.
-  sol: 'plaintext', vy: 'python', move: 'rust', cairo: 'rust', cbl: 'plaintext', cobol: 'plaintext', abap: 'plaintext',
+  sol: 'solidity', vy: 'python', move: 'rust', cairo: 'rust', cbl: 'plaintext', cobol: 'plaintext', abap: 'plaintext',
   asm: 'x86asm', s: 'armasm', nasm: 'x86asm', wat: 'wasm', ll: 'llvm', zig: 'rust', vala: 'vala',
   tcl: 'tcl', coffee: 'coffeescript', ls: 'livescript', hx: 'haxe', ps: 'plaintext',
   matlab: 'matlab', sas: 'sas', do: 'stata', mat: 'matlab', mpl: 'maple', nb: 'mathematica', wl: 'mathematica',
@@ -46,7 +46,7 @@ const CODE: Record<string, string> = {
   tex: 'latex', sty: 'latex', cls: 'latex', bib: 'latex', ltx: 'latex',
   diff: 'diff', patch: 'diff', http: 'http', rest: 'http', nginx: 'nginx', htaccess: 'apache',
   dockerfile: 'dockerfile', containerfile: 'dockerfile', makefile: 'makefile', mk: 'makefile', mak: 'makefile',
-  cmake: 'cmake', gradle: 'gradle', nix: 'nix', tf: 'plaintext', hcl: 'plaintext', bicep: 'plaintext',
+  cmake: 'cmake', gradle: 'gradle', nix: 'nix', tf: 'hcl', tfvars: 'hcl', hcl: 'hcl', nomad: 'hcl', bicep: 'plaintext',
   adoc: 'asciidoc', asciidoc: 'asciidoc', rst: 'plaintext', org: 'plaintext', textile: 'plaintext',
   dxf: 'plaintext', obj: 'plaintext', ifc: 'step21', ics: 'plaintext', vcf: 'plaintext', ldif: 'ldif',
   pem: 'plaintext', crt: 'plaintext', key: 'plaintext', pub: 'plaintext', asc: 'plaintext',
@@ -85,6 +85,11 @@ function sniff(head: string): CodeKind | null {
   return null;
 }
 
+/** Objective-C has unmistakable markers; everything else in a .m file is treated as MATLAB/Octave. */
+function looksObjectiveC(head: string): boolean {
+  return /^\s*#(import|include)\b|@(interface|implementation|protocol|property|end)\b|\bNS[A-Z]\w+|\[\s*\w+\s+\w+(:|\s*\])/m.test(head);
+}
+
 /**
  * Returns the language for a file, or null if it is not code (plain text,
  * Markdown, HTML, subtitles … are handled by the Text viewer).
@@ -95,6 +100,8 @@ export function codeKind(fileName: string, head: string): CodeKind | null {
   if (JSON_EXT.has(ext)) return { language: 'json', json: ext === 'jsonl' || ext === 'ndjson' ? 'lines' : 'document' };
   if (BY_NAME[base]) return { language: BY_NAME[base] };
   if (/^(makefile|dockerfile)\./.test(base)) return { language: base.startsWith('make') ? 'makefile' : 'dockerfile' };
+  // `.m` is both MATLAB/Octave and Objective-C: the content decides.
+  if (ext === 'm') return { language: looksObjectiveC(head) ? 'objectivec' : 'matlab' };
   if (CODE[ext]) return { language: CODE[ext] };
   // Names that say "plain text" or "document" are never treated as code.
   if (ext && ['txt', 'text', 'log', 'md', 'markdown', 'html', 'htm', 'srt', 'vtt', 'ass', 'ssa', 'csv', 'tsv'].includes(ext)) return null;
@@ -109,7 +116,7 @@ export const LANGUAGE_NAMES: Record<string, string> = {
   x86asm: 'Assembly', armasm: 'ARM Assembly', gcode: 'G-code', step21: 'STEP', glsl: 'GLSL', latex: 'LaTeX',
   graphql: 'GraphQL', protobuf: 'Protocol Buffers', dockerfile: 'Dockerfile', makefile: 'Makefile',
   cmake: 'CMake', vhdl: 'VHDL', http: 'HTTP', plaintext: 'Text', markdown: 'Markdown', ocaml: 'OCaml',
-  matlab: 'MATLAB', sas: 'SAS', llvm: 'LLVM IR', wasm: 'WebAssembly', asciidoc: 'AsciiDoc', ldif: 'LDIF',
+  matlab: 'MATLAB', sas: 'SAS', hcl: 'Terraform / HCL', solidity: 'Solidity', llvm: 'LLVM IR', wasm: 'WebAssembly', asciidoc: 'AsciiDoc', ldif: 'LDIF',
 };
 
 export function languageName(id: string): string {

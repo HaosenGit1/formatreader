@@ -1,4 +1,4 @@
-// Solidity sample (opens as plain text — no colours yet)
+// Solidity sample
 pragma solidity ^0.8.20;
 
 contract Counter {

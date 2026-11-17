@@ -1,4 +1,4 @@
-# Terraform sample (opens as plain text — no colours yet)
+# Terraform sample
 resource "aws_s3_bucket" "site" {
   bucket = "formatreader-site"
 }

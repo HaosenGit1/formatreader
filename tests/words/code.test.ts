@@ -40,3 +40,15 @@ describe('Code viewer: codeKind', () => {
     expect(languageName('python')).toBe('Python');
   });
 });
+
+describe('Code viewer: shared extensions decided by content', () => {
+  test('.m: MATLAB unless it is clearly Objective-C', () => {
+    expect(codeKind('analysis.m', "power = [2410 2385 0];\nfprintf('%d online\\n', sum(power > 0));")?.language).toBe('matlab');
+    expect(codeKind('AppDelegate.m', '#import "AppDelegate.h"\n@implementation AppDelegate\n@end')?.language).toBe('objectivec');
+    expect(codeKind('View.m', 'NSString *s = [obj description];')?.language).toBe('objectivec');
+  });
+  test('Terraform and Solidity have their own grammars', () => {
+    expect(codeKind('main.tf', '')?.language).toBe('hcl');
+    expect(codeKind('Token.sol', '')?.language).toBe('solidity');
+  });
+});
