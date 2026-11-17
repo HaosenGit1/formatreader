@@ -10,7 +10,10 @@
     "preview": "vite preview",
     "test": "vitest run",
     "samples": "node scripts/make-samples.mjs",
-    "deploy": "bash scripts/deploy.sh"
+    "deploy": "bash scripts/deploy.sh",
+    "predev": "node scripts/copy-vendor.mjs",
+    "prebuild": "node scripts/copy-vendor.mjs",
+    "pretest": "node scripts/copy-vendor.mjs"
   },
   "dependencies": {
     "@kenjiuno/msgreader": "1.29.0",
@@ -22,6 +25,7 @@
     "foliate-js": "1.0.1",
     "highlight.js": "11.12.0",
     "jschardet": "4.1.0",
+    "libarchive.js": "2.0.2",
     "marked": "18.2.1",
     "mdb-reader": "3.2.1",
     "postal-mime": "4.2.1",

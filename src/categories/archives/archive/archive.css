@@ -1,0 +1,82 @@
+/* Archive file list */
+.view-archive {
+  padding: 16px 20px 32px;
+}
+
+.archive-hint,
+.archive-empty {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.archive-list {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.archive-list th {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.archive-list td {
+  padding: 2px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.archive-list .num {
+  width: 110px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.archive-open {
+  display: block;
+  width: 100%;
+  padding: 7px 0;
+  overflow: hidden;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.archive-open:hover {
+  color: var(--accent);
+}
+
+.archive-dir {
+  color: var(--muted);
+}
+
+.archive-lock {
+  display: grid;
+  gap: 10px;
+  max-width: 320px;
+  margin: 40px auto;
+  text-align: center;
+}
+
+.archive-pass {
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  font: inherit;
+}
+
+.archive-error {
+  min-height: 1.2em;
+  margin: 0;
+  color: #d03b3b;
+  font-size: 13px;
+}
