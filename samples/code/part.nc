@@ -1,0 +1,12 @@
+(G-code sample: square pocket)
+G21 G90 G17
+G0 X0 Y0 Z5
+M3 S12000
+G1 Z-1 F200
+G1 X40 F800
+G1 Y40
+G1 X0
+G1 Y0
+G0 Z5
+M5
+M30
