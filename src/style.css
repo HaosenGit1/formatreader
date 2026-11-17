@@ -1062,7 +1062,7 @@ foliate-view {
 .circle {
   display: grid;
   place-items: center;
-  width: min(76vmin, 560px);
+  width: min(60vmin, 520px);
   aspect-ratio: 1;
   padding: 0;
   border: 3px dashed color-mix(in srgb, var(--fg) 28%, transparent);
@@ -1144,4 +1144,21 @@ foliate-view {
   .loading-name {
     animation-duration: 4s;
   }
+}
+
+/* Name above the circle: same type as the loading screen, fully filled. */
+.landing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(20px, 5vmin, 44px);
+}
+
+.landing-name {
+  color: var(--accent);
+  font-size: clamp(30px, 7vmin, 52px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
 }

@@ -172,6 +172,7 @@ function landing(): HTMLElement {
   return h(
     'main',
     { class: 'landing' },
+    h('div', { class: 'landing-name' }, 'FormatReader'),
     h(
       'button',
       { type: 'button', class: 'circle', onclick: open },
