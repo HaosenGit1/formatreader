@@ -15,6 +15,12 @@ its own libraries. Updating or replacing one viewer does not change the others.
 | `words/text` | text, Markdown, HTML, subtitles | `marked`, `dompurify` | npm — Dependabot |
 | `words/shared/encoding` | encoding detection (Text, Code, Sheets) | `jschardet` | npm — Dependabot |
 | `words/pdf` | PDF | none (browser's viewer) | — |
+| `words/db` | Access, SQLite | `mdb-reader`, `sql.js`, `buffer` | npm — Dependabot |
+| `words/email` | EML, MBOX, MSG, MHTML | `postal-mime`, `@kenjiuno/msgreader` | npm — Dependabot |
+| `words/hwp` | HWP | `hwp.js` | npm — Dependabot |
+| `words/odf`, `fixed`, `hwpx`, `iwork` | ODT/ODP, XPS/OFD, HWPX, Pages/Keynote | `fflate` | npm — Dependabot |
+| `words/legacy` | DOC/PPT/WPS/DPS | `xlsx` (its CFB reader) | SheetJS CDN |
+| `archives/archive` | ZIP, RAR, 7Z, CBR… | `libarchive.js` (worker + wasm copied by `scripts/copy-vendor.mjs`) | npm — Dependabot |
 
 Shared underneath: `docx-preview` and `pptx-preview` both use `jszip`, and
 Text and Code both use `marked`/`dompurify`. Updating one of those affects

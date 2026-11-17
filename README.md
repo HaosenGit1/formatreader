@@ -19,17 +19,17 @@ Everything runs locally: files are never uploaded, and nothing is downloaded or 
 | Spreadsheets | XLSX/XLSM/XLSB/XLS, ODS, Numbers, WPS ET, DBF, SYLK, DIF, Lotus, Excel XML | Excel-like grid, tabs, formulas |
 | Databases | Access MDB/ACCDB, SQLite | Tables and views in a grid |
 | Word | DOCX/DOCM/DOTX | Pages |
-| Old Office | DOC/DOT, PPT/PPS/POT, WPS Writer (.wps), WPS Presentation (.dps) | Text only (paragraphs, tables, slide text) |
+| Old Office | DOC/DOT (Word 6/95–2003), PPT/PPS/POT, WPS Writer (.wps), WPS Presentation (.dps) | Text only (paragraphs, tables, slide text) |
 | Rich text | RTF | Page (formatting, tables, pictures, any code page) |
 | OpenDocument | ODT/OTT, ODP/OTP (ODS → spreadsheets) | Page; slides |
 | Fixed layout | XPS/OXPS, OFD | Pages drawn as SVG |
-| Korean | HWPX | Page |
+| Korean | HWP (5.x), HWPX | Pages |
 | Apple | Pages, Keynote | Preview image stored in the file |
 | PowerPoint | PPTX | Slides + full-screen slideshow |
 | PDF | PDF | Browser's viewer |
-| Ebooks | EPUB, MOBI, AZW3, FB2, CBZ, PalmDoc (PDB) | Book reader / text |
+| Ebooks | EPUB, MOBI, AZW3, FB2, CBZ/CBR/CB7, PalmDoc (PDB) | Book reader / text |
 | Email | EML, MBOX, Outlook MSG, MHTML | Message view; attachments open in place; no tracking |
-| Compressed | .gz | The file inside opens in its own viewer |
+| Archives | ZIP, RAR, 7Z, TAR, ISO, CAB, XZ, BZ2, GZ | File list; any file inside opens in place; passwords |
 
 Pasting text (⌘V / Ctrl+V) works too. Every viewer has a full-screen mode (F).
 
@@ -56,9 +56,9 @@ side by side (`?try=`), and adding formats.
 
 ```
 src/core/                 shell: front page, toolbar, full screen, format detection, viewer registry
-src/categories/words/     text · code · sheets · db · docs · rtf · odf · fixed · hwpx · iwork ·
+src/categories/words/     text · code · sheets · db · docs · rtf · odf · fixed · hwp · hwpx · iwork ·
                           legacy · email · books · slides · pdf · shared
-src/categories/archives/  gzip
+src/categories/archives/  archive (libarchive) · gzip
 src/categories/images/    (next)   drawings/ sounds/ videos/ archives/
 tests/                    mirrors src/
 samples/                  test files, one folder per viewer

@@ -30,6 +30,7 @@ src/
       rtf/                 RTF
       odf/                 OpenDocument text and presentations
       fixed/               XPS/OXPS, OFD (pages as SVG)
+      hwp/                 Korean HWP 5.x (hwp.js)
       hwpx/                Korean HWPX
       iwork/               Apple Pages/Keynote (stored preview)
       legacy/              Word/PowerPoint 97–2003 and WPS (text)
@@ -39,7 +40,8 @@ src/
       pdf/                 PDF
       shared/              used by several Words viewers: encodings (incl. fast path and escape
                            decoding), text source, code block + grammars, grid
-    archives/              gzip (opens the file inside via ctx.openFile)
+    archives/              archive (libarchive worker, copied to /vendor), gzip;
+                           files inside open via ctx.openFile
     images/ drawings/ sounds/ videos/    empty, ready for viewers
 tests/                     mirrors src/: core/, words/, plus samples.test.ts over samples/
 samples/                   test files, one folder per viewer
