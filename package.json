@@ -9,7 +9,8 @@
     "build": "tsc --noEmit && vite build && node scripts/check-size.mjs",
     "preview": "vite preview",
     "test": "vitest run",
-    "samples": "node scripts/make-samples.mjs"
+    "samples": "node scripts/make-samples.mjs",
+    "deploy": "bash scripts/deploy.sh"
   },
   "dependencies": {
     "docx-preview": "0.4.1",

@@ -86,3 +86,16 @@ Worth re-checking every few months, per viewer:
 - **PDF**: replace the browser viewer with PDF.js for phones
 - **Ebooks**: `foliate-js` releases (adds formats over time)
 - **Old Office (.doc/.ppt)**: no good browser library yet — watch for one
+
+## Publishing
+
+The site is a static build on S3 behind CloudFront (`deploy.config.json`).
+
+- **Automatic** (after a one-time setup): `scripts/setup-github-deploy.sh`
+  creates a narrowly scoped AWS role for this repo's `main` branch; from then on
+  `.github/workflows/deploy.yml` publishes every merge once tests pass.
+- **Manual** from this machine: `npm run deploy` (runs tests, builds, uploads,
+  refreshes the CDN).
+
+Versioned files in `assets/` are cached for a year; `index.html` is always
+revalidated, so a new release reaches visitors immediately.

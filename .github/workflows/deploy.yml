@@ -1,0 +1,45 @@
+name: Deploy formatreader.com
+
+# Publishes the site after every push to main, once tests and the size budget
+# pass. Inactive until scripts/setup-github-deploy.sh has been run (it sets
+# the AWS_DEPLOY_ROLE_ARN variable and creates the narrowly scoped AWS role).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write # short-lived AWS login, no stored keys
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: vars.AWS_DEPLOY_ROLE_ARN != ''
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://formatreader.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
+      - name: Upload (versioned files first, page next, old files last)
+        run: |
+          aws s3 sync dist/assets "s3://${{ vars.SITE_BUCKET }}/assets" --cache-control "public, max-age=31536000, immutable" --only-show-errors
+          aws s3 sync dist "s3://${{ vars.SITE_BUCKET }}" --exclude "assets/*" --delete --cache-control "public, max-age=0, must-revalidate" --only-show-errors
+          aws s3 sync dist/assets "s3://${{ vars.SITE_BUCKET }}/assets" --delete --cache-control "public, max-age=31536000, immutable" --only-show-errors
+      - name: Refresh the CDN
+        run: aws cloudfront create-invalidation --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" --paths "/" "/index.html"
