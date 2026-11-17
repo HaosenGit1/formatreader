@@ -577,23 +577,8 @@ select {
   gap: 10px;
 }
 
-.circle-sub {
-  color: var(--muted);
-  font-size: clamp(13px, 2.2vmin, 16px);
-  font-weight: 500;
-}
 
 .notices[hidden] {
   display: none;
 }
 
-.circle-points {
-  display: grid;
-  gap: 4px;
-  max-width: 78%;
-  margin: 6px auto 0;
-  color: var(--muted);
-  font-size: clamp(12px, 2vmin, 15px);
-  font-weight: 500;
-  line-height: 1.35;
-}

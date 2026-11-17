@@ -16,10 +16,8 @@ import { assertUniqueIds, pickViewer, withTrials } from './registry';
 import type { OpenContext, OpenedView, ViewerEntry, ViewerModule } from './viewer';
 
 const s = strings({
-  readAny: { en: 'Read any format', zh: '读任何格式' },
-  point1: { en: 'Detects the format and fixes garbled text', zh: '自动识别格式，乱码也能读' },
-  point2: { en: 'No apps to install', zh: '无需安装任何软件' },
-  point3: { en: 'Nothing leaves your device', zh: '文件不会离开你的设备' },
+  // The slogan reads the same for every visitor.
+  readAny: { en: 'Just Read it!', zh: 'Just Read it!' },
   openAnother: { en: 'Open another', zh: '换个文件' },
   fullscreen: { en: 'Full screen', zh: '全屏' },
   exitFullscreen: { en: 'Exit full screen', zh: '退出全屏' },
@@ -80,9 +78,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     h(
       'main',
       { class: 'landing' },
-      h('button', { type: 'button', class: 'circle', onclick: () => fileInput.click() }, h('span', { class: 'circle-text' }, s('readAny')),
-        h('span', { class: 'circle-points' }, h('span', {}, s('point1')), h('span', {}, s('point2')), h('span', {}, s('point3'))),
-      ),
+      h('button', { type: 'button', class: 'circle', onclick: () => fileInput.click() }, h('span', { class: 'circle-text' }, s('readAny'))),
     );
 
   /** The only loading state: the name fills with colour like a progress bar. */
