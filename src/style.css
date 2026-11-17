@@ -590,3 +590,18 @@ select {
   text-align: center;
   text-wrap: balance;
 }
+
+/* Circle sentence: smaller and lighter so it reads as a natural sentence
+   with comfortable space inside the circle. */
+.circle-text {
+  max-width: 68%;
+  font-size: clamp(16px, 3.3vmin, 25px);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.45;
+}
+
+.circle-text {
+  max-width: 76%;
+  white-space: pre-line; /* honour the break after the question */
+}
