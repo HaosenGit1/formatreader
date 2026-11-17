@@ -5,7 +5,7 @@
  * language: each font declares a charset (GBK, Big5, Shift_JIS, Cyrillic…).
  */
 
-import type { Block, Para, Run } from '../shared/doc-model';
+import type { Block, Para, Run } from './doc-model';
 
 export type { Block, Para, Run };
 

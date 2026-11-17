@@ -28,6 +28,11 @@ export interface OpenContext {
   fontScale(): number;
   /** Ask the shell to redraw the toolbar and notices (e.g. after the viewer's state changed). */
   refreshChrome(): void;
+  /**
+   * Open another file in FormatReader (e.g. an email attachment or a file
+   * inside an archive). It replaces the current view, like dropping it.
+   */
+  openFile(file: File): void;
 }
 
 export interface OpenedView {

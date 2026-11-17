@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { parseRtf, type Para } from '../../src/categories/words/rtf/parse';
+import { parseRtf, type Para } from '../../src/categories/words/shared/rtf-parse';
 
 const text = (blocks: ReturnType<typeof parseRtf>) =>
   blocks.map((b) => (b.type === 'para' ? b.runs.map((r) => r.text).join('') : `[${b.type}]`)).join('\n');

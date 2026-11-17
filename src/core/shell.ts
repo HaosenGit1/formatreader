@@ -179,7 +179,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     const cover = h('div', { class: 'loading-cover' }, loadingView());
     app.replaceChildren(header(), page, cover);
 
-    const ctx: OpenContext = { mount, format, fontScale: () => fontScale, refreshChrome };
+    const ctx: OpenContext = { mount, format, fontScale: () => fontScale, refreshChrome, openFile: (f) => void openFile(f) };
     let view: OpenedView;
     try {
       const mod = await entry.load();

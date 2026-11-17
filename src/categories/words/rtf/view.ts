@@ -1,7 +1,7 @@
 /** Rich Text Format (.rtf) viewer: converted with our own parser, drawn as a page. */
 import type { OpenContext, OpenedView } from '../../../core/viewer';
 import { renderPaper } from '../shared/paper';
-import { bytesToRtfString, parseRtf } from './parse';
+import { bytesToRtfString, parseRtf } from '../shared/rtf-parse';
 
 export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   const blocks = parseRtf(bytesToRtfString(new Uint8Array(await file.arrayBuffer())));

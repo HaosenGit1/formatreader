@@ -58,6 +58,13 @@ export const wordsViewers: ViewerEntry[] = [
     load: () => import('./odf/view'),
   },
   {
+    id: 'words/email',
+    category: 'words',
+    mimes: /^message\/rfc822$|vnd\.ms-outlook|^application\/mbox$|multipart\/related|x-mimearchive/,
+    accepts: ({ format, ext }) => format?.id === 'msg' || (isTextish(format) && ['eml', 'mbox', 'mbx', 'mht', 'mhtml'].includes(ext)),
+    load: () => import('./email/view'),
+  },
+  {
     id: 'words/pdf',
     category: 'words',
     mimes: /^application\/pdf$/,

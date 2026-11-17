@@ -26,6 +26,7 @@ const FOLDER_VIEWER: Record<string, string> = {
   slides: 'words/slides',
   docs: 'words/docs',
   db: 'words/db',
+  email: 'words/email',
 };
 
 /** Some folders hold several document types, each with its own viewer. */
@@ -48,7 +49,7 @@ const EXPECT: Record<string, string> = {
   'double-encoded.txt': '这是一段被错误编码后又保存了的中文',
 };
 
-const BINARY_EXT = new Set(['epub', 'cbz', 'pptx', 'xlsx', 'xls', 'ods', 'docx', 'mdb', 'accdb', 'sqlite', 'rtf', 'odt', 'odp']);
+const BINARY_EXT = new Set(['epub', 'cbz', 'pptx', 'xlsx', 'xls', 'ods', 'docx', 'mdb', 'accdb', 'sqlite', 'rtf', 'odt', 'odp', 'eml', 'mbox', 'msg', 'mhtml']);
 
 for (const folder of Object.keys(FOLDER_VIEWER)) {
   const dir = join(root, folder);
