@@ -72,6 +72,27 @@ export const wordsViewers: ViewerEntry[] = [
     load: () => import('./fixed/view'),
   },
   {
+    id: 'words/iwork',
+    category: 'words',
+    mimes: /x-iwork|vnd\.apple\.(pages|keynote|numbers)/,
+    // Numbers files go to the Sheets viewer (SheetJS reads them).
+    accepts: ({ format }) => ['pages', 'key', 'iwork'].includes(format?.id ?? ''),
+    load: () => import('./iwork/view'),
+  },
+  {
+    id: 'words/hwpx',
+    category: 'words',
+    mimes: /hwp\+zip|haansofthwpx/,
+    accepts: ({ format }) => format?.id === 'hwpx',
+    load: () => import('./hwpx/view'),
+  },
+  {
+    id: 'words/palmdoc',
+    category: 'words',
+    accepts: ({ format }) => format?.id === 'pdb',
+    load: () => import('./text/palm-view'),
+  },
+  {
     id: 'words/pdf',
     category: 'words',
     mimes: /^application\/pdf$/,

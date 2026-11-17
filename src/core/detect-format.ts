@@ -51,6 +51,8 @@ const BY_EXTENSION: Record<string, FormatInfo> = {
   pages: F('pages', 'Apple Pages document', 'words'),
   numbers: F('numbers', 'Apple Numbers spreadsheet', 'words'),
   key: F('key', 'Apple Keynote presentation', 'words'),
+  hwp: F('hwp', 'Hangul document (HWP, old binary)', 'words'),
+  wpd: F('wpd', 'WordPerfect document', 'words'),
   dwg: F('dwg', 'AutoCAD drawing', 'drawings'),
   dxf: F('dxf', 'AutoCAD DXF drawing', 'drawings', true),
   step: F('step', 'STEP 3D model', 'drawings', true),
@@ -221,6 +223,7 @@ function fromZip(names: string[], head: Uint8Array, ext: string): FormatInfo {
   if (has('Index/Document.iwa') || any(/^Index\/.*\.iwa$/)) {
     return BY_EXTENSION[ext] ?? F('iwork', 'Apple iWork document', 'words');
   }
+  if (mime.includes('application/hwp+zip') || has('Contents/section0.xml')) return F('hwpx', 'Hangul document (HWPX)', 'words');
   if (has('3D/3dmodel.model')) return F('3mf', '3MF 3D model', 'drawings');
   if (has('content.json') && ext === 'xmind') return F('xmind', 'XMind mind map', 'drawings');
   if (has('doc.kml')) return F('kmz', 'Google Earth KMZ', 'drawings');
