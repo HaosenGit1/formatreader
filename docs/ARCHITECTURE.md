@@ -26,12 +26,21 @@ src/
       code/                programming languages, JSON, XML, YAML, config
       sheets/              CSV/TSV, Excel, ODS, Numbers, older spreadsheet formats
       docs/                Word (DOCX)
+      db/                  Access (MDB/ACCDB), SQLite
+      rtf/                 RTF
+      odf/                 OpenDocument text and presentations
+      fixed/               XPS/OXPS, OFD (pages as SVG)
+      hwpx/                Korean HWPX
+      iwork/               Apple Pages/Keynote (stored preview)
+      legacy/              Word/PowerPoint 97–2003 and WPS (text)
+      email/               EML, MBOX, Outlook MSG, MHTML
       books/               EPUB, MOBI, AZW3, FB2, CBZ
       slides/              PowerPoint
       pdf/                 PDF
       shared/              used by several Words viewers: encodings (incl. fast path and escape
                            decoding), text source, code block + grammars, grid
-    images/ drawings/ sounds/ videos/ archives/    empty, ready for viewers
+    archives/              gzip (opens the file inside via ctx.openFile)
+    images/ drawings/ sounds/ videos/    empty, ready for viewers
 tests/                     mirrors src/: core/, words/, plus samples.test.ts over samples/
 samples/                   test files, one folder per viewer
 ```
