@@ -25,10 +25,12 @@ src/
       text/                plain text, Markdown, HTML, subtitles
       code/                programming languages, JSON, XML, YAML, config
       sheets/              CSV/TSV, Excel, ODS, Numbers, older spreadsheet formats
+      docs/                Word (DOCX)
       books/               EPUB, MOBI, AZW3, FB2, CBZ
       slides/              PowerPoint
       pdf/                 PDF
-      shared/              used by several Words viewers: encodings, text source, code block, grid
+      shared/              used by several Words viewers: encodings (incl. fast path and escape
+                           decoding), text source, code block + grammars, grid
     images/ drawings/ sounds/ videos/ archives/    empty, ready for viewers
 tests/                     mirrors src/: core/, words/, plus samples.test.ts over samples/
 samples/                   test files, one folder per viewer
@@ -101,10 +103,13 @@ Nothing else changes.
   fails if it is exceeded (`scripts/check-size.mjs`).
 - Viewers marked `prefetch: true` (Text, Code, Sheets) download in the
   background while the front page is idle, so common files open instantly.
-- The encoding detector (~700 KB) is fetched in the background only for
-  browsers set to languages that often use legacy encodings (Chinese,
-  Japanese, Korean, Cyrillic, Arabic…), and never on data-saver connections.
+- Clear GBK, Big5, Shift_JIS, EUC-JP, EUC-KR, Windows-1252 and Cyrillic files
+  are decided by a tiny fast path (`shared/encoding/fast.ts`); the statistical
+  detector (~700 KB) downloads only for unclear files, and is fetched in the
+  background for browsers set to legacy-encoding languages (not on data-saver).
+- Viewers declare MIME types: matching viewers and their heavy libraries
+  (`preload()`) start loading while a file is dragged over the page.
 - Detection reads only the first bytes; big files render progressively.
 
-Measured on simulated 4G: front page 160 ms; a GBK novel 136 ms (Chinese
-browser); CSV 25 ms; Python 200 ms; Excel 210 ms; EPUB 420 ms; slides 520 ms.
+Measured on simulated 4G, first visit: front page 160 ms; GBK/Big5/Japanese
+text ~35 ms; GBK CSV 45 ms; Excel 230 ms; EPUB 440 ms; slides 510 ms.

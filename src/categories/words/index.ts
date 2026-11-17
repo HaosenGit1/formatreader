@@ -30,6 +30,13 @@ export const wordsViewers: ViewerEntry[] = [
     load: () => import('./slides/view'),
   },
   {
+    id: 'words/docs',
+    category: 'words',
+    mimes: /wordprocessingml|^application\/msword$/,
+    accepts: ({ format }) => format?.id === 'docx',
+    load: () => import('./docs/view'),
+  },
+  {
     id: 'words/pdf',
     category: 'words',
     mimes: /^application\/pdf$/,

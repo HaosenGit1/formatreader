@@ -12,6 +12,7 @@
     "samples": "node scripts/make-samples.mjs"
   },
   "dependencies": {
+    "docx-preview": "0.4.1",
     "dompurify": "3.4.18",
     "echarts": "5.6.0",
     "foliate-js": "1.0.1",
