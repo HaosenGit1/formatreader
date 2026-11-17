@@ -4,7 +4,10 @@ import { h } from '../../../core/dom';
 import type { OpenContext, OpenedView } from '../../../core/viewer';
 
 export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
-  const url = URL.createObjectURL(file);
+  // A PDF taken out of an archive (or dropped with no MIME type) has an empty
+  // type, and the browser will not show an untyped blob as a PDF: label it.
+  const blob = file.type === 'application/pdf' ? file : new Blob([file], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
   ctx.mount.replaceChildren(h('div', { class: 'view view-pdf' }, h('iframe', { class: 'pdf-frame', src: url, title: file.name })));
   return {
     meta: () => ['PDF'],
