@@ -203,6 +203,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     closeCurrent();
     const my = ++token;
     app.replaceChildren(loadingView());
+    warmForMime(file.type);
     const head = new Uint8Array(await file.slice(0, 8192).arrayBuffer());
     let format: OpenContext['format'] = null;
     try {
@@ -212,6 +213,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     }
     if (my !== token) return;
     const entry = pickViewer(viewers, { format, name: file.name, ext: extOf(file.name), head }) ?? infoEntry;
+    warm(entry); // its libraries download while the page is being laid out and the file read
     await show(entry, file.name, file.size, format, (mod, ctx) => mod.open(file, ctx), my);
   }
 
@@ -286,6 +288,23 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     else setTimeout(run, 1500);
   }
 
+  /** Load a viewer and let it start fetching its heavy libraries. Safe to call repeatedly. */
+  const warmed = new Set<string>();
+  function warm(entry: ViewerEntry) {
+    if (warmed.has(entry.id)) return;
+    warmed.add(entry.id);
+    entry
+      .load()
+      .then((m) => m.preload?.())
+      .catch(() => warmed.delete(entry.id));
+  }
+
+  /** Warm the viewers that match a MIME type (all the browser reveals during a drag). */
+  function warmForMime(mime: string) {
+    if (!mime) return;
+    for (const v of viewers) if (v.mimes?.test(mime)) warm(v);
+  }
+
   // ------------------------------------------------------ input: drop/pick/paste
 
   // While dragging, the page shows only the circle.
@@ -300,6 +319,8 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     e.preventDefault();
     dragDepth++;
     overlay.classList.add('show');
+    // Start loading the right viewer while the user is still dragging.
+    if (dragDepth === 1) for (const item of e.dataTransfer?.items ?? []) if (item.kind === 'file') warmForMime(item.type);
   });
   window.addEventListener('dragover', (e) => {
     if (!hasFiles(e)) return;

@@ -3,6 +3,9 @@ import './books.css';
 import type { OpenContext, OpenedView } from '../../../core/viewer';
 import { openBook, type BookController } from './book-view';
 
+/** Start downloading the ebook engine early. */
+export const preload = () => import('foliate-js/view.js');
+
 export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   const book = (await openBook(file, ctx.mount, ctx.fontScale)) as BookController & { restyle: () => void };
   return {

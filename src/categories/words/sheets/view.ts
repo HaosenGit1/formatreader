@@ -104,15 +104,17 @@ function usedSize(XLSX: XLSXModule, ws: WorkSheet): { rows: number; cols: number
 
 async function openWorkbook(file: File, ctx: OpenContext): Promise<OpenedView> {
   const ext = extOf(file.name);
-  const XLSX = await import('xlsx');
-  if (NEEDS_CODEPAGES.has(ext)) {
-    const cptable = await import('xlsx/dist/cpexcel.full.mjs');
-    XLSX.set_cptable(cptable);
-  }
+  // Load the engine (and code pages if needed) while the file is being read.
+  const [XLSX, cptable, data] = await Promise.all([
+    import('xlsx'),
+    NEEDS_CODEPAGES.has(ext) ? import('xlsx/dist/cpexcel.full.mjs') : Promise.resolve(null),
+    file.arrayBuffer(),
+  ]);
+  if (cptable) XLSX.set_cptable(cptable);
 
   let wb: import('xlsx').WorkBook;
   try {
-    wb = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true, cellFormula: true, cellStyles: false, dense: false });
+    wb = XLSX.read(data, { type: 'array', cellDates: true, cellFormula: true, cellStyles: false, dense: false });
   } catch (e) {
     const msg = String((e as Error)?.message ?? e);
     if (/password|encrypt/i.test(msg)) throw new Error(s('password'));
@@ -192,6 +194,9 @@ async function openWorkbook(file: File, ctx: OpenContext): Promise<OpenedView> {
 }
 
 type GridCellMerge = { s: { r: number; c: number }; e: { r: number; c: number } };
+
+/** Start downloading the spreadsheet engine early (e.g. while a file is dragged). */
+export const preload = () => import('xlsx');
 
 export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   const ext = extOf(file.name);

@@ -2,7 +2,7 @@
 import { h } from '../../../core/dom';
 import { strings } from '../../../core/i18n';
 import type { OpenContext, OpenedView } from '../../../core/viewer';
-import { codeView } from '../shared/code-block';
+import { codeView, preloadHighlighter } from '../shared/code-block';
 import { isSource, readText } from '../shared/read';
 import { codeKind, languageName } from './languages';
 
@@ -13,7 +13,12 @@ const s = strings({
 /** Pretty-print JSON documents below this size (bigger ones are shown as they are). */
 const PRETTY_LIMIT = 30 * 1024 * 1024;
 
+export const preload = () => preloadHighlighter();
+
 export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
+  // The language is usually known from the name: fetch its grammar while the file is read.
+  const guess = codeKind(file.name, '');
+  if (guess) void preloadHighlighter(guess.language);
   const src = await readText(file, ctx.mount);
   if (!isSource(src)) return src;
 

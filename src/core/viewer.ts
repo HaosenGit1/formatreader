@@ -55,6 +55,11 @@ export interface ViewerModule {
   open(file: File, ctx: OpenContext): Promise<OpenedView>;
   /** Optional: open pasted text instead of a file. */
   openText?(text: string, ctx: OpenContext): Promise<OpenedView>;
+  /**
+   * Optional: start downloading heavy libraries (spreadsheet engine, ebook
+   * engine…) before open() is called — e.g. while a file is being dragged.
+   */
+  preload?(): Promise<unknown>;
 }
 
 export interface ViewerEntry {
@@ -70,6 +75,12 @@ export interface ViewerEntry {
   layout?: 'fill';
   /** Fetch this viewer's code in the background while the front page is idle (common formats). */
   prefetch?: boolean;
+  /**
+   * MIME types this viewer probably handles. While a file is dragged over the
+   * page the browser reveals only its MIME type, so matching viewers start
+   * loading before the drop.
+   */
+  mimes?: RegExp;
   accepts(ctx: AcceptContext): boolean;
   /** Loads the implementation on demand (dynamic import → separate chunk). */
   load(): Promise<ViewerModule>;

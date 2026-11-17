@@ -9,6 +9,9 @@ const s = strings({
   slides: { en: 'slides', zh: '页幻灯片' },
 });
 
+/** Start downloading the slide renderer early. */
+export const preload = () => import('pptx-preview');
+
 export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   const slides = await openSlides(file, ctx.mount);
   return {

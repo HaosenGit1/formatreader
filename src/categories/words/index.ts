@@ -17,6 +17,7 @@ export const wordsViewers: ViewerEntry[] = [
   {
     id: 'words/books',
     category: 'words',
+    mimes: /^application\/(epub\+zip|x-mobipocket-ebook|vnd\.amazon\.ebook|x-fictionbook\+xml|vnd\.comicbook\+zip|x-cbz)$/,
     layout: 'fill',
     accepts: ({ format, ext }) => (format ? BOOK_FORMATS.has(format.id) : ext === 'fb2'),
     load: () => import('./books/view'),
@@ -24,18 +25,21 @@ export const wordsViewers: ViewerEntry[] = [
   {
     id: 'words/slides',
     category: 'words',
+    mimes: /presentationml|ms-powerpoint|opendocument\.presentation/,
     accepts: ({ format }) => format?.id === 'pptx',
     load: () => import('./slides/view'),
   },
   {
     id: 'words/pdf',
     category: 'words',
+    mimes: /^application\/pdf$/,
     accepts: ({ format }) => format?.id === 'pdf',
     load: () => import('./pdf/view'),
   },
   {
     id: 'words/sheets',
     category: 'words',
+    mimes: /^text\/(csv|tab-separated-values)$|spreadsheetml|ms-excel|opendocument\.spreadsheet|x-iwork-numbers|^application\/(x-)?dbf$/,
     prefetch: true,
     accepts: ({ format, ext, head }) =>
       (format != null && SHEET_FORMAT_IDS.has(format.id)) ||
@@ -45,6 +49,7 @@ export const wordsViewers: ViewerEntry[] = [
   {
     id: 'words/code',
     category: 'words',
+    mimes: /^(text\/(x-|javascript|css|xml)|application\/(json|javascript|xml|x-sh|x-yaml|yaml|toml|x-httpd-php|sql|x-ipynb\+json))/,
     prefetch: true,
     priority: 20,
     accepts: ({ format, name, head }) => isTextish(format) && codeKind(name, headText(head)) !== null,
@@ -53,6 +58,7 @@ export const wordsViewers: ViewerEntry[] = [
   {
     id: 'words/text',
     category: 'words',
+    mimes: /^text\/(plain|markdown|html|vtt)|^application\/x-subrip$/,
     prefetch: true,
     priority: 10,
     // Catch-all for anything that isn't a known binary format; binary files

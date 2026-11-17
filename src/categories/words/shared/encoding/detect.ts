@@ -1,4 +1,5 @@
 import { decode, isValidUtf8 } from './codec';
+import { fastLegacy } from './fast';
 import { toWhatwgLabel } from './names';
 
 export type DetectReason =
@@ -147,6 +148,13 @@ export async function detectEncoding(all: Uint8Array): Promise<EncodingResult | 
       bomLength: 0,
       alternatives: ['gb18030', 'big5', 'shift_jis', 'windows-1252'],
     };
+  }
+
+  // Clear-cut legacy cases (GBK, Big5, Japanese, Korean, Western European)
+  // are decided here without downloading the statistical detector.
+  const fast = fastLegacy(bytes);
+  if (fast) {
+    return { encoding: fast.encoding, confidence: 0.95, reason: 'statistical', bomLength: 0, alternatives: fast.alternatives };
   }
 
   // Legacy encoding: ask the statistical detector, then verify each guess by decoding.

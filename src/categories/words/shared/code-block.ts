@@ -16,6 +16,12 @@ const languageModules = import.meta.glob('../../../../node_modules/highlight.js/
 type Hljs = typeof import('highlight.js/lib/core').default;
 let hljsPromise: Promise<Hljs> | null = null;
 
+/** Start downloading the highlighter (and a language, if known) before the text is ready. */
+export function preloadHighlighter(language?: string): Promise<unknown> {
+  hljsPromise ??= import('highlight.js/lib/core').then((m) => m.default);
+  return language ? highlighter(language).catch(() => null) : hljsPromise;
+}
+
 async function highlighter(language: string): Promise<Hljs | null> {
   const key = Object.keys(languageModules).find((k) => k.endsWith(`/${language}.js`));
   if (!key) return null;
