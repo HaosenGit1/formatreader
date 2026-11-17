@@ -125,3 +125,25 @@ Nothing else changes.
 
 Measured on simulated 4G, first visit: front page 160 ms; GBK/Big5/Japanese
 text ~35 ms; GBK CSV 45 ms; Excel 230 ms; EPUB 440 ms; slides 510 ms.
+
+## Read-only guarantee
+
+A user's file is only ever **read**. It is never modified, saved over,
+downloaded or sent anywhere. This holds by construction:
+
+- **The browser forbids writing.** A dropped or picked file arrives as a
+  read-only `File`; a web page has no way to write to it. FormatReader never
+  asks for write access (no File System Access API handles or save pickers).
+- **Changes happen to copies in memory.** Encoding repair, relabelling the MIME
+  type (`core/mime.ts`), unpacking archives: each makes a new in-memory
+  object and leaves the original bytes untouched. Closing the tab discards them.
+- **Nothing leaves the device.** The Content-Security-Policy in `index.html`
+  allows network requests only to formatreader.com itself (to load the app's own
+  code) and blocks form submissions.
+- **Enforced by a test.** `tests/core/read-only.test.ts` fails the build if code
+  in `src/` uses write handles, save pickers, download links, `fetch`,
+  `sendBeacon`, WebSockets or HTTP writes, or if the CSP is loosened.
+
+Only small preferences are kept in the browser's `localStorage`: the text size,
+and each book's reading position (keyed by file name and size). No file
+content is stored.

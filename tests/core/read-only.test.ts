@@ -1,0 +1,44 @@
+/**
+ * FormatReader's promise: a user's file is only ever READ. It is never
+ * changed, saved over, downloaded or sent anywhere. This test fails the build
+ * if code that could do any of that appears in src/, or if the page's
+ * Content-Security-Policy is loosened to allow sending data elsewhere.
+ */
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { describe, expect, test } from 'vitest';
+
+const root = process.cwd();
+const files = (dir: string): string[] =>
+  readdirSync(dir).flatMap((f) => {
+    const p = join(dir, f);
+    return statSync(p).isDirectory() ? files(p) : /\.(ts|js)$/.test(f) ? [p] : [];
+  });
+
+/** APIs that can write to the user's disk, trigger downloads, or send data out. */
+const FORBIDDEN: Array<[RegExp, string]> = [
+  [/showSaveFilePicker|showOpenFilePicker|showDirectoryPicker/, 'File System Access pickers (write access to disk)'],
+  [/createWritable|createSyncAccessHandle|FileSystem(File|Directory)Handle|getAsFileSystemHandle/, 'file handles that can write'],
+  [/\bdownload\s*[:=]|\.download\b|['"]download['"]/, 'download links'],
+  [/sendBeacon|XMLHttpRequest|new WebSocket|EventSource|RTCPeerConnection/, 'network senders'],
+  [/\bfetch\s*\(/, 'fetch (only local blob/URL reads are allowed; add an explicit exception if ever needed)'],
+  [/method\s*:\s*['"](POST|PUT|PATCH|DELETE)/i, 'HTTP writes'],
+];
+
+describe('read-only guarantee', () => {
+  for (const file of files(join(root, 'src'))) {
+    const rel = file.slice(root.length + 1);
+    test(rel, () => {
+      const code = readFileSync(file, 'utf8').replace(/^\s*(\/\/|\*).*$/gm, '');
+      for (const [re, what] of FORBIDDEN) expect(re.test(code), `${rel} uses ${what}`).toBe(false);
+    });
+  }
+
+  test('CSP: data can only go to this site, never to another server or a form target', () => {
+    const csp = /Content-Security-Policy"\s+content="([^"]+)"/.exec(readFileSync(join(root, 'index.html'), 'utf8'))?.[1] ?? '';
+    const directive = (name: string) => new RegExp(`(?:^|;)\\s*${name}\\s+([^;]*)`).exec(csp)?.[1].trim();
+    expect(directive('connect-src')).toBe("'self' blob: data:");
+    expect(directive('form-action')).toBe("'none'");
+    expect(csp).not.toMatch(/https?:\/\/|\*/);
+  });
+});
