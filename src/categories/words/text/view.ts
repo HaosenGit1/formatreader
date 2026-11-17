@@ -1,7 +1,7 @@
 /** Text viewer: plain text (novels, logs, notes), Markdown, HTML and subtitles. */
 import './text.css';
 import { h } from '../../../core/dom';
-import { lang, strings } from '../../../core/i18n';
+import { strings } from '../../../core/i18n';
 import type { OpenContext, OpenedView } from '../../../core/viewer';
 import { codeView } from '../shared/code-block';
 import { isSource, readText } from '../shared/read';
@@ -25,6 +25,8 @@ function kindLabel(k: TextKind): string {
 }
 
 async function makeView(src: TextSource, name: string, ctx: OpenContext): Promise<OpenedView> {
+  // Plain reading text: show \\u…, %…, &#…; and Base64 decoded when the whole text is encoded.
+  if (classifyText(name, src.text).kind === 'plain') src.enableDecoding();
   let showSource = false;
   let kind = classifyText(name, src.text);
 
@@ -59,7 +61,7 @@ async function makeView(src: TextSource, name: string, ctx: OpenContext): Promis
     },
     notices: () => src.notices(changed),
     onFontScale: () => { /* sizes follow the --reader-scale CSS variable */ },
-    onLangChange: () => { void lang; void draw(); },
+    onLangChange: () => void draw(),
   };
 }
 

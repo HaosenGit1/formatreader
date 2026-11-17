@@ -7,6 +7,7 @@ import { h } from '../../../core/dom';
 import { lang, strings } from '../../../core/i18n';
 import { decode } from './encoding/codec';
 import { detectEncoding, isBinaryResult, warmDetector, type EncodingResult } from './encoding/detect';
+import { decodeEscapes, type DecodedText, type EscapeKind } from './encoding/escapes';
 import { repairMojibake, type RepairResult } from './encoding/mojibake';
 import { ENCODING_CHOICES, encodingName } from './encoding/names';
 
@@ -34,6 +35,13 @@ const s = strings({
     zh: '个字符（显示为 �）在文件里已经损坏，无法恢复。',
   },
   showOriginal: { en: 'Show original', zh: '查看原文' },
+  decodedPrefix: { en: 'This text was encoded as', zh: '这段文字是以下列方式编码的：' },
+  decodedSuffix: { en: '— shown decoded.', zh: '——已解码显示。' },
+  unicode: { en: 'Unicode escapes (\\u…)', zh: 'Unicode 转义（\\u…）' },
+  url: { en: 'URL encoding (%…)', zh: 'URL 编码（%…）' },
+  html: { en: 'HTML entities (&#…;)', zh: 'HTML 实体（&#…;）' },
+  base64: { en: 'Base64', zh: 'Base64' },
+  showDecoded: { en: 'Show decoded', zh: '查看解码后' },
   showRepaired: { en: 'Show repaired', zh: '查看修复后' },
 });
 
@@ -50,6 +58,17 @@ export class TextSource {
     public showOriginal = false,
   ) {}
 
+  /** Escapes/Base64 decoding: only viewers meant for reading text turn this on. */
+  private decodeEnabled = false;
+  decoded: DecodedText | null = null;
+
+  /** Show \\u…, %…, &#…; and Base64 text decoded when the whole text is encoded that way. */
+  enableDecoding(): this {
+    this.decodeEnabled = true;
+    this.decoded = this.repair ? null : decodeEscapes(this.raw);
+    return this;
+  }
+
   /** Returns null when the bytes are binary, not text. */
   static async fromBytes(bytes: Uint8Array): Promise<TextSource | null> {
     const detected = await detectEncoding(bytes);
@@ -63,9 +82,10 @@ export class TextSource {
     return new TextSource(null, null, 'utf-8', text, repairMojibake(text));
   }
 
-  /** The text to show: repaired unless the user asked for the original. */
+  /** The text to show: repaired or decoded, unless the user asked for the original. */
   get text(): string {
-    return this.repair && !this.showOriginal ? this.repair.text : this.raw;
+    if (this.showOriginal) return this.raw;
+    return this.repair?.text ?? this.decoded?.text ?? this.raw;
   }
 
   setEncoding(label: string): void {
@@ -76,6 +96,7 @@ export class TextSource {
     this.encoding = encoding;
     this.raw = decode(this.bytes.subarray(skip), encoding);
     this.repair = encoding === 'utf-8' ? repairMojibake(this.raw) : null;
+    this.decoded = this.decodeEnabled && !this.repair ? decodeEscapes(this.raw) : null;
     this.showOriginal = false;
   }
 
@@ -146,6 +167,28 @@ export class TextSource {
               },
             },
             this.showOriginal ? s('showRepaired') : s('showOriginal'),
+          ),
+        ),
+      );
+    }
+    if (this.decoded) {
+      const names = this.decoded.kinds.map((k: EscapeKind) => s(k)).join(' → ');
+      out.push(
+        h(
+          'div',
+          { class: 'notice good' },
+          `${s('decodedPrefix')} ${names} ${s('decodedSuffix')} `,
+          h(
+            'button',
+            {
+              type: 'button',
+              class: 'link',
+              onclick: () => {
+                this.showOriginal = !this.showOriginal;
+                onChange();
+              },
+            },
+            this.showOriginal ? s('showDecoded') : s('showOriginal'),
           ),
         ),
       );
