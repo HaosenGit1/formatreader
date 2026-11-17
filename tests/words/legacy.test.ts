@@ -29,6 +29,9 @@ describe('old Word (.doc)', () => {
     const paras = docBlocks(word('SampleDoc.doc')).filter((b) => b.type === 'para' && b.runs.length);
     expect(paras.length).toBeGreaterThan(3);
   });
+  test('Word 6/95 document (Apache POI Word6.doc)', () => {
+    expect(word('Word6.doc').trim()).toBe('The quick brown fox jumps over the lazy dog');
+  });
   test('field codes are removed, results kept', () => {
     const blocks = docBlocks('See \u0013 HYPERLINK "https://x" \u0014the site\u0015 now\r');
     expect(blocks[0].type === 'para' && blocks[0].runs[0].text).toBe('See the site now');

@@ -1,0 +1,16 @@
+/* hwp.js draws absolutely sized pages; give them a desk to sit on */
+.view-hwp {
+  padding: 20px 16px 40px;
+  overflow: auto;
+  background: var(--surface-2);
+}
+
+.hwp-pages {
+  color: #111;
+}
+
+.hwp-pages .hwp-page {
+  margin: 0 auto 24px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12), 0 8px 24px rgb(0 0 0 / 0.08);
+}

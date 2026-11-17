@@ -19,9 +19,10 @@ const CP1252_HIGH =
 
 export function docText(wordDocument: Uint8Array, tableStreams: { '0Table'?: Uint8Array; '1Table'?: Uint8Array }): string {
   const fib = new DataView(wordDocument.buffer, wordDocument.byteOffset, wordDocument.byteLength);
-  if (fib.getUint16(0, true) !== 0xa5ec) throw new Error('Not a Word 97–2003 document');
+  const ident = fib.getUint16(0, true);
+  if (ident !== 0xa5ec && ident !== 0xa5dc) throw new Error('Not a Word document');
   const nFib = fib.getUint16(2, true);
-  if (nFib < 101) throw new Error('This is a Word 6/95 document, which is too old to read here');
+  if (nFib < 193) return word6Text(wordDocument, fib);
   const flags = fib.getUint16(0x0a, true);
   if (flags & 0x0100) throw new Error('This document is password-protected');
   const table = flags & 0x0200 ? tableStreams['1Table'] : tableStreams['0Table'];
@@ -66,6 +67,33 @@ export function docText(wordDocument: Uint8Array, tableStreams: { '0Table'?: Uin
     }
   }
   return text.slice(0, ccpText);
+}
+
+/** Windows language id → code page, for Word 6/95 8-bit text. */
+function codePageForLid(lid: number): string {
+  const primary = lid & 0x3ff;
+  if (lid === 0x0804 || lid === 0x1004) return 'gb18030'; // Chinese (PRC, Singapore)
+  if (lid === 0x0404 || lid === 0x0c04 || lid === 0x1404) return 'big5'; // Chinese (Taiwan, HK, Macau)
+  const byPrimary: Record<number, string> = {
+    0x11: 'shift_jis', 0x12: 'euc-kr', 0x19: 'windows-1251', 0x22: 'windows-1251', 0x23: 'windows-1251', 0x02: 'windows-1251',
+    0x1a: 'windows-1250', 0x05: 'windows-1250', 0x0e: 'windows-1250', 0x15: 'windows-1250', 0x18: 'windows-1250', 0x1b: 'windows-1250', 0x24: 'windows-1250',
+    0x08: 'windows-1253', 0x1f: 'windows-1254', 0x0d: 'windows-1255', 0x01: 'windows-1256', 0x29: 'windows-1256',
+    0x25: 'windows-1257', 0x26: 'windows-1257', 0x27: 'windows-1257', 0x2a: 'windows-1258', 0x1e: 'windows-874',
+  };
+  return byPrimary[primary] ?? 'windows-1252';
+}
+
+/** Word 6/95: unless fast-saved, the main text is one 8-bit run in the document's code page. */
+function word6Text(doc: Uint8Array, fib: DataView): string {
+  const flags = fib.getUint16(0x0a, true);
+  if (flags & 0x0100) throw new Error('This document is password-protected');
+  if (flags & 0x0004) throw new Error('This Word 6/95 document was "fast saved"; open and re-save it in Word to read it here');
+  const fcMin = fib.getUint32(0x18, true);
+  const fcMac = fib.getUint32(0x1c, true);
+  const ccpText = fib.getInt32(0x34, true);
+  const len = Math.min(fcMac - fcMin, ccpText > 0 ? ccpText : fcMac - fcMin);
+  const lid = fib.getUint16(0x06, true);
+  return new TextDecoder(codePageForLid(lid)).decode(doc.subarray(fcMin, fcMin + len));
 }
 
 /** Word's text with control characters → paragraphs and tables. */

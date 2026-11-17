@@ -87,6 +87,13 @@ export const wordsViewers: ViewerEntry[] = [
     load: () => import('./hwpx/view'),
   },
   {
+    id: 'words/hwp',
+    category: 'words',
+    mimes: /x-hwp|haansofthwp/,
+    accepts: ({ format }) => format?.id === 'hwp',
+    load: () => import('./hwp/view'),
+  },
+  {
     id: 'words/palmdoc',
     category: 'words',
     accepts: ({ format }) => format?.id === 'pdb',
