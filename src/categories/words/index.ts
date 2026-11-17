@@ -44,6 +44,20 @@ export const wordsViewers: ViewerEntry[] = [
     load: () => import('./db/view'),
   },
   {
+    id: 'words/rtf',
+    category: 'words',
+    mimes: /rtf/,
+    accepts: ({ format }) => format?.id === 'rtf',
+    load: () => import('./rtf/view'),
+  },
+  {
+    id: 'words/odf',
+    category: 'words',
+    mimes: /opendocument\.(text|presentation)/,
+    accepts: ({ format }) => ['odt', 'odp'].includes(format?.id ?? ''),
+    load: () => import('./odf/view'),
+  },
+  {
     id: 'words/pdf',
     category: 'words',
     mimes: /^application\/pdf$/,
