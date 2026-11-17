@@ -65,6 +65,13 @@ export const wordsViewers: ViewerEntry[] = [
     load: () => import('./email/view'),
   },
   {
+    id: 'words/fixed',
+    category: 'words',
+    mimes: /ms-xpsdocument|oxps|^application\/ofd$/,
+    accepts: ({ format }) => ['xps', 'oxps', 'ofd'].includes(format?.id ?? ''),
+    load: () => import('./fixed/view'),
+  },
+  {
     id: 'words/pdf',
     category: 'words',
     mimes: /^application\/pdf$/,

@@ -30,7 +30,7 @@ const FOLDER_VIEWER: Record<string, string> = {
 };
 
 /** Some folders hold several document types, each with its own viewer. */
-const EXT_VIEWER: Record<string, string> = { rtf: 'words/rtf', odt: 'words/odf', odp: 'words/odf' };
+const EXT_VIEWER: Record<string, string> = { rtf: 'words/rtf', odt: 'words/odf', odp: 'words/odf', xps: 'words/fixed', ofd: 'words/fixed' };
 
 /** Expected decoded snippet per text sample: proves the right encoding was chosen. */
 const EXPECT: Record<string, string> = {
@@ -49,7 +49,7 @@ const EXPECT: Record<string, string> = {
   'double-encoded.txt': '这是一段被错误编码后又保存了的中文',
 };
 
-const BINARY_EXT = new Set(['epub', 'cbz', 'pptx', 'xlsx', 'xls', 'ods', 'docx', 'mdb', 'accdb', 'sqlite', 'rtf', 'odt', 'odp', 'eml', 'mbox', 'msg', 'mhtml']);
+const BINARY_EXT = new Set(['epub', 'cbz', 'pptx', 'xlsx', 'xls', 'ods', 'docx', 'mdb', 'accdb', 'sqlite', 'rtf', 'odt', 'odp', 'eml', 'mbox', 'msg', 'mhtml', 'xps', 'ofd']);
 
 for (const folder of Object.keys(FOLDER_VIEWER)) {
   const dir = join(root, folder);

@@ -216,7 +216,7 @@ function fromZip(names: string[], head: Uint8Array, ext: string): FormatInfo {
   if (has('xl/workbook.bin')) return F('xlsb', 'Excel binary workbook', 'words');
   if (has('ppt/presentation.xml')) return F('pptx', 'PowerPoint presentation', 'words');
   if (has('visio/document.xml')) return F('vsdx', 'Visio drawing', 'drawings');
-  if (any(/^Documents\/1\/Pages\/1\.fpage$/) || has('FixedDocSeq.fdseq')) return F('xps', 'XPS document', 'words');
+  if (any(/\.fdseq$/i) || any(/\.fpage$/i)) return F(ext === 'oxps' ? 'oxps' : 'xps', ext === 'oxps' ? 'OpenXPS document' : 'XPS document', 'words');
   if (has('OFD.xml')) return F('ofd', 'OFD document', 'words');
   if (has('Index/Document.iwa') || any(/^Index\/.*\.iwa$/)) {
     return BY_EXTENSION[ext] ?? F('iwork', 'Apple iWork document', 'words');
