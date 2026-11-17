@@ -1,0 +1,27 @@
+/* Database viewer (builds on the Sheets grid styles) */
+.view-db .db-tabs {
+  border-top: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.db-view-tag {
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.db-note:empty {
+  display: none;
+}
+
+.db-note {
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+}

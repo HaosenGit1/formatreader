@@ -174,7 +174,9 @@ function fromMagic(h: Uint8Array, ext: string): FormatInfo | null {
   if (ascii(h, 0, 18) === 'Kaydara FBX Binary') return F('fbx', 'FBX 3D model', 'drawings');
 
   // Other
-  if (ascii(h, 0, 16) === 'SQLite format 3\0') return F('sqlite', 'SQLite database', 'other');
+  if (ascii(h, 0, 16) === 'SQLite format 3\0') return F('sqlite', 'SQLite database', 'words');
+  if (ascii(h, 4, 15) === 'Standard Jet DB') return F('mdb', 'Access database (MDB)', 'words');
+  if (ascii(h, 4, 15) === 'Standard ACE DB') return F('accdb', 'Access database (ACCDB)', 'words');
   if (ascii(h, 0, 2) === 'MZ') return F('exe', 'Windows program', 'other');
   if (startsWith(h, [0x7f, 0x45, 0x4c, 0x46])) return F('elf', 'Linux program', 'other');
   if (startsWith(h, [0xcf, 0xfa, 0xed, 0xfe]) || startsWith(h, [0xca, 0xfe, 0xba, 0xbe])) {

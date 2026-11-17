@@ -37,6 +37,13 @@ export const wordsViewers: ViewerEntry[] = [
     load: () => import('./docs/view'),
   },
   {
+    id: 'words/db',
+    category: 'words',
+    mimes: /x-msaccess|vnd\.ms-access|x-sqlite3|vnd\.sqlite3/,
+    accepts: ({ format }) => ['mdb', 'accdb', 'sqlite'].includes(format?.id ?? ''),
+    load: () => import('./db/view'),
+  },
+  {
     id: 'words/pdf',
     category: 'words',
     mimes: /^application\/pdf$/,

@@ -13,18 +13,25 @@
     "deploy": "bash scripts/deploy.sh"
   },
   "dependencies": {
+    "@kenjiuno/msgreader": "1.29.0",
+    "buffer": "6.0.3",
     "docx-preview": "0.4.1",
     "dompurify": "3.4.18",
     "echarts": "5.6.0",
+    "fflate": "0.8.3",
     "foliate-js": "1.0.1",
     "highlight.js": "11.12.0",
     "jschardet": "4.1.0",
     "marked": "18.2.1",
+    "mdb-reader": "3.2.1",
+    "postal-mime": "4.2.1",
     "pptx-preview": "1.0.7",
+    "sql.js": "1.16.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@types/node": "24.19.2",
+    "@types/sql.js": "1.4.11",
     "typescript": "7.0.2",
     "vite": "8.3.8",
     "vitest": "5.1.0"

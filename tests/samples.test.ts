@@ -25,6 +25,7 @@ const FOLDER_VIEWER: Record<string, string> = {
   books: 'words/books',
   slides: 'words/slides',
   docs: 'words/docs',
+  db: 'words/db',
 };
 
 /** Expected decoded snippet per text sample: proves the right encoding was chosen. */
@@ -44,11 +45,11 @@ const EXPECT: Record<string, string> = {
   'double-encoded.txt': '这是一段被错误编码后又保存了的中文',
 };
 
-const BINARY_EXT = new Set(['epub', 'cbz', 'pptx', 'xlsx', 'xls', 'ods', 'docx']);
+const BINARY_EXT = new Set(['epub', 'cbz', 'pptx', 'xlsx', 'xls', 'ods', 'docx', 'mdb', 'accdb', 'sqlite']);
 
 for (const folder of Object.keys(FOLDER_VIEWER)) {
   const dir = join(root, folder);
-  const files = readdirSync(dir).filter((f) => !f.startsWith('.') && statSync(join(dir, f)).isFile());
+  const files = readdirSync(dir).filter((f) => !f.startsWith('.') && !f.endsWith('SOURCES.md') && statSync(join(dir, f)).isFile());
 
   describe(`samples/${folder} → ${FOLDER_VIEWER[folder]}`, () => {
     for (const name of files) {
