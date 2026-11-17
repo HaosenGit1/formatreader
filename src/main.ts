@@ -172,7 +172,6 @@ function landing(): HTMLElement {
   return h(
     'main',
     { class: 'landing' },
-    h('div', { class: 'landing-name' }, 'FormatReader'),
     h(
       'button',
       { type: 'button', class: 'circle', onclick: open },
@@ -398,7 +397,7 @@ function notices(d: Doc): HTMLElement | null {
 async function render() {
   const token = ++renderToken;
   if (!doc) {
-    app.replaceChildren(landing());
+    app.replaceChildren(header(), landing());
     document.title = 'FormatReader';
     return;
   }

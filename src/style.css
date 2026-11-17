@@ -1146,19 +1146,7 @@ foliate-view {
   }
 }
 
-/* Name above the circle: same type as the loading screen, fully filled. */
+/* Front page sits under the same header as every other page. */
 .landing {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(20px, 5vmin, 44px);
-}
-
-.landing-name {
-  color: var(--accent);
-  font-size: clamp(30px, 7vmin, 52px);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1;
+  min-height: calc(100dvh - 57px);
 }
