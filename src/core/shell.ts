@@ -26,6 +26,7 @@ const s = strings({
   pasted: { en: 'Pasted text', zh: '粘贴的文字' },
   failed: { en: 'This file could not be opened', zh: '无法打开这个文件' },
   trail: { en: 'Opened from', zh: '打开自' },
+  back: { en: 'Back', zh: '返回' },
 });
 
 interface Current {
@@ -137,6 +138,8 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     return h(
       'div',
       { class: 'toolbar' },
+      // One step back up the trail (same as the browser's Back button).
+      trail.length ? h('button', { type: 'button', class: 'btn back-btn', title: s('back'), 'aria-label': s('back'), onclick: () => goBack() }, '←') : null,
       h(
         'div',
         { class: 'file' },
@@ -230,9 +233,25 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
   function openInside(file: File, replace = false) {
     // A viewer may hand over while it is still opening (current not set yet).
     const from = current?.file ?? shownFile;
-    if (from && !replace) trail.push(from);
+    if (from && !replace) {
+      trail.push(from);
+      // Let the browser's Back button (and mouse/swipe back) step out again.
+      history.pushState({ formatreaderDepth: trail.length }, '');
+    }
     void openFile(file, true);
   }
+
+  /** One step back: through history when we added the entry, otherwise directly. */
+  function goBack() {
+    if (!trail.length) return;
+    if (history.state?.formatreaderDepth === trail.length) history.back();
+    else backTo(trail.length - 1);
+  }
+
+  window.addEventListener('popstate', () => {
+    const depth = Number(history.state?.formatreaderDepth ?? 0);
+    if (trail.length > depth) backTo(depth);
+  });
 
   /** Go back up the trail to the file at `index`. */
   function backTo(index: number) {
