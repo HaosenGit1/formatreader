@@ -20,9 +20,8 @@ jobs:
   deploy:
     if: vars.AWS_DEPLOY_ROLE_ARN != ''
     runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: https://formatreader.com
+    # No `environment:` here: it would change the identity GitHub presents to
+    # AWS, and the AWS role only trusts this repo's main branch.
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
