@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { decode, encode } from '../src/words/encoding/codec';
-import { detectEncoding, isBinaryResult, type EncodingResult } from '../src/words/encoding/detect';
-import { repairMojibake } from '../src/words/encoding/mojibake';
+import { decode, encode } from '../../src/categories/words/shared/encoding/codec';
+import { detectEncoding, isBinaryResult, type EncodingResult } from '../../src/categories/words/shared/encoding/detect';
+import { repairMojibake } from '../../src/categories/words/shared/encoding/mojibake';
 
 const SAMPLES: Array<[name: string, label: string, text: string]> = [
   ['Simplified Chinese (long)', 'gb18030', '第一章 少年\n\n天色渐渐暗了下来，远处的山峦被晚霞染成了一片金红色。少年站在村口，望着那条通往外面世界的小路，心中充满了期待。他知道，总有一天，他会离开这里。'],

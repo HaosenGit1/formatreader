@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { detectFormat } from '../src/core/detect-format';
+import { detectFormat } from '../../src/core/detect-format';
 
 const blob = (bytes: number[] | Uint8Array) => new Blob([new Uint8Array(bytes)]);
 const str = (s: string) => [...s].map((c) => c.charCodeAt(0));

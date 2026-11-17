@@ -3,8 +3,18 @@
  * Book content renders in frames; the page's Content-Security-Policy stops any
  * script inside a book from running.
  */
-import { h } from '../core/dom';
-import { t } from '../core/i18n';
+import { h } from '../../../core/dom';
+import { strings } from '../../../core/i18n';
+
+const t = strings({
+  contents: { en: 'Contents', zh: '目录' },
+  noContents: { en: 'This book has no table of contents.', zh: '这本书没有目录。' },
+  progress: { en: 'Reading progress', zh: '阅读进度' },
+  prevPage: { en: 'Previous page', zh: '上一页' },
+  nextPage: { en: 'Next page', zh: '下一页' },
+  pages: { en: 'Pages', zh: '翻页' },
+  scroll: { en: 'Scroll', zh: '滚动' },
+});
 
 interface TocItem {
   label: string;

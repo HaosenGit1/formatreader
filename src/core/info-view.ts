@@ -73,3 +73,8 @@ export function infoView(fileSize: number, head: Uint8Array, format: FormatInfo 
     !format ? h('section', { class: 'info-section' }, h('h3', {}, t('firstBytes')), h('pre', { class: 'hex', dir: 'ltr' }, hexDump(head))) : null,
   );
 }
+
+/** A simple centred card with a title and a sentence (empty files, viewer errors). */
+export function messageView(title: string, note: string): HTMLElement {
+  return h('div', { class: 'view view-info' }, h('div', { class: 'info-card' }, h('h2', {}, title), h('p', { class: 'info-note' }, note)));
+}

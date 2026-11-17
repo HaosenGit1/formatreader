@@ -1,0 +1,93 @@
+/* Highlighted code block (Code viewer and Text "Source" mode) */
+
+/* Code */
+.view-code pre {
+  margin: 0;
+  overflow: auto;
+}
+
+.code-lines {
+  display: block;
+  padding: 12px 0;
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--reader-scale));
+  line-height: 1.6;
+  counter-reset: line;
+  tab-size: 4;
+}
+
+.code-lines .line {
+  display: block;
+  padding: 0 16px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding-left: 4.5em;
+  text-indent: -4.5em;
+}
+
+.code-lines .line::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 3.5em;
+  margin-right: 1em;
+  color: var(--muted);
+  opacity: 0.6;
+  text-align: right;
+  text-indent: 0;
+  user-select: none;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-built_in,
+.hljs-literal {
+  color: var(--hl-keyword);
+}
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-symbol {
+  color: var(--hl-string);
+}
+.hljs-number,
+.hljs-bullet {
+  color: var(--hl-number);
+}
+.hljs-comment,
+.hljs-quote,
+.hljs-deletion {
+  color: var(--hl-comment);
+  font-style: italic;
+}
+.hljs-title,
+.hljs-section,
+.hljs-name,
+.hljs-selector-id {
+  color: var(--hl-title);
+}
+.hljs-attr,
+.hljs-attribute,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-selector-class,
+.hljs-property {
+  color: var(--hl-attr);
+}
+.hljs-type,
+.hljs-class .hljs-title,
+.hljs-params {
+  color: var(--hl-type);
+}
+.hljs-meta,
+.hljs-doctag,
+.hljs-tag {
+  color: var(--hl-meta);
+}
+.hljs-emphasis {
+  font-style: italic;
+}
+.hljs-strong {
+  font-weight: 700;
+}
+

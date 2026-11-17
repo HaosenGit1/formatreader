@@ -2,8 +2,13 @@
  * PowerPoint (.pptx) viewer built on pptx-preview: all slides in a scrolling
  * list, plus a full-screen slideshow (one slide at a time, arrow keys / click).
  */
-import { formatCount, h } from '../core/dom';
-import { t } from '../core/i18n';
+import { formatCount, h } from '../../../core/dom';
+import { strings } from '../../../core/i18n';
+
+const t = strings({
+  slides: { en: 'slides', zh: '页幻灯片' },
+  showHint: { en: '← → or click to move · Esc to exit', zh: '← → 或点击翻页 · Esc 退出' },
+});
 
 export interface SlidesController {
   el: HTMLElement;

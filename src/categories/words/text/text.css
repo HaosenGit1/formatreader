@@ -1,0 +1,78 @@
+/* Text viewer: reading text, subtitles, rendered Markdown/HTML */
+
+/* Plain reading text */
+.reading {
+  max-width: 46em;
+  margin: 0 auto;
+  padding: 32px 20px 48px;
+  font-family: var(--font-read);
+  font-size: calc(17px * var(--reader-scale));
+  line-height: 1.85;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Subtitles */
+.cues {
+  margin: 0;
+  padding: 8px 0;
+  list-style: none;
+  font-size: calc(15px * var(--reader-scale));
+}
+
+.cues li {
+  display: grid;
+  grid-template-columns: minmax(170px, auto) 1fr;
+  gap: 16px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.cue-time {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.9;
+}
+
+.cue-speaker {
+  display: block;
+  color: var(--accent);
+  font-family: var(--font-ui);
+}
+
+.cue-text {
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* Rendered documents and PDF */
+.rendered {
+  display: block;
+  width: 100%;
+  height: calc(100vh - 170px);
+  min-height: 420px;
+  border: 0;
+  background: var(--surface);
+}
+
+.doc:fullscreen .rendered {
+  height: calc(100dvh - 110px);
+}
+
+.doc:fullscreen .reading {
+  max-width: 52em;
+}
+
+@media (max-width: 640px) {
+  .reading {
+    padding: 20px 16px 32px;
+  }
+  .cues li {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  .rendered {
+    height: calc(100vh - 220px);
+  }
+}

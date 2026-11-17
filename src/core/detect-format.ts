@@ -36,6 +36,12 @@ const BY_EXTENSION: Record<string, FormatInfo> = {
   vsd: F('vsd', 'Visio 2003–2010 drawing', 'drawings'),
   wps: F('wps', 'WPS / Works document', 'words'),
   et: F('et', 'WPS spreadsheet', 'words'),
+  dbf: F('dbf', 'dBASE table', 'words'),
+  wk1: F('lotus', 'Lotus 1-2-3 spreadsheet', 'words'),
+  wk3: F('lotus', 'Lotus 1-2-3 spreadsheet', 'words'),
+  wk4: F('lotus', 'Lotus 1-2-3 spreadsheet', 'words'),
+  wks: F('lotus', 'Lotus / Works spreadsheet', 'words'),
+  qpw: F('qpw', 'Quattro Pro spreadsheet', 'words'),
   dps: F('dps', 'WPS presentation', 'words'),
   pub: F('pub', 'Publisher document', 'words'),
   mpp: F('mpp', 'Project file', 'words'),
@@ -196,8 +202,16 @@ function fromZip(names: string[], head: Uint8Array, ext: string): FormatInfo {
   if (mime.includes('opendocument.spreadsheet')) return F('ods', 'OpenDocument spreadsheet', 'words');
   if (mime.includes('opendocument.presentation')) return F('odp', 'OpenDocument presentation', 'words');
   if (mime.includes('opendocument.graphics')) return F('odg', 'OpenDocument drawing', 'drawings');
+  // OpenDocument written by tools that compress the mimetype entry: recognise by structure.
+  if (has('content.xml') && has('META-INF/manifest.xml')) {
+    if (ext === 'ods' || ext === 'ots') return F('ods', 'OpenDocument spreadsheet', 'words');
+    if (ext === 'odp' || ext === 'otp') return F('odp', 'OpenDocument presentation', 'words');
+    if (ext === 'odg' || ext === 'otg') return F('odg', 'OpenDocument drawing', 'drawings');
+    return F('odt', 'OpenDocument text', 'words');
+  }
   if (has('word/document.xml')) return F('docx', 'Word document', 'words');
-  if (has('xl/workbook.xml') || has('xl/workbook.bin')) return F('xlsx', 'Excel workbook', 'words');
+  if (has('xl/workbook.xml')) return F('xlsx', 'Excel workbook', 'words');
+  if (has('xl/workbook.bin')) return F('xlsb', 'Excel binary workbook', 'words');
   if (has('ppt/presentation.xml')) return F('pptx', 'PowerPoint presentation', 'words');
   if (has('visio/document.xml')) return F('vsdx', 'Visio drawing', 'drawings');
   if (any(/^Documents\/1\/Pages\/1\.fpage$/) || has('FixedDocSeq.fdseq')) return F('xps', 'XPS document', 'words');

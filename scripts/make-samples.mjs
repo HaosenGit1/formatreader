@@ -47,9 +47,22 @@ function encode(text, label) {
   return new Uint8Array(bytes);
 }
 
+/** Samples are grouped by the viewer that opens them, like the source code. */
+const folderFor = (name) => {
+  const ext = name.split('.').pop().toLowerCase();
+  if (['csv', 'tsv', 'xlsx', 'xls', 'ods'].includes(ext)) return 'sheets';
+  if (['py', 'st', 'json', 'xml', 'js', 'ts'].includes(ext)) return 'code';
+  return 'text';
+};
+const pathFor = (name) => {
+  const dir = join(out, folderFor(name));
+  mkdirSync(dir, { recursive: true });
+  return join(dir, name);
+};
+
 const write = (name, label, text, bom = []) => {
   const body = encode(text, label);
-  writeFileSync(join(out, name), Buffer.concat([Buffer.from(bom), Buffer.from(body)]));
+  writeFileSync(pathFor(name), Buffer.concat([Buffer.from(bom), Buffer.from(body)]));
   console.log(`  ${name.padEnd(36)} ${label}`);
 };
 
@@ -100,7 +113,7 @@ write('double-encoded.txt', 'utf-8', garbled);
 const u16 = 'Windows 记事本 “Unicode” 格式保存的文件\r\nUTF-16 LE with BOM\r\n';
 const u16bytes = Buffer.alloc(u16.length * 2);
 for (let i = 0; i < u16.length; i++) u16bytes.writeUInt16LE(u16.charCodeAt(i), i * 2);
-writeFileSync(join(out, 'notepad-utf16.txt'), Buffer.concat([Buffer.from([0xff, 0xfe]), u16bytes]));
+writeFileSync(pathFor('notepad-utf16.txt'), Buffer.concat([Buffer.from([0xff, 0xfe]), u16bytes]));
 console.log('  notepad-utf16.txt                    utf-16le');
 
 // Code, data, markup
@@ -111,4 +124,31 @@ write('README.md', 'utf-8', '# FormatReader sample\n\nThis **Markdown** file is 
 write('page.html', 'utf-8', '<!doctype html><html><head><title>Sample</title><style>body{font-family:sans-serif;padding:2em}h1{color:#2f5bea}</style></head><body><h1>HTML preview</h1><p>Rendered in a sandbox. <script>alert("this will not run")</script></p><ul><li>One</li><li>二</li></ul></body></html>');
 write('data.xml', 'utf-8', '<?xml version="1.0" encoding="UTF-8"?>\n<turbines>\n  <turbine id="WTG-01" status="running">\n    <power unit="kW">2410</power>\n  </turbine>\n</turbines>\n');
 write('server.log', 'utf-8', Array.from({ length: 3000 }, (_, i) => `2026-11-17 08:${String(Math.floor(i / 60) % 60).padStart(2, '0')}:${String(i % 60).padStart(2, '0')} INFO  [poller] read 128 tags from PLC-${(i % 4) + 1} in ${20 + (i % 13)} ms`).join('\n') + '\n');
+// Spreadsheets: several sheets, merged cells, formulas, dates, Chinese text
+const XLSX = await import('xlsx');
+{
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['风场月报 Wind farm monthly report', null, null, null, null],
+    ['Turbine 风机', 'Energy MWh', 'Availability', 'Date', 'Status 状态'],
+    ['WTG-01', 412.6, 0.981, new Date(2026, 9, 31), 'Running 运行'],
+    ['WTG-02', 388.2, 0.954, new Date(2026, 9, 31), 'Running 运行'],
+    ['WTG-03', 0, 0.12, new Date(2026, 9, 31), 'Gearbox fault 齿轮箱故障'],
+    ['Total 合计', null, null, null, null],
+  ], { cellDates: true });
+  ws['B6'] = { t: 'n', f: 'SUM(B3:B5)', v: 800.8 };
+  ws['C6'] = { t: 'n', f: 'AVERAGE(C3:C5)', v: 0.685 };
+  for (const r of [3, 4, 5]) ws[`C${r}`].z = '0.0%';
+  ws['C6'].z = '0.0%';
+  ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }];
+  ws['!cols'] = [{ wch: 14 }, { wch: 12 }, { wch: 13 }, { wch: 12 }, { wch: 24 }];
+  XLSX.utils.book_append_sheet(wb, ws, '十月 October');
+  const log = [['Time', 'Turbine', 'Event']];
+  for (let i = 0; i < 500; i++) log.push([`2026-10-${String(1 + (i % 30)).padStart(2, '0')} ${String(i % 24).padStart(2, '0')}:00`, `WTG-0${1 + (i % 3)}`, i % 7 ? 'OK' : 'Pitch warning 变桨警告']);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(log), 'Event log');
+  for (const [ext, bookType] of [['xlsx', 'xlsx'], ['xls', 'biff8'], ['ods', 'ods']]) {
+    writeFileSync(pathFor(`wind-report.${ext}`), XLSX.write(wb, { type: 'buffer', bookType }));
+    console.log(`  wind-report.${ext}`.padEnd(38), bookType);
+  }
+}
 console.log('Done.');

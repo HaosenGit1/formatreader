@@ -25,6 +25,26 @@ export interface BinaryResult {
   binary: true;
 }
 
+/** The statistical detector (language models, ~700 KB gz), loaded once on demand. */
+let detectorPromise: Promise<typeof import('jschardet')> | null = null;
+const loadDetector = () => (detectorPromise ??= import('jschardet'));
+
+/**
+ * Fetch the detector in the background for visitors who are likely to open
+ * non-Unicode files (their browser language uses legacy encodings a lot), so
+ * the first GBK / Shift_JIS / Cyrillic file opens without waiting.
+ * Skipped when the browser asks to save data.
+ */
+export function warmDetector(): void {
+  if (typeof navigator === 'undefined') return;
+  const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+  if (conn?.saveData) return;
+  const langs = navigator.languages?.length ? navigator.languages : [navigator.language];
+  if (langs.some((l) => /^(zh|ja|ko|ru|uk|be|bg|sr|mk|kk|ar|fa|he|el|th|tr|vi|pl|cs|sk|hu|ro|hr|sl|lt|lv|et)\b/i.test(l))) {
+    void loadDetector().catch(() => {});
+  }
+}
+
 /** How many bytes we look at to decide. Enough for any detector, fast on huge files. */
 export const SAMPLE_BYTES = 256 * 1024;
 
@@ -132,7 +152,7 @@ export async function detectEncoding(all: Uint8Array): Promise<EncodingResult | 
   // Legacy encoding: ask the statistical detector, then verify each guess by decoding.
   const guesses = new Map<string, number>();
   try {
-    const { detectAll } = await import('jschardet');
+    const { detectAll } = await loadDetector();
     for (const r of detectAll(bytes)) {
       const label = toWhatwgLabel(r.encoding);
       if (label && label !== 'utf-8' && !guesses.has(label)) guesses.set(label, r.confidence);

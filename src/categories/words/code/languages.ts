@@ -1,16 +1,7 @@
 /**
- * Decides how a decoded text file should be shown: as a table, subtitles,
- * rendered Markdown/HTML, pretty JSON, highlighted code, or plain reading text.
+ * Which programming / data language a file is written in.
+ * Decided from the file name first, then from the first bytes of content.
  */
-
-export type TextKind =
-  | { kind: 'table'; delimiter: string }
-  | { kind: 'subtitle'; format: 'srt' | 'vtt' | 'ass' }
-  | { kind: 'markdown' }
-  | { kind: 'html' }
-  | { kind: 'json'; lines: boolean }
-  | { kind: 'code'; language: string }
-  | { kind: 'plain' };
 
 /** File extension → highlight.js language id. */
 const CODE: Record<string, string> = {
@@ -32,6 +23,8 @@ const CODE: Record<string, string> = {
   ml: 'ocaml', mli: 'ocaml', re: 'reasonml', nim: 'nim', cr: 'crystal', d: 'd', v: 'verilog',
   sv: 'verilog', vhd: 'vhdl', vhdl: 'vhdl', f: 'fortran', f90: 'fortran', f95: 'fortran', for: 'fortran',
   pas: 'delphi', dpr: 'delphi', pp: 'delphi', ada: 'ada', adb: 'ada', ads: 'ada', cob: 'plaintext',
+  // No highlighter yet: still shown as code (line numbers), without colours.
+  sol: 'plaintext', vy: 'python', move: 'rust', cairo: 'rust', cbl: 'plaintext', cobol: 'plaintext', abap: 'plaintext',
   asm: 'x86asm', s: 'armasm', nasm: 'x86asm', wat: 'wasm', ll: 'llvm', zig: 'rust', vala: 'vala',
   tcl: 'tcl', coffee: 'coffeescript', ls: 'livescript', hx: 'haxe', ps: 'plaintext',
   matlab: 'matlab', sas: 'sas', do: 'stata', mat: 'matlab', mpl: 'maple', nb: 'mathematica', wl: 'mathematica',
@@ -68,74 +61,57 @@ const BY_NAME: Record<string, string> = {
   '.gitignore': 'bash', '.env': 'bash', '.editorconfig': 'ini', '.gitconfig': 'ini', '.npmrc': 'ini',
 };
 
-const PLAIN_EXT = new Set(['txt', 'text', 'log', 'nfo', 'diz', 'me', 'readme', '1st', 'out', 'err', 'asc', '']);
+/** Data formats that are pretty-printed before highlighting. */
+const JSON_EXT = new Set(['json', 'geojson', 'webmanifest', 'har', 'ipynb', 'jsonc', 'json5', 'babelrc', 'eslintrc', 'jsonl', 'ndjson']);
 
-/** Choose the CSV delimiter that splits the first lines most consistently. */
-export function sniffDelimiter(sample: string): string {
-  const lines = sample.split(/\r?\n/).filter((l) => l.trim()).slice(0, 20);
-  let best = ',';
-  let bestScore = 0;
-  for (const d of [',', '\t', ';', '|']) {
-    const counts = lines.map((l) => l.split(d).length - 1);
-    if (!counts.length || counts[0] === 0) continue;
-    const consistent = counts.filter((c) => c === counts[0]).length / counts.length;
-    const score = counts[0] * consistent;
-    if (score > bestScore) {
-      bestScore = score;
-      best = d;
-    }
-  }
-  return best;
+export interface CodeKind {
+  language: string;
+  /** JSON documents are reformatted; JSON Lines are not. */
+  json?: 'document' | 'lines';
 }
 
-function sniffContent(text: string): TextKind | null {
-  const head = text.slice(0, 4000).replace(/^﻿/, '');
-  const t = head.trimStart();
-  if (/^WEBVTT/.test(t)) return { kind: 'subtitle', format: 'vtt' };
-  if (/^\[Script Info\]/i.test(t)) return { kind: 'subtitle', format: 'ass' };
-  if (/^\d+\s*\r?\n\d{1,2}:\d{2}:\d{2}[,.]\d{1,3}\s*-->\s*\d{1,2}:\d{2}:\d{2}/.test(t)) return { kind: 'subtitle', format: 'srt' };
-  if (/^<!doctype html|^<html[\s>]/i.test(t)) return { kind: 'html' };
-  if (/^<\?xml|^<[a-z][\w:-]*[\s>][\s\S]*<\/[a-z][\w:-]*>/i.test(t) && t.startsWith('<')) return { kind: 'code', language: 'xml' };
-  if (/^[{[]/.test(t)) {
-    try {
-      JSON.parse(text);
-      return { kind: 'json', lines: false };
-    } catch {
-      /* not JSON */
-    }
-  }
-  if (/^#!.*\b(ba|z|k)?sh\b/.test(t)) return { kind: 'code', language: 'bash' };
-  if (/^#!.*\bpython/.test(t)) return { kind: 'code', language: 'python' };
-  if (/^#!.*\bnode\b/.test(t)) return { kind: 'code', language: 'javascript' };
+const extOf = (lowerName: string) => /\.([a-z0-9_+-]{1,16})$/i.exec(lowerName)?.[1] ?? '';
+
+/** Content clues for files without a telling name. `head` is the start of the file as text. */
+function sniff(head: string): CodeKind | null {
+  const t = head.replace(/^\uFEFF/, '').trimStart();
+  if (/^#!.*\b(ba|z|k)?sh\b/.test(t)) return { language: 'bash' };
+  if (/^#!.*\bpython/.test(t)) return { language: 'python' };
+  if (/^#!.*\bnode\b/.test(t)) return { language: 'javascript' };
+  if (/^#!.*\bperl\b/.test(t)) return { language: 'perl' };
+  if (/^#!.*\bruby\b/.test(t)) return { language: 'ruby' };
+  if (/^<\?xml/.test(t)) return { language: 'xml' };
+  if (/^[{[]\s*["{[\]0-9-]/.test(t) || /^[{[]\s*$/.test(t.slice(0, 3))) return { language: 'json', json: 'document' };
   return null;
 }
 
-export function classifyText(fileName: string, text: string): TextKind {
-  const base = fileName.split(/[\\/]/).pop() ?? fileName;
-  const lower = base.toLowerCase();
-  const ext = /\.([a-z0-9_+-]{1,16})$/i.exec(lower)?.[1] ?? '';
+/**
+ * Returns the language for a file, or null if it is not code (plain text,
+ * Markdown, HTML, subtitles … are handled by the Text viewer).
+ */
+export function codeKind(fileName: string, head: string): CodeKind | null {
+  const base = (fileName.split(/[\\/]/).pop() ?? fileName).toLowerCase();
+  const ext = extOf(base);
+  if (JSON_EXT.has(ext)) return { language: 'json', json: ext === 'jsonl' || ext === 'ndjson' ? 'lines' : 'document' };
+  if (BY_NAME[base]) return { language: BY_NAME[base] };
+  if (/^(makefile|dockerfile)\./.test(base)) return { language: base.startsWith('make') ? 'makefile' : 'dockerfile' };
+  if (CODE[ext]) return { language: CODE[ext] };
+  // Names that say "plain text" or "document" are never treated as code.
+  if (ext && ['txt', 'text', 'log', 'md', 'markdown', 'html', 'htm', 'srt', 'vtt', 'ass', 'ssa', 'csv', 'tsv'].includes(ext)) return null;
+  return sniff(head);
+}
 
-  if (ext === 'csv') return { kind: 'table', delimiter: sniffDelimiter(text.slice(0, 20000)) };
-  if (ext === 'tsv' || ext === 'tab') return { kind: 'table', delimiter: '\t' };
-  if (ext === 'psv') return { kind: 'table', delimiter: '|' };
-  if (ext === 'srt') return { kind: 'subtitle', format: 'srt' };
-  if (ext === 'vtt') return { kind: 'subtitle', format: 'vtt' };
-  if (ext === 'ass' || ext === 'ssa') return { kind: 'subtitle', format: 'ass' };
-  if (['md', 'markdown', 'mdown', 'mkd', 'mdx'].includes(ext)) return { kind: 'markdown' };
-  if (['html', 'htm', 'xhtml', 'shtml'].includes(ext)) return { kind: 'html' };
-  if (['json', 'geojson', 'webmanifest', 'har', 'ipynb', 'jsonc', 'json5', 'babelrc', 'eslintrc'].includes(ext)) {
-    return { kind: 'json', lines: false };
-  }
-  if (ext === 'jsonl' || ext === 'ndjson') return { kind: 'json', lines: true };
-  if (BY_NAME[lower]) return { kind: 'code', language: BY_NAME[lower] };
-  if (/^(makefile|dockerfile)\./.test(lower)) return { kind: 'code', language: lower.startsWith('make') ? 'makefile' : 'dockerfile' };
-  if (CODE[ext]) return { kind: 'code', language: CODE[ext] };
+export const LANGUAGE_NAMES: Record<string, string> = {
+  javascript: 'JavaScript', typescript: 'TypeScript', csharp: 'C#', cpp: 'C++', c: 'C', fsharp: 'F#',
+  objectivec: 'Objective-C', php: 'PHP', sql: 'SQL', pgsql: 'PostgreSQL', json: 'JSON', xml: 'XML',
+  yaml: 'YAML', ini: 'INI / TOML', css: 'CSS', scss: 'SCSS', less: 'Less', bash: 'Shell', dos: 'Batch',
+  powershell: 'PowerShell', vbnet: 'VB.NET', vbscript: 'VBScript', delphi: 'Pascal / Structured Text',
+  x86asm: 'Assembly', armasm: 'ARM Assembly', gcode: 'G-code', step21: 'STEP', glsl: 'GLSL', latex: 'LaTeX',
+  graphql: 'GraphQL', protobuf: 'Protocol Buffers', dockerfile: 'Dockerfile', makefile: 'Makefile',
+  cmake: 'CMake', vhdl: 'VHDL', http: 'HTTP', plaintext: 'Text', markdown: 'Markdown', ocaml: 'OCaml',
+  matlab: 'MATLAB', sas: 'SAS', llvm: 'LLVM IR', wasm: 'WebAssembly', asciidoc: 'AsciiDoc', ldif: 'LDIF',
+};
 
-  if (PLAIN_EXT.has(ext) || !ext) {
-    // .txt files are what people read as books; only sniff when there is no extension.
-    if (!ext) return sniffContent(text) ?? { kind: 'plain' };
-    return { kind: 'plain' };
-  }
-  // Unknown extension: use content clues, else plain text.
-  return sniffContent(text) ?? { kind: 'plain' };
+export function languageName(id: string): string {
+  return LANGUAGE_NAMES[id] ?? id.charAt(0).toUpperCase() + id.slice(1);
 }

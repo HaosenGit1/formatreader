@@ -1,0 +1,113 @@
+/* Sheets viewer */
+
+/* Tables */
+.table-wrap {
+  max-height: calc(100vh - 220px);
+  overflow: auto;
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: calc(13px * var(--reader-scale));
+}
+
+th,
+td {
+  max-width: 420px;
+  padding: 6px 12px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  text-align: start;
+  vertical-align: top;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface-2);
+  font-weight: 650;
+}
+
+.rownum {
+  position: sticky;
+  left: 0;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+thead .rownum {
+  z-index: 2;
+}
+
+tbody tr:hover td {
+  background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
+}
+
+.doc:fullscreen .table-wrap {
+  max-height: calc(100dvh - 150px);
+}
+
+/* Excel-like grid */
+.view-sheet {
+  display: flex;
+  flex-direction: column;
+}
+
+.grid th.corner {
+  z-index: 3;
+}
+
+.grid td.num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.grid td[title] {
+  cursor: help;
+}
+
+.sheet-empty {
+  padding: 48px 16px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Sheet tabs along the bottom, like Excel */
+.sheet-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 0 8px;
+  overflow-x: auto;
+  border-top: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+.sheet-tab {
+  flex: none;
+  padding: 7px 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.sheet-tab.active {
+  border-bottom-color: var(--accent);
+  background: var(--surface);
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.sheet-tab.is-hidden {
+  font-style: italic;
+  opacity: 0.6;
+}

@@ -5,7 +5,7 @@ Everything runs locally: files are never uploaded, and nothing is downloaded or 
 
 **Categories:** Words (now) · Images · Drawings · Sounds · Videos (later)
 
-## What works today (Words, stage 1)
+## What works today (Words)
 
 | Kind | Formats | View |
 | --- | --- | --- |
@@ -14,13 +14,16 @@ Everything runs locally: files are never uploaded, and nothing is downloaded or 
 | Repaired text | Text that was mis-decoded and saved (浣犲ソ → 你好, cafÃ© → café) | Repaired automatically, original one click away |
 | Code & config | ~200 languages incl. IEC 61131-3 ST, G-code, STEP | Highlighted, line numbers |
 | Data | JSON, JSON Lines, XML, YAML, INI/TOML | Pretty-printed and highlighted |
-| Tables | CSV, TSV (delimiter auto-detected) | Table with sticky header |
+| Tables | CSV, TSV, PSV (delimiter and encoding auto-detected) | Grid with sticky header |
+| Spreadsheets | XLSX, XLSM, XLSB, XLS, ODS, Numbers, WPS ET, DBF, SYLK, DIF, Lotus, Excel 2003 XML | Excel-like grid, sheet tabs, merged cells, formulas on hover |
 | Subtitles | SRT, VTT, ASS/SSA | Cue list |
 | Markup | Markdown, HTML | Rendered in a sandbox (scripts never run), or source |
+| Ebooks | EPUB, MOBI, AZW3, FB2, CBZ | Book reader: pages/scroll, contents, remembers position |
+| Slides | PPTX | All slides + full-screen slideshow |
 | PDF | PDF | Browser's built-in viewer |
-| Everything else | DOCX, XLSX, EPUB, MOBI, images, video, CAD, archives… | Identified by its bytes; viewer coming in later stages |
+| Everything else | DOCX, images, video, CAD, archives… | Identified by its bytes; viewer coming in later stages |
 
-Pasting text (⌘V / Ctrl+V) works too.
+Pasting text (⌘V / Ctrl+V) works too. Every viewer has a full-screen mode (F).
 
 ## Develop
 
@@ -37,23 +40,18 @@ GBK subtitles, a double-encoded file, UTF-16 from Notepad, code, Markdown and HT
 
 ## Layout
 
+Each kind of file has its own viewer module; the shell around them knows no file
+formats. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the structure, the
+isolation rules, the speed budget, and how to add a viewer (images, drawings…).
+
 ```
-src/
-  main.ts                 drop zone, paste, toolbar, page flow
-  core/
-    detect-format.ts      magic bytes → format and category
-    zip.ts                reads ZIP entry names (DOCX/XLSX/EPUB/ODT…)
-    info-view.ts          recognised-but-not-yet-viewable and unknown files
-    i18n.ts               English / 中文
-  words/
-    encoding/             detection, decoding, double-encoding repair
-    text-kind.ts          table / subtitle / markdown / html / json / code / plain
-    parse.ts              CSV and subtitle parsers
-    views.ts              the viewers
-tests/                    vitest
-samples/                  test files in many encodings
+src/core/                 shell: front page, toolbar, full screen, format detection, viewer registry
+src/categories/words/     text · code · sheets · books · slides · pdf · shared
+src/categories/images/    (next)   drawings/ sounds/ videos/ archives/
+tests/                    mirrors src/
+samples/                  test files, one folder per viewer
 ```
 
 Heavy parts load only when needed: the statistical encoding detector (for non-Unicode files),
 the syntax highlighter (one language at a time), and the Markdown renderer.
-The first page load is about 32 KB gzipped.
+The first page load is about 17 KB gzipped; `npm run build` fails if it passes 60 KB.

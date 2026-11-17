@@ -1,0 +1,19 @@
+/* PDF viewer */
+.pdf-frame {
+  display: block;
+  width: 100%;
+  height: calc(100vh - 170px);
+  min-height: 420px;
+  border: 0;
+  background: var(--surface);
+}
+
+.doc:fullscreen .pdf-frame {
+  height: calc(100dvh - 110px);
+}
+
+@media (max-width: 640px) {
+  .pdf-frame {
+    height: calc(100vh - 220px);
+  }
+}

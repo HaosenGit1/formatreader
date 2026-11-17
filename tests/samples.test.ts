@@ -1,17 +1,32 @@
-import { readFileSync, readdirSync } from 'node:fs';
+/**
+ * End-to-end over every file in samples/: each folder is named after the
+ * viewer that must open its files, and text files must decode correctly.
+ */
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'vitest';
-import { detectFormat } from '../src/core/detect-format';
-import { decode } from '../src/words/encoding/codec';
-import { detectEncoding, isBinaryResult } from '../src/words/encoding/detect';
-import { repairMojibake } from '../src/words/encoding/mojibake';
-import { classifyText } from '../src/words/text-kind';
+import * as XLSX from 'xlsx';
+import { allViewers } from '../src/categories';
+import { decode } from '../src/categories/words/shared/encoding/codec';
+import { detectEncoding, isBinaryResult } from '../src/categories/words/shared/encoding/detect';
+import { repairMojibake } from '../src/categories/words/shared/encoding/mojibake';
+import { detectFormat, extOf } from '../src/core/detect-format';
+import { infoEntry } from '../src/core/info-entry';
+import { pickViewer } from '../src/core/registry';
 
-const dir = join(fileURLToPath(new URL('.', import.meta.url)), '..', 'samples');
-const files = readdirSync(dir).filter((f) => !f.startsWith('.'));
+const root = join(fileURLToPath(new URL('.', import.meta.url)), '..', 'samples');
+const viewers = [...allViewers, infoEntry];
 
-/** Expected decoded snippet per sample: proves the right encoding was chosen. */
+const FOLDER_VIEWER: Record<string, string> = {
+  text: 'words/text',
+  code: 'words/code',
+  sheets: 'words/sheets',
+  books: 'words/books',
+  slides: 'words/slides',
+};
+
+/** Expected decoded snippet per text sample: proves the right encoding was chosen. */
 const EXPECT: Record<string, string> = {
   'novel-gbk.txt': '山村少年',
   'novel-big5.txt': '遠處的山巒',
@@ -28,33 +43,46 @@ const EXPECT: Record<string, string> = {
   'double-encoded.txt': '这是一段被错误编码后又保存了的中文',
 };
 
-const BOOKS: Record<string, string> = { 'sample-book.epub': 'epub', 'sample-comic.cbz': 'cbz', 'sample-slides.pptx': 'pptx' };
+const BINARY_EXT = new Set(['epub', 'cbz', 'pptx', 'xlsx', 'xls', 'ods']);
 
-describe('book samples are recognised as books', () => {
-  for (const [name, id] of Object.entries(BOOKS)) {
-    test(name, async () => {
-      const bytes = new Uint8Array(readFileSync(join(dir, name)));
-      expect((await detectFormat(new Blob([bytes]), name))?.id).toBe(id);
-    });
-  }
-});
+for (const folder of Object.keys(FOLDER_VIEWER)) {
+  const dir = join(root, folder);
+  const files = readdirSync(dir).filter((f) => !f.startsWith('.') && statSync(join(dir, f)).isFile());
 
-describe('every sample opens as readable text', () => {
-  for (const name of files.filter((f) => !BOOKS[f])) {
-    test(name, async () => {
-      const bytes = new Uint8Array(readFileSync(join(dir, name)));
-      expect(await detectFormat(new Blob([bytes]), name)).toBeNull();
-      const enc = await detectEncoding(bytes);
-      expect(isBinaryResult(enc)).toBe(false);
-      if (isBinaryResult(enc)) return;
-      let text = decode(bytes.subarray(enc.bomLength), enc.encoding);
-      const repair = enc.encoding === 'utf-8' ? repairMojibake(text) : null;
-      if (repair) text = repair.text;
-      // A repaired file may have characters that were destroyed before we saw it; they are counted, not hidden.
-      expect(text.split('�').length - 1).toBe(repair?.lost ?? 0);
-      if (name !== 'double-encoded.txt') expect(repair).toBeNull();
-      if (EXPECT[name]) expect(text).toContain(EXPECT[name]);
-      expect(classifyText(name, text).kind).toBeTruthy();
+  describe(`samples/${folder} → ${FOLDER_VIEWER[folder]}`, () => {
+    for (const name of files) {
+      test(name, async () => {
+        const bytes = new Uint8Array(readFileSync(join(dir, name)));
+        const format = await detectFormat(new Blob([bytes]), name);
+        const viewer = pickViewer(viewers, { format, name, ext: extOf(name), head: bytes.subarray(0, 8192) });
+        expect(viewer?.id).toBe(FOLDER_VIEWER[folder]);
+
+        if (BINARY_EXT.has(extOf(name))) return;
+
+        // Text-based: must decode cleanly (repaired files may list destroyed characters).
+        const enc = await detectEncoding(bytes);
+        expect(isBinaryResult(enc)).toBe(false);
+        if (isBinaryResult(enc)) return;
+        let text = decode(bytes.subarray(enc.bomLength), enc.encoding);
+        const repair = enc.encoding === 'utf-8' ? repairMojibake(text) : null;
+        if (repair) text = repair.text;
+        expect(text.split('�').length - 1).toBe(repair?.lost ?? 0);
+        if (name !== 'double-encoded.txt') expect(repair).toBeNull();
+        if (EXPECT[name]) expect(text).toContain(EXPECT[name]);
+      });
+    }
+  });
+}
+
+describe('spreadsheet samples read back correctly', () => {
+  for (const ext of ['xlsx', 'xls', 'ods']) {
+    test(`wind-report.${ext}`, () => {
+      const wb = XLSX.read(readFileSync(join(root, 'sheets', `wind-report.${ext}`)), { cellDates: true });
+      expect(wb.SheetNames).toEqual(['十月 October', 'Event log']);
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      expect(ws['A1'].v).toBe('风场月报 Wind farm monthly report');
+      expect(ws['A5'].v).toBe('WTG-03');
+      expect(ws['B3'].v).toBe(412.6);
     });
   }
 });

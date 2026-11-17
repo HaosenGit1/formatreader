@@ -1,0 +1,163 @@
+/* Ebook reader */
+
+.doc-fill {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - 57px);
+  padding-bottom: 16px;
+}
+
+.doc-fill .toolbar {
+  position: static;
+  flex: none;
+}
+
+.doc-fill .viewer-mount {
+  flex: 1;
+  min-height: 0;
+}
+
+.view-book {
+  display: flex;
+  height: 100%;
+}
+
+.book-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.book-stage {
+  flex: 1;
+  min-height: 0;
+  padding: 8px 0 0;
+}
+
+foliate-view {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.book-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--line);
+}
+
+.page-btn {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.page-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.book-progress {
+  flex: 1;
+  min-width: 0;
+}
+
+.book-loc {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.book-chapter {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.book-slider {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.toc-panel {
+  flex: none;
+  width: 290px;
+  overflow: auto;
+  border-right: 1px solid var(--line);
+  background: var(--surface-2);
+  font-size: 14px;
+}
+
+.toc-panel[hidden] {
+  display: none;
+}
+
+.toc-head {
+  padding: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.toc ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.toc-root {
+  padding: 8px 0 !important;
+}
+
+.toc-sub {
+  padding-left: 14px !important;
+}
+
+.toc a {
+  display: block;
+  padding: 6px 16px;
+  color: var(--fg);
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.toc a:hover {
+  background: color-mix(in srgb, var(--accent-soft) 60%, transparent);
+}
+
+.toc a.current {
+  color: var(--accent);
+  font-weight: 650;
+}
+
+.toc .muted {
+  padding: 16px;
+}
+
+@media (max-width: 900px) {
+  .view-book {
+    position: relative;
+  }
+  .toc-panel {
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 5;
+    width: min(320px, 85%);
+    box-shadow: var(--shadow);
+  }
+}
+
+.doc-fill:fullscreen {
+  display: flex;
+  height: 100dvh;
+  overflow: hidden;
+}
