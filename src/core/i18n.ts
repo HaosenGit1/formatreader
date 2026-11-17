@@ -1,6 +1,7 @@
 export type Lang = 'en' | 'zh';
 
 const STRINGS = {
+  readAny: { en: 'Read any format', zh: '读任何格式' },
   tagline: { en: 'Drop any file. It just opens.', zh: '任何文件，拖进来就能看。' },
   dropTitle: { en: 'Drop a file here', zh: '把文件拖到这里' },
   dropOr: { en: 'or', zh: '或' },

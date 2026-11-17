@@ -1048,3 +1048,100 @@ foliate-view {
 .doc:fullscreen .reading {
   max-width: 52em;
 }
+
+/* --------------------------------------------- minimal front page & loading */
+
+.landing {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  max-width: none;
+  padding: 16px;
+}
+
+.circle {
+  display: grid;
+  place-items: center;
+  width: min(76vmin, 560px);
+  aspect-ratio: 1;
+  padding: 0;
+  border: 3px dashed color-mix(in srgb, var(--fg) 28%, transparent);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.circle:hover,
+.circle:focus-visible,
+.circle-active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
+  outline: none;
+}
+
+.circle-active {
+  transform: scale(1.03);
+}
+
+.circle-text {
+  font-size: clamp(22px, 5.5vmin, 40px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.drop-overlay {
+  background: var(--bg);
+  backdrop-filter: none;
+}
+
+.loading {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  min-height: 100dvh;
+  padding: 16px;
+}
+
+.loading-name {
+  font-size: clamp(22px, 5vmin, 34px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.loading-name {
+  /* Two-tone text: the accent part sweeps across the letters like a progress bar. */
+  background: linear-gradient(90deg, var(--accent) 0 50%, color-mix(in srgb, var(--fg) 18%, transparent) 50% 100%);
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: clamp(30px, 7vmin, 52px);
+  animation: name-fill 1.6s ease-in-out infinite;
+}
+
+@keyframes name-fill {
+  0% {
+    background-position: 100% 0;
+  }
+  70%,
+  100% {
+    background-position: 0 0;
+  }
+}
+
+.loading-cover {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--bg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-name {
+    animation-duration: 4s;
+  }
+}

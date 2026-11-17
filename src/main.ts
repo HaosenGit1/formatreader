@@ -52,10 +52,12 @@ function closeCurrent() {
 }
 
 /** Lay out the page, then let a viewer build itself inside it (it must not be moved afterwards). */
-function mountShell(fileName: string, extraClass = ''): { mount: HTMLElement; bar: HTMLElement } {
-  const mount = h('div', { class: 'book-mount' }, h('div', { class: 'loading' }, h('div', { class: 'spinner', 'aria-hidden': 'true' }), `${t('reading')} ${fileName}`));
+function mountShell(extraClass = ''): { mount: HTMLElement; bar: HTMLElement } {
+  // The viewer builds itself inside `mount` while the loading screen covers the page.
+  const mount = h('div', { class: 'book-mount' });
   const bar = h('div', { class: 'toolbar' });
-  app.replaceChildren(header(), h('main', { class: `doc ${extraClass}`.trim() }, bar, mount));
+  const page = h('main', { class: `doc ${extraClass}`.trim() }, bar, mount);
+  app.replaceChildren(header(), page, h('div', { class: 'loading-cover' }, loadingView()));
   return { mount, bar };
 }
 
@@ -63,29 +65,31 @@ async function openFile(file: File) {
   closeCurrent();
   doc = null;
   const token = ++renderToken;
-  showLoading(file.name);
+  showLoading();
   try {
     const format = await detectFormat(file, file.name);
     if (token !== renderToken) return;
 
     const isFb2 = /\.fb2$/i.test(file.name);
     if ((format && BOOK_FORMATS.has(format.id)) || isFb2) {
-      const { mount, bar } = mountShell(file.name, 'doc-book');
+      const { mount, bar } = mountShell('doc-book');
       const book = (await openBook(file, mount, () => fontScale)) as BookController & { restyle: () => void };
       if (token !== renderToken) return book.destroy();
       doc = { type: 'book', name: file.name, size: file.size, format: format?.name ?? 'FictionBook', book };
       document.title = `${book.title} — FormatReader`;
       bar.replaceWith(toolbar(doc));
+      app.querySelector('.loading-cover')?.remove();
       return;
     }
 
     if (format?.id === 'pptx') {
-      const { mount, bar } = mountShell(file.name);
+      const { mount, bar } = mountShell();
       const slides = await openSlides(file, mount);
       if (token !== renderToken) return slides.destroy();
       doc = { type: 'slides', name: file.name, size: file.size, slides };
       document.title = `${file.name} — FormatReader`;
       bar.replaceWith(toolbar(doc));
+      app.querySelector('.loading-cover')?.remove();
       return;
     }
 
@@ -164,29 +168,22 @@ function header(): HTMLElement {
 }
 
 function landing(): HTMLElement {
-  const cats: Array<[Parameters<typeof t>[0], boolean]> = [
-    ['catWords', true], ['catImages', false], ['catDrawings', false], ['catSounds', false], ['catVideos', false],
-  ];
+  const open = () => fileInput.click();
   return h(
     'main',
     { class: 'landing' },
-    h('h1', { class: 'tagline' }, t('tagline')),
     h(
-      'div',
-      { class: 'dropzone', tabindex: 0, role: 'button', onclick: () => fileInput.click(), onkeydown: (e: Event) => { const k = (e as KeyboardEvent).key; if (k === 'Enter' || k === ' ') { e.preventDefault(); fileInput.click(); } } },
-      h('div', { class: 'drop-icon', 'aria-hidden': 'true' }, dropIcon()),
-      h('div', { class: 'drop-title' }, t('dropTitle')),
-      h('div', { class: 'drop-or' }, t('dropOr')),
-      h('span', { class: 'btn btn-primary' }, t('choose')),
-      h('div', { class: 'drop-hint' }, t('pasteHint')),
-    ),
-    h('p', { class: 'privacy' }, lockIcon(), t('privacy')),
-    h(
-      'ul',
-      { class: 'cats' },
-      ...cats.map(([k, on]) => h('li', { class: on ? 'cat on' : 'cat' }, h('span', { class: 'cat-name' }, t(k)), h('span', { class: 'cat-state' }, on ? t('available') : t('soon')))),
+      'button',
+      { type: 'button', class: 'circle', onclick: open },
+      h('span', { class: 'circle-text' }, t('readAny')),
     ),
   );
+}
+
+/** The only loading state: just the name. */
+function loadingView(): HTMLElement {
+  // The name is the progress bar: it fills with colour from left to right.
+  return h('div', { class: 'loading', role: 'status', 'aria-label': 'Loading' }, h('div', { class: 'loading-name' }, 'FormatReader'));
 }
 
 function svg(path: string, size = 20): SVGSVGElement {
@@ -203,11 +200,9 @@ function svg(path: string, size = 20): SVGSVGElement {
   s.innerHTML = path;
   return s;
 }
-const dropIcon = () => svg('<path d="M12 15V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/>', 40);
-const lockIcon = () => svg('<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>', 16);
 
-function showLoading(name: string) {
-  app.replaceChildren(header(), h('main', { class: 'doc' }, h('div', { class: 'loading' }, h('div', { class: 'spinner', 'aria-hidden': 'true' }), `${t('reading')} ${name}`)));
+function showLoading() {
+  app.replaceChildren(loadingView());
 }
 
 function toolbar(d: Doc): HTMLElement {
@@ -402,7 +397,7 @@ function notices(d: Doc): HTMLElement | null {
 async function render() {
   const token = ++renderToken;
   if (!doc) {
-    app.replaceChildren(header(), landing());
+    app.replaceChildren(landing());
     document.title = 'FormatReader';
     return;
   }
@@ -441,7 +436,8 @@ async function render() {
 // Drag & drop, file picker, paste
 // ---------------------------------------------------------------------------
 
-const overlay = h('div', { class: 'drop-overlay', 'aria-hidden': 'true' }, h('div', { class: 'drop-overlay-inner' }, dropIcon(), h('div', {}, t('dropOverlay'))));
+// While dragging, the page shows only the circle.
+const overlay = h('div', { class: 'drop-overlay', 'aria-hidden': 'true' }, h('div', { class: 'circle circle-active' }, h('span', { class: 'circle-text' }, t('readAny'))));
 document.body.append(overlay);
 let dragDepth = 0;
 
@@ -493,7 +489,7 @@ document.addEventListener('paste', (e) => {
 });
 
 onLangChange(() => {
-  (overlay.querySelector('.drop-overlay-inner div:last-child') as HTMLElement).textContent = t('dropOverlay');
+  (overlay.querySelector('.circle-text') as HTMLElement).textContent = t('readAny');
   render();
 });
 setLang(lang());
