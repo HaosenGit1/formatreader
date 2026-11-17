@@ -17,8 +17,9 @@ import type { OpenContext, OpenedView, ViewerEntry, ViewerModule } from './viewe
 
 const s = strings({
   readAny: { en: 'Read any format', zh: '读任何格式' },
-  private: { en: 'Nothing leaves your device', zh: '文件不会离开你的设备' },
-  language: { en: '中文', zh: 'English' },
+  point1: { en: 'Detects the format and fixes garbled text', zh: '自动识别格式，乱码也能读' },
+  point2: { en: 'No apps to install', zh: '无需安装任何软件' },
+  point3: { en: 'Nothing leaves your device', zh: '文件不会离开你的设备' },
   openAnother: { en: 'Open another', zh: '换个文件' },
   fullscreen: { en: 'Full screen', zh: '全屏' },
   exitFullscreen: { en: 'Exit full screen', zh: '退出全屏' },
@@ -73,14 +74,15 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
       'header',
       { class: 'site-header' },
       h('button', { class: 'brand', type: 'button', onclick: goHome }, h('span', { class: 'brand-mark', 'aria-hidden': 'true' }, 'F'), h('span', { class: 'brand-name' }, 'FormatReader')),
-      h('button', { class: 'lang-toggle', type: 'button', onclick: () => setLang(lang() === 'en' ? 'zh' : 'en') }, s('language')),
     );
 
   const landing = () =>
     h(
       'main',
       { class: 'landing' },
-      h('button', { type: 'button', class: 'circle', onclick: () => fileInput.click() }, h('span', { class: 'circle-text' }, s('readAny')), h('span', { class: 'circle-sub' }, s('private'))),
+      h('button', { type: 'button', class: 'circle', onclick: () => fileInput.click() }, h('span', { class: 'circle-text' }, s('readAny')),
+        h('span', { class: 'circle-points' }, h('span', {}, s('point1')), h('span', {}, s('point2')), h('span', {}, s('point3'))),
+      ),
     );
 
   /** The only loading state: the name fills with colour like a progress bar. */

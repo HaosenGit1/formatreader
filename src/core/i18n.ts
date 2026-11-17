@@ -35,14 +35,10 @@ const STRINGS = {
 
 export type StringKey = keyof typeof STRINGS;
 
+/** The interface follows the browser's language: Chinese browsers get Chinese, others English. */
 function initialLang(): Lang {
-  try {
-    const saved = localStorage.getItem('fr.lang');
-    if (saved === 'en' || saved === 'zh') return saved;
-  } catch {
-    /* storage unavailable */
-  }
-  return typeof navigator !== 'undefined' && /^zh/i.test(navigator.language) ? 'zh' : 'en';
+  const langs = typeof navigator === 'undefined' ? [] : navigator.languages?.length ? navigator.languages : [navigator.language];
+  return /^zh/i.test(langs[0] ?? '') ? 'zh' : 'en';
 }
 
 let current: Lang = initialLang();
@@ -53,11 +49,6 @@ export const t = (key: StringKey) => STRINGS[key][current];
 
 export function setLang(next: Lang) {
   current = next;
-  try {
-    localStorage.setItem('fr.lang', next);
-  } catch {
-    /* ignore */
-  }
   document.documentElement.lang = next === 'zh' ? 'zh-CN' : 'en';
   listeners.forEach((fn) => fn());
 }

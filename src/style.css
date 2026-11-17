@@ -134,14 +134,6 @@ select {
   letter-spacing: -0.01em;
 }
 
-.lang-toggle {
-  padding: 6px 12px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--surface);
-  cursor: pointer;
-  font-size: 14px;
-}
 
 /* ----------------------------------------------------------------- buttons */
 
@@ -593,4 +585,15 @@ select {
 
 .notices[hidden] {
   display: none;
+}
+
+.circle-points {
+  display: grid;
+  gap: 4px;
+  max-width: 78%;
+  margin: 6px auto 0;
+  color: var(--muted);
+  font-size: clamp(12px, 2vmin, 15px);
+  font-weight: 500;
+  line-height: 1.35;
 }
