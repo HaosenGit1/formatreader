@@ -25,3 +25,22 @@
   color: var(--muted);
   font-size: 12px;
 }
+
+/* Row count on each tab; empty tables are dimmed so the ones with data stand out */
+.db-count {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.db-tab-empty {
+  opacity: 0.55;
+}
+
+.db-tab-empty.active {
+  opacity: 1;
+}
