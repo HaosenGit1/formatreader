@@ -1,0 +1,1 @@
+{"site":"风电场 A","turbines":[{"id":"WTG-01","rated_kw":2500,"online":true},{"id":"WTG-02","rated_kw":2500,"online":false}],"scada":{"poll_ms":1000,"protocol":"IEC 61850"}}

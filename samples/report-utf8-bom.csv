@@ -1,0 +1,4 @@
+﻿Turbine,Status,Power (kW),Note
+WTG-01,Running,2410,
+WTG-02,Stopped,0,"Pitch fault, blade 2"
+WTG-03,Running,2385,

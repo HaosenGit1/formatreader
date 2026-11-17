@@ -1,0 +1,26 @@
+{
+  "name": "formatreader",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Drop any file into your browser — it detects the format and shows it. Nothing is uploaded.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "samples": "node scripts/make-samples.mjs"
+  },
+  "dependencies": {
+    "dompurify": "3.4.18",
+    "highlight.js": "11.12.0",
+    "jschardet": "4.1.0",
+    "marked": "18.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "7.0.2",
+    "vite": "8.3.8",
+    "vitest": "5.1.0"
+  }
+}

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<turbines>
+  <turbine id="WTG-01" status="running">
+    <power unit="kW">2410</power>
+  </turbine>
+</turbines>
