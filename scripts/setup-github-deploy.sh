@@ -30,14 +30,21 @@ if [ -z "$PROV" ]; then
   echo "Created GitHub identity provider"
 fi
 
+# GitHub identifies the workflow by repo and branch. Repos may use the
+# "immutable" format with numeric IDs (owner@id/repo@id); ask GitHub which.
+PREFIX=$(gh api "repos/$REPO/actions/oidc/customization/sub" --jq '.sub_claim_prefix // empty' 2>/dev/null || true)
+SUB="${PREFIX:-repo:$REPO}:ref:refs/heads/main"
+
 cat > "$TMP/trust.json" <<JSON
 { "Version": "2012-10-17", "Statement": [{
   "Effect": "Allow",
   "Principal": { "Federated": "$PROV" },
   "Action": "sts:AssumeRoleWithWebIdentity",
   "Condition": {
-    "StringEquals": { "token.actions.githubusercontent.com:aud": "sts.amazonaws.com" },
-    "StringLike": { "token.actions.githubusercontent.com:sub": "repo:$REPO:ref:refs/heads/main" }
+    "StringEquals": {
+      "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+      "token.actions.githubusercontent.com:sub": "${SUB}"
+    }
   }
 }]}
 JSON
