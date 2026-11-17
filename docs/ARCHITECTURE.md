@@ -40,6 +40,7 @@ src/
       pdf/                 PDF
       shared/              used by several Words viewers: encodings (incl. fast path and escape
                            decoding), text source, code block + grammars, grid
+    data/                  comtrade (power-system fault recordings)
     archives/              archive (libarchive worker, copied to /vendor), gzip;
                            files inside open via ctx.openFile
     images/ drawings/ sounds/ videos/    empty, ready for viewers

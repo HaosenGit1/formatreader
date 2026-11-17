@@ -4,6 +4,7 @@ import { t, type StringKey } from './i18n';
 
 const CATEGORY_KEY: Record<Category, StringKey | null> = {
   words: 'catWords',
+  data: null,
   images: 'catImages',
   drawings: 'catDrawings',
   sounds: 'catSounds',

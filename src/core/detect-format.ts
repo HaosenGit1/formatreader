@@ -1,6 +1,6 @@
 import { listZipEntries, type BlobLike } from './zip';
 
-export type Category = 'words' | 'images' | 'drawings' | 'sounds' | 'videos' | 'archives' | 'other';
+export type Category = 'words' | 'data' | 'images' | 'drawings' | 'sounds' | 'videos' | 'archives' | 'other';
 
 export interface FormatInfo {
   /** Stable id, e.g. 'pdf', 'docx', 'epub', 'png'. */
@@ -70,6 +70,7 @@ const BY_EXTENSION: Record<string, FormatInfo> = {
   azw: F('azw', 'Kindle book', 'words'),
   kfx: F('kfx', 'Kindle KFX book', 'words'),
   umd: F('umd', 'UMD ebook', 'words'),
+  cff: F('comtrade', 'COMTRADE record (CFF)', 'data'),
   ttf: F('ttf', 'TrueType font', 'other'),
   otf: F('otf', 'OpenType font', 'other'),
   woff: F('woff', 'Web font', 'other'),
@@ -227,6 +228,11 @@ function fromZip(names: string[], head: Uint8Array, ext: string): FormatInfo {
     return BY_EXTENSION[ext] ?? F('iwork', 'Apple iWork document', 'words');
   }
   if (mime.includes('application/hwp+zip') || has('Contents/section0.xml')) return F('hwpx', 'Hangul document (HWPX)', 'words');
+  // A COMTRADE record shared as its .cfg + .dat pair.
+  {
+    const cfgs = names.filter((n) => /\.cfg$/i.test(n)).map((n) => n.slice(0, -4).toLowerCase());
+    if (cfgs.some((b) => names.some((n) => n.toLowerCase() === `${b}.dat`))) return F('comtrade', 'COMTRADE record', 'data');
+  }
   if (has('3D/3dmodel.model')) return F('3mf', '3MF 3D model', 'drawings');
   if (has('content.json') && ext === 'xmind') return F('xmind', 'XMind mind map', 'drawings');
   if (has('doc.kml')) return F('kmz', 'Google Earth KMZ', 'drawings');

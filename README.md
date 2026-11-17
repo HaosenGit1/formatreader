@@ -29,6 +29,7 @@ Everything runs locally: files are never uploaded, and nothing is downloaded or 
 | PDF | PDF | Browser's viewer |
 | Ebooks | EPUB, MOBI, AZW3, FB2, CBZ/CBR/CB7, PalmDoc (PDB) | Book reader / text |
 | Email | EML, MBOX, Outlook MSG, MHTML | Message view; attachments open in place; no tracking |
+| COMTRADE (power systems) | .cff, .zip with .cfg+.dat, .cfg (details) | Stacked waveforms, digital lanes, trigger, zoom, table |
 | Archives | ZIP, RAR, 7Z, TAR, ISO, CAB, XZ, BZ2, GZ | File list; any file inside opens in place; passwords |
 
 Pasting text (⌘V / Ctrl+V) works too. Every viewer has a full-screen mode (F).
@@ -58,6 +59,7 @@ side by side (`?try=`), and adding formats.
 src/core/                 shell: front page, toolbar, full screen, format detection, viewer registry
 src/categories/words/     text · code · sheets · db · docs · rtf · odf · fixed · hwp · hwpx · iwork ·
                           legacy · email · books · slides · pdf · shared
+src/categories/data/      comtrade
 src/categories/archives/  archive (libarchive) · gzip
 src/categories/images/    (next)   drawings/ sounds/ videos/ archives/
 tests/                    mirrors src/

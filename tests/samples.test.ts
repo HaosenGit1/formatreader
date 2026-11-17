@@ -29,6 +29,7 @@ const FOLDER_VIEWER: Record<string, string> = {
   email: 'words/email',
   archives: 'archives/gzip',
   legacy: 'words/legacy',
+  data: 'data/comtrade',
 };
 
 /** Some folders hold several document types, each with its own viewer. */
@@ -51,7 +52,7 @@ const EXPECT: Record<string, string> = {
   'double-encoded.txt': '这是一段被错误编码后又保存了的中文',
 };
 
-const BINARY_EXT = new Set(['epub', 'cbz', 'pptx', 'xlsx', 'xls', 'ods', 'docx', 'mdb', 'accdb', 'sqlite', 'rtf', 'odt', 'odp', 'eml', 'mbox', 'msg', 'mhtml', 'xps', 'ofd', 'hwpx', 'pages', 'key', 'pdb', 'gz', 'doc', 'ppt', 'hwp', 'zip', '7z', 'tar', 'rar', 'cb7']);
+const BINARY_EXT = new Set(['epub', 'cbz', 'pptx', 'xlsx', 'xls', 'ods', 'docx', 'mdb', 'accdb', 'sqlite', 'rtf', 'odt', 'odp', 'eml', 'mbox', 'msg', 'mhtml', 'xps', 'ofd', 'hwpx', 'pages', 'key', 'pdb', 'gz', 'doc', 'ppt', 'hwp', 'zip', '7z', 'tar', 'rar', 'cb7', 'cfg', 'cff']);
 // locked.zip is password-protected: still routed to the archive viewer.
 
 for (const folder of Object.keys(FOLDER_VIEWER)) {
@@ -64,7 +65,8 @@ for (const folder of Object.keys(FOLDER_VIEWER)) {
         const bytes = new Uint8Array(readFileSync(join(dir, name)));
         const format = await detectFormat(new Blob([bytes]), name);
         const viewer = pickViewer(viewers, { format, name, ext: extOf(name), head: bytes.subarray(0, 8192) });
-        expect(viewer?.id).toBe(EXT_VIEWER[extOf(name)] ?? FOLDER_VIEWER[folder]);
+        // In samples/data the folder decides (a ZIP there is a COMTRADE record, not a plain archive).
+        expect(viewer?.id).toBe(folder === 'data' ? FOLDER_VIEWER[folder] : EXT_VIEWER[extOf(name)] ?? FOLDER_VIEWER[folder]);
 
         if (BINARY_EXT.has(extOf(name))) return;
 

@@ -1,0 +1,162 @@
+/* COMTRADE waveforms. Colours follow the validated default palette (series 1). */
+.view-comtrade {
+  --ct-series: #2a78d6;
+  --ct-grid: #e3e3e8;
+  --ct-muted: #6b6b73;
+  --ct-cursor: #0b0b0b;
+  --ct-select: rgb(42 120 214 / 0.12);
+  padding: 16px 18px 28px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme='light'])) .view-comtrade {
+    --ct-series: #3987e5;
+    --ct-grid: #2e2f36;
+    --ct-muted: #9c9ca6;
+    --ct-cursor: #f0efec;
+    --ct-select: rgb(57 135 229 / 0.18);
+  }
+}
+
+:root[data-theme='dark'] .view-comtrade {
+  --ct-series: #3987e5;
+  --ct-grid: #2e2f36;
+  --ct-muted: #9c9ca6;
+  --ct-cursor: #f0efec;
+  --ct-select: rgb(57 135 229 / 0.18);
+}
+
+.ct-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 6px 18px;
+  margin: 0 0 14px;
+  font-size: 13px;
+}
+
+.ct-details dt {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.ct-details dd {
+  margin: 0 0 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ct-hint,
+.ct-note {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.ct-note {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--warn-soft);
+  color: var(--fg);
+  font-size: 13px;
+}
+
+.ct-plots {
+  display: grid;
+  gap: 2px;
+}
+
+.ct-row {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 10px;
+  align-items: stretch;
+}
+
+.ct-label {
+  display: grid;
+  align-content: center;
+  gap: 1px;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.ct-meta {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.ct-value {
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  min-height: 1.3em;
+}
+
+.ct-time {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.ct-canvas {
+  display: block;
+  width: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.ct-analog {
+  height: 92px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ct-digital {
+  height: 24px;
+}
+
+.ct-row-d .ct-label {
+  grid-template-columns: 1fr auto;
+}
+
+.ct-axis {
+  height: 34px;
+  cursor: default;
+}
+
+.ct-table-wrap {
+  max-height: calc(100vh - 260px);
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.ct-table {
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.ct-table th,
+.ct-table td {
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.ct-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-2);
+  text-align: left;
+}
+
+.ct-table .num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .ct-row {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+}
