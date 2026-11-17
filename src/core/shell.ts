@@ -7,6 +7,7 @@
  * whatever toolbar controls the viewer offers. If a viewer fails, only that
  * file shows an error card; the shell and all other viewers keep working.
  */
+import { withDetectedType } from './mime';
 import { detectFormat, extOf } from './detect-format';
 import { formatBytes, h } from './dom';
 import { lang, onLangChange, setLang, strings } from './i18n';
@@ -274,6 +275,8 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
       console.error('Format detection failed', err);
     }
     if (my !== token) return;
+    // Label the file with what its bytes say it is: archives give no type, renames give a wrong one.
+    file = withDetectedType(file, format);
     const entry = pickViewer(viewers, { format, name: file.name, ext: extOf(file.name), head }) ?? infoEntry;
     shownFile = file;
     warm(entry); // its libraries download while the page is being laid out and the file read
