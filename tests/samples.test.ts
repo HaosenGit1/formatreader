@@ -28,7 +28,7 @@ const EXPECT: Record<string, string> = {
   'double-encoded.txt': '这是一段被错误编码后又保存了的中文',
 };
 
-const BOOKS: Record<string, string> = { 'sample-book.epub': 'epub', 'sample-comic.cbz': 'cbz' };
+const BOOKS: Record<string, string> = { 'sample-book.epub': 'epub', 'sample-comic.cbz': 'cbz', 'sample-slides.pptx': 'pptx' };
 
 describe('book samples are recognised as books', () => {
   for (const [name, id] of Object.entries(BOOKS)) {

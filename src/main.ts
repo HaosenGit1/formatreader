@@ -10,6 +10,7 @@ import { ENCODING_CHOICES, encodingName } from './words/encoding/names';
 import { classifyText, type TextKind } from './words/text-kind';
 import { renderText } from './words/views';
 import { BOOK_FORMATS, openBook, type BookController } from './words/book-view';
+import { openSlides, type SlidesController } from './words/slides-view';
 
 // ---------------------------------------------------------------------------
 // State
@@ -19,6 +20,7 @@ type Doc =
   | { type: 'text'; name: string; size: number; bytes: Uint8Array | null; detected: EncodingResult | null; encoding: string; text: string; repair: RepairResult | null; showOriginal: boolean; kind: TextKind; source: boolean }
   | { type: 'pdf'; name: string; size: number; url: string }
   | { type: 'book'; name: string; size: number; format: string; book: BookController & { restyle: () => void } }
+  | { type: 'slides'; name: string; size: number; slides: SlidesController }
   | { type: 'info'; name: string; size: number; head: Uint8Array; format: FormatInfo | null }
   | { type: 'error'; name: string; size: number; message: string };
 
@@ -46,6 +48,15 @@ applyFontScale();
 function closeCurrent() {
   if (doc?.type === 'pdf') URL.revokeObjectURL(doc.url);
   if (doc?.type === 'book') doc.book.destroy();
+  if (doc?.type === 'slides') doc.slides.destroy();
+}
+
+/** Lay out the page, then let a viewer build itself inside it (it must not be moved afterwards). */
+function mountShell(fileName: string, extraClass = ''): { mount: HTMLElement; bar: HTMLElement } {
+  const mount = h('div', { class: 'book-mount' }, h('div', { class: 'loading' }, h('div', { class: 'spinner', 'aria-hidden': 'true' }), `${t('reading')} ${fileName}`));
+  const bar = h('div', { class: 'toolbar' });
+  app.replaceChildren(header(), h('main', { class: `doc ${extraClass}`.trim() }, bar, mount));
+  return { mount, bar };
 }
 
 async function openFile(file: File) {
@@ -59,14 +70,21 @@ async function openFile(file: File) {
 
     const isFb2 = /\.fb2$/i.test(file.name);
     if ((format && BOOK_FORMATS.has(format.id)) || isFb2) {
-      // Build the page around the reader first: the reader is opened in place and never moved.
-      const mount = h('div', { class: 'book-mount' }, h('div', { class: 'loading' }, h('div', { class: 'spinner', 'aria-hidden': 'true' }), `${t('reading')} ${file.name}`));
-      const bar = h('div', { class: 'toolbar' });
-      app.replaceChildren(header(), h('main', { class: 'doc doc-book' }, bar, mount));
+      const { mount, bar } = mountShell(file.name, 'doc-book');
       const book = (await openBook(file, mount, () => fontScale)) as BookController & { restyle: () => void };
       if (token !== renderToken) return book.destroy();
       doc = { type: 'book', name: file.name, size: file.size, format: format?.name ?? 'FictionBook', book };
       document.title = `${book.title} — FormatReader`;
+      bar.replaceWith(toolbar(doc));
+      return;
+    }
+
+    if (format?.id === 'pptx') {
+      const { mount, bar } = mountShell(file.name);
+      const slides = await openSlides(file, mount);
+      if (token !== renderToken) return slides.destroy();
+      doc = { type: 'slides', name: file.name, size: file.size, slides };
+      document.title = `${file.name} — FormatReader`;
       bar.replaceWith(toolbar(doc));
       return;
     }
@@ -243,14 +261,61 @@ function toolbar(d: Doc): HTMLElement {
       h('div', { class: 'file-name', title: d.name }, d.type === 'book' ? d.book.title : d.name),
       h('div', { class: 'file-meta' }, fileMeta(d)),
     ),
-    h('div', { class: 'tools' }, ...items, h('button', { type: 'button', class: 'btn', onclick: () => fileInput.click() }, t('openAnother'))),
+    h('div', { class: 'tools' }, ...items, fullscreenButton(d), h('button', { type: 'button', class: 'btn', onclick: () => fileInput.click() }, t('openAnother'))),
   );
 }
+
+// ---------------------------------------------------------------------------
+// Full screen (every viewer). Slides get a real slideshow.
+// ---------------------------------------------------------------------------
+
+const expandIcon = () => svg('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>', 16);
+const shrinkIcon = () => svg('<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>', 16);
+
+function toggleFullscreen() {
+  if (doc?.type === 'slides') return doc.slides.present();
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(() => {});
+    return;
+  }
+  const target = app.querySelector<HTMLElement>('main.doc');
+  target?.requestFullscreen?.().catch(() => {});
+}
+
+function fullscreenButton(d: Doc): HTMLElement | null {
+  if (d.type === 'error') return null;
+  // Element full screen is not available everywhere (e.g. iPhone); slides still get the overlay show.
+  if (d.type !== 'slides' && !document.fullscreenEnabled) return null;
+  const label = d.type === 'slides' ? t('present') : document.fullscreenElement ? t('exitFullscreen') : t('fullscreen');
+  return h(
+    'button',
+    { type: 'button', class: 'btn fs-btn', title: `${label} (F)`, onclick: toggleFullscreen },
+    document.fullscreenElement ? shrinkIcon() : expandIcon(),
+    label,
+  );
+}
+
+// Keep the button label in sync without re-rendering (re-rendering would leave full screen).
+document.addEventListener('fullscreenchange', () => {
+  const btn = app.querySelector('.fs-btn');
+  if (!btn || doc?.type === 'slides' || !doc) return;
+  btn.replaceWith(fullscreenButton(doc) ?? '');
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'f' && e.key !== 'F') return;
+  if (e.metaKey || e.ctrlKey || e.altKey || !doc) return;
+  const target = e.target as HTMLElement | null;
+  if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
+  e.preventDefault();
+  toggleFullscreen();
+});
 
 function fileMeta(d: Doc): string {
   const parts = [formatBytes(d.size)];
   if (d.type === 'pdf') parts.unshift('PDF');
   if (d.type === 'book') parts.unshift(...[d.book.author, d.format].filter(Boolean));
+  if (d.type === 'slides') parts.unshift(`PowerPoint · ${d.slides.count} ${t('slides')}`);
   if (d.type === 'info' && d.format) parts.unshift(d.format.name);
   if (d.type === 'text') parts.unshift(kindLabel(d.kind));
   return parts.join(' · ');
@@ -342,8 +407,8 @@ async function render() {
     return;
   }
   const d = doc;
-  if (d.type === 'book') {
-    // Only refresh the chrome around the reader; moving the reader would reload the book.
+  if (d.type === 'book' || d.type === 'slides') {
+    // Only refresh the chrome around the viewer; rebuilding it would reload the document.
     app.querySelector('.site-header')?.replaceWith(header());
     app.querySelector('.toolbar')?.replaceWith(toolbar(d));
     return;
