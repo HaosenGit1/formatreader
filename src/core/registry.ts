@@ -28,3 +28,14 @@ export function assertUniqueIds(viewers: ViewerEntry[]): void {
     seen.add(v.id);
   }
 }
+
+/**
+ * Applies ?try=<id>,<id>: experimental viewers are dropped unless listed, and
+ * listed ones jump ahead of the stable viewers for the same files.
+ */
+export function withTrials(viewers: ViewerEntry[], search: string): ViewerEntry[] {
+  const tried = new Set((new URLSearchParams(search).get('try') ?? '').split(',').map((x) => x.trim()).filter(Boolean));
+  return viewers
+    .filter((v) => !v.experimental || tried.has(v.id))
+    .map((v) => (v.experimental ? { ...v, priority: (v.priority ?? 50) + 100 } : v));
+}

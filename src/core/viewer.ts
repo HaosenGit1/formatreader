@@ -71,6 +71,12 @@ export interface ViewerEntry {
    * last: Code 20, Text 10, the shell's "unknown file" card 0.
    */
   priority?: number;
+  /**
+   * A new or replacement version under test. Ignored unless the page is
+   * opened with ?try=<id> (comma-separated for several); then it takes
+   * precedence over the stable viewer for the same files. Visitors never see it.
+   */
+  experimental?: boolean;
   /** 'fill': the viewer takes the whole window height (books). Default: the page scrolls. */
   layout?: 'fill';
   /** Fetch this viewer's code in the background while the front page is idle (common formats). */

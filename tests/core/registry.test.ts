@@ -5,7 +5,7 @@ import { describe, expect, test } from 'vitest';
 import { allViewers } from '../../src/categories';
 import { detectFormat, extOf } from '../../src/core/detect-format';
 import { infoEntry } from '../../src/core/info-entry';
-import { assertUniqueIds, pickViewer } from '../../src/core/registry';
+import { assertUniqueIds, pickViewer, withTrials } from '../../src/core/registry';
 import type { ViewerEntry } from '../../src/core/viewer';
 
 const viewers = [...allViewers, infoEntry];
@@ -64,4 +64,19 @@ describe('routing: every sample in samples/code opens in the Code viewer', () =>
       expect(await route(name, new Uint8Array(readFileSync(join(dir, name))))).toBe('words/code');
     });
   }
+});
+
+describe('experimental viewers (?try=)', () => {
+  const stable: ViewerEntry = { id: 'words/slides', category: 'words', accepts: () => true, load: async () => ({ open: async () => ({}) }) };
+  const next: ViewerEntry = { id: 'words/slides-v2', category: 'words', experimental: true, accepts: () => true, load: async () => ({ open: async () => ({}) }) };
+  const ctx = { format: null, name: 'a.pptx', ext: 'pptx', head: new Uint8Array() };
+
+  test('visitors never get the experimental viewer', () => {
+    expect(pickViewer(withTrials([stable, next], ''), ctx)?.id).toBe('words/slides');
+    expect(pickViewer(withTrials([stable, next], '?try=something-else'), ctx)?.id).toBe('words/slides');
+  });
+  test('?try=<id> puts it ahead of the stable one', () => {
+    expect(pickViewer(withTrials([stable, next], '?try=words/slides-v2'), ctx)?.id).toBe('words/slides-v2');
+    expect(pickViewer(withTrials([stable, next], '?try=a,words/slides-v2'), ctx)?.id).toBe('words/slides-v2');
+  });
 });

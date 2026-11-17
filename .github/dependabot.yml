@@ -1,0 +1,27 @@
+# Automatic update checks. Each viewer library gets its OWN pull request, so
+# upgrading one format never changes another. Every PR runs the full test
+# suite (all sample files per viewer) and the speed budget before merging.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    labels: [dependencies]
+    commit-message:
+      prefix: deps
+    groups:
+      # Build and test tools don't reach visitors: update them together.
+      build-tools:
+        dependency-type: development
+        patterns: ['*']
+    # Viewer libraries (xlsx, docx-preview, foliate-js, pptx-preview, echarts,
+    # highlight.js, marked, dompurify, jschardet) stay ungrouped: one PR each.
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    labels: [dependencies]

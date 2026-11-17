@@ -12,7 +12,7 @@ import { formatBytes, h } from './dom';
 import { lang, onLangChange, setLang, strings } from './i18n';
 import { infoEntry } from './info-entry';
 import { messageView } from './info-view';
-import { assertUniqueIds, pickViewer } from './registry';
+import { assertUniqueIds, pickViewer, withTrials } from './registry';
 import type { OpenContext, OpenedView, ViewerEntry, ViewerModule } from './viewer';
 
 const s = strings({
@@ -36,8 +36,9 @@ interface Current {
 }
 
 export function startApp(categoryViewers: ViewerEntry[]): void {
-  const viewers = [...categoryViewers, infoEntry];
-  assertUniqueIds(viewers);
+  assertUniqueIds([...categoryViewers, infoEntry]);
+  // Experimental viewers run only for whoever opens the page with ?try=<id>.
+  const viewers = withTrials([...categoryViewers, infoEntry], location.search);
 
   const app = document.getElementById('app')!;
   const fileInput = h('input', { type: 'file', hidden: true }) as HTMLInputElement;
@@ -123,6 +124,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     } catch {
       /* keep the size at least */
     }
+    if (c.entry.experimental) meta.unshift(`🧪 ${c.entry.id}`);
     const title = c.view.title ?? c.name;
     return h(
       'div',

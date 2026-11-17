@@ -1,0 +1,33 @@
+name: Check SheetJS updates
+
+# SheetJS is not on npm (Dependabot can't track it). Once a month, open an
+# issue if a newer version is published on the SheetJS CDN.
+on:
+  schedule:
+    - cron: '0 6 1 * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Compare installed and latest version
+        id: v
+        run: echo "latest=$(node scripts/check-sheetjs.mjs)" >> "$GITHUB_OUTPUT"
+      - name: Open an issue
+        if: steps.v.outputs.latest != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Update SheetJS to ${{ steps.v.outputs.latest }}"
+          if ! gh issue list --state open --search "$title in:title" --json number --jq '.[0].number' | grep -q .; then
+            gh issue create --title "$title" --label dependencies --body "A newer SheetJS (spreadsheet viewer) is available. Update the xlsx URL in package.json to https://cdn.sheetjs.com/xlsx-${{ steps.v.outputs.latest }}/xlsx-${{ steps.v.outputs.latest }}.tgz, run npm install, and check that CI passes (it opens every spreadsheet sample). See docs/UPDATING.md."
+          fi

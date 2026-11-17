@@ -46,6 +46,8 @@ GBK subtitles, a double-encoded file, UTF-16 from Notepad, code, Markdown and HT
 Each kind of file has its own viewer module; the shell around them knows no file
 formats. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the structure, the
 isolation rules, the speed budget, and how to add a viewer (images, drawings…).
+[docs/UPDATING.md](docs/UPDATING.md) covers library updates, trying new viewer versions
+side by side (`?try=`), and adding formats.
 
 ```
 src/core/                 shell: front page, toolbar, full screen, format detection, viewer registry
