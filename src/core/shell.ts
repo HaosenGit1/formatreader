@@ -16,8 +16,8 @@ import { assertUniqueIds, pickViewer, withTrials } from './registry';
 import type { OpenContext, OpenedView, ViewerEntry, ViewerModule } from './viewer';
 
 const s = strings({
-  // Line breaks at the natural phrase boundaries (same on every screen size).
-  readAny: { en: "Can't open a file?\nNo app needed,\njust read it here.", zh: '打不开文件？\n无需安装软件，\n在这里直接读。' },
+  // Brand slogan: the same words for every visitor.
+  readAny: { en: 'Any Format.\nOne Bridge.', zh: 'Any Format.\nOne Bridge.' },
   openAnother: { en: 'Open another', zh: '换个文件' },
   fullscreen: { en: 'Full screen', zh: '全屏' },
   exitFullscreen: { en: 'Exit full screen', zh: '退出全屏' },
