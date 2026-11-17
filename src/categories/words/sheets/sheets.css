@@ -33,6 +33,7 @@ thead th {
 }
 
 .rownum {
+  white-space: nowrap;
   position: sticky;
   left: 0;
   background: var(--surface-2);

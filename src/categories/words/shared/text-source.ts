@@ -9,6 +9,7 @@ import { decode } from './encoding/codec';
 import { detectEncoding, isBinaryResult, warmDetector, type EncodingResult } from './encoding/detect';
 import { decodeEscapes, type DecodedText, type EscapeKind } from './encoding/escapes';
 import { repairMojibake, type RepairResult } from './encoding/mojibake';
+import { lostToQuestionMarks } from './encoding/question-loss';
 import { ENCODING_CHOICES, encodingName } from './encoding/names';
 
 const s = strings({
@@ -35,6 +36,10 @@ const s = strings({
     zh: '个字符（显示为 �）在文件里已经损坏，无法恢复。',
   },
   showOriginal: { en: 'Show original', zh: '查看原文' },
+  questionLoss: {
+    en: '{n} characters in this file are “?”: the original text (often Chinese, Japanese, Korean, Arabic…) was replaced when the file was saved in a format that could not hold it, such as Excel’s “CSV (Comma delimited)”. It is not in the file any more and cannot be recovered. Use the original file, or save it again as “CSV UTF-8”.',
+    zh: '这个文件里有 {n} 个“?”：原来的文字（常见于中文、日文、韩文、阿拉伯文等）在保存时被替换掉了，原因是保存格式无法容纳这些文字，例如 Excel 的“CSV（逗号分隔）”。文件中已没有原文，无法恢复。请使用原始文件，或重新另存为“CSV UTF-8”。',
+  },
   decodedPrefix: { en: 'This text was encoded as', zh: '这段文字是以下列方式编码的：' },
   decodedSuffix: { en: '— shown decoded.', zh: '——已解码显示。' },
   unicode: { en: 'Unicode escapes (\\u…)', zh: 'Unicode 转义（\\u…）' },
@@ -61,6 +66,9 @@ export class TextSource {
   /** Escapes/Base64 decoding: only viewers meant for reading text turn this on. */
   private decodeEnabled = false;
   decoded: DecodedText | null = null;
+  /** "?"-replaced characters, computed once per decoded text. */
+  private qFor: string | null = null;
+  private qLost = 0;
 
   /** Show \\u…, %…, &#…; and Base64 text decoded when the whole text is encoded that way. */
   enableDecoding(): this {
@@ -127,7 +135,14 @@ export class TextSource {
   notices(onChange: () => void): HTMLElement[] {
     const out: HTMLElement[] = [];
     const det = this.detected;
-    if (det && this.bytes && this.encoding === det.encoding) {
+    if (this.qFor !== this.raw) {
+      this.qFor = this.raw;
+      this.qLost = lostToQuestionMarks(this.raw);
+    }
+    const qLost = this.qLost;
+    if (qLost) out.push(h('div', { class: 'notice warn' }, s('questionLoss').replace('{n}', qLost.toLocaleString())));
+    // "Decoded correctly" would contradict the loss notice: the text is gone whatever the encoding.
+    if (det && this.bytes && this.encoding === det.encoding && !qLost) {
       const name = encodingName(det.encoding, lang());
       if (det.reason === 'statistical' || det.reason === 'fallback') {
         out.push(
