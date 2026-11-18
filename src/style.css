@@ -652,3 +652,161 @@ select {
 .toolbar:has(.back-btn) .tools {
   margin-left: auto;
 }
+
+/* Offline status on the front page, and its list */
+.offline-slot {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.offline-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.offline-line:hover,
+.offline-line:focus-visible {
+  background: var(--surface-2);
+  color: var(--fg);
+}
+
+.offline-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.offline-dot.full {
+  background: var(--good, #1f9d55);
+}
+
+.offline-panel {
+  width: min(520px, calc(100vw - 32px));
+  max-height: min(80vh, 720px);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--fg);
+}
+
+.offline-panel::backdrop {
+  background: rgb(0 0 0 / 35%);
+}
+
+.offline-inner {
+  display: grid;
+  gap: 12px;
+  padding: 18px 20px 20px;
+}
+
+.offline-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.offline-head h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.offline-close {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.offline-close:hover {
+  background: var(--surface-2);
+}
+
+.offline-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.offline-note:empty {
+  display: none;
+}
+
+.offline-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.offline-list li {
+  display: grid;
+  grid-template-columns: 20px auto 1fr;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.offline-list .offline-mark {
+  font-weight: 700;
+}
+
+.offline-list .ready .offline-mark {
+  color: var(--good, #1f9d55);
+}
+
+.offline-list .missing {
+  color: var(--muted);
+}
+
+.offline-ext {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: end;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.offline-all {
+  justify-content: center;
+}
+
+.offline-toast {
+  position: fixed;
+  bottom: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 13px;
+}
+
+.offline-dot.some {
+  background: var(--accent);
+}
+
+.offline-list .partly .offline-mark {
+  color: var(--accent);
+}

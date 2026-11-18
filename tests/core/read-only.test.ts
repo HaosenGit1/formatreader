@@ -42,3 +42,17 @@ describe('read-only guarantee', () => {
     expect(csp).not.toMatch(/https?:\/\/|\*/);
   });
 });
+
+describe('offline service worker (scripts/sw-template.js)', () => {
+  const sw = readFileSync(join(root, 'scripts/sw-template.js'), 'utf8');
+  test('only handles GET requests for this site', () => {
+    expect(sw).toContain("if (req.method !== 'GET' || !req.url.startsWith(scope)) return;");
+  });
+  test('only stores the build’s own files and the page', () => {
+    // Every cache.put stores either the page or a URL from this build's file list.
+    const puts = [...sw.matchAll(/cache\.put\(([^,]+),/g)].map((m) => m[1].trim());
+    expect(new Set(puts)).toEqual(new Set(['PAGE', 'clean', 'href', 'req']));
+    expect(sw).toContain('if (!KNOWN.has(clean)) return;');
+    expect(sw).not.toMatch(/https?:\/\//);
+  });
+});

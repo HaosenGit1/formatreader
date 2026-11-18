@@ -16,7 +16,6 @@ npm run build
 aws s3 sync dist/assets "s3://$BUCKET/assets" --cache-control "public, max-age=31536000, immutable" --only-show-errors
 aws s3 sync dist "s3://$BUCKET" --exclude "assets/*" --delete --cache-control "public, max-age=0, must-revalidate" --only-show-errors
 # Old versioned files are removed last (visitors with an open page may still need them briefly).
-aws s3 sync dist/assets "s3://$BUCKET/assets" --delete --cache-control "public, max-age=31536000, immutable" --only-show-errors
 
-aws cloudfront create-invalidation --distribution-id "$DIST" --paths "/" "/index.html" --query 'Invalidation.Id' --output text >/dev/null
+aws cloudfront create-invalidation --distribution-id "$DIST" --paths "/" "/index.html" "/sw.js" "/manifest.json" --query 'Invalidation.Id' --output text >/dev/null
 echo "Deployed to $SITE"

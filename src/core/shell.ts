@@ -8,6 +8,7 @@
  * file shows an error card; the shell and all other viewers keep working.
  */
 import { withDetectedType } from './mime';
+import { offlineLine } from '../offline/panel';
 import { detectFormat, extOf } from './detect-format';
 import { formatBytes, h } from './dom';
 import { lang, onLangChange, setLang, strings } from './i18n';
@@ -27,6 +28,11 @@ const s = strings({
   pasted: { en: 'Pasted text', zh: '粘贴的文字' },
   failed: { en: 'This file could not be opened', zh: '无法打开这个文件' },
   trail: { en: 'Opened from', zh: '打开自' },
+  offlineTitle: { en: 'Needs the internet', zh: '需要联网' },
+  offlineText: {
+    en: 'The reader for this kind of file could not be downloaded. Connect to the internet and open the file again: once downloaded, it also works offline.',
+    zh: '无法下载这类文件的阅读器。请联网后再打开一次：下载过一次之后，离线也能使用。',
+  },
   back: { en: 'Back', zh: '返回' },
 });
 
@@ -91,6 +97,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
       'main',
       { class: 'landing' },
       h('button', { type: 'button', class: 'circle', onclick: () => fileInput.click() }, h('span', { class: 'circle-text' }, s('readAny'))),
+      offlineLine(),
     );
 
   /** The only loading state: the name fills with colour like a progress bar. */
@@ -214,7 +221,9 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     } catch (err) {
       console.error(`Viewer ${entry.id} failed`, err);
       view = {};
-      mount.replaceChildren(messageView(s('failed'), String((err as Error)?.message ?? err)));
+      // Offline and this viewer's code was never stored: say what to do, not a raw network error.
+      const missingCode = /dynamically imported module|Unable to preload CSS|Failed to fetch|Importing a module script failed|NetworkError|Load failed/i.test(String((err as Error)?.message));
+      mount.replaceChildren(missingCode ? messageView(s('offlineTitle'), s('offlineText')) : messageView(s('failed'), String((err as Error)?.message ?? err)));
     }
     if (my !== token) {
       view.destroy?.();

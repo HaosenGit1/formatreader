@@ -35,10 +35,9 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: us-east-1
-      - name: Upload (versioned files first, page next, old files last)
+      - name: Upload (versioned files first, then the page; old versioned files are kept so open tabs keep working)
         run: |
           aws s3 sync dist/assets "s3://${{ vars.SITE_BUCKET }}/assets" --cache-control "public, max-age=31536000, immutable" --only-show-errors
           aws s3 sync dist "s3://${{ vars.SITE_BUCKET }}" --exclude "assets/*" --delete --cache-control "public, max-age=0, must-revalidate" --only-show-errors
-          aws s3 sync dist/assets "s3://${{ vars.SITE_BUCKET }}/assets" --delete --cache-control "public, max-age=31536000, immutable" --only-show-errors
       - name: Refresh the CDN
-        run: aws cloudfront create-invalidation --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" --paths "/" "/index.html"
+        run: aws cloudfront create-invalidation --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" --paths "/" "/index.html" "/sw.js" "/manifest.json"

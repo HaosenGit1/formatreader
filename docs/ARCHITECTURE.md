@@ -147,3 +147,23 @@ downloaded or sent anywhere. This holds by construction:
 Only small preferences are kept in the browser's `localStorage`: the text size,
 and each book's reading position (keyed by file name and size). No file
 content is stored.
+
+## Offline
+
+FormatReader works with no internet once its code is stored in the browser.
+
+- `scripts/sw-template.js` becomes `dist/sw.js` at build time (`offlinePlugin` in
+  `vite.config.ts`), with this build's exact file list and, per viewer, the files
+  it needs: `base` (its common types, e.g. CSV) and `all` (plus engines loaded for
+  some types, e.g. Excel). Encoding detector and syntax colouring are optional.
+- First visit: the core app is stored; then every app file the page downloads
+  (the pre-loaded text, spreadsheet and code viewers, and any viewer used) is
+  stored as it arrives. Installed as an app: everything is stored.
+- The front page shows "Offline · n of 20 ready"; its list marks each kind of file
+  ✓ (fully offline), ◐ (common types offline) or ○, with a button to store
+  everything (~4 MB, only when the visitor asks).
+- The page is fetched from the network when online (updates arrive), from the
+  store when not. A new version keeps already-stored viewers whose files did not
+  change. Old versioned files stay on S3, so tabs open during a deploy keep working.
+- The worker only handles GET requests for this site's own files; it never sees
+  the files people open (`tests/core/read-only.test.ts` checks this).

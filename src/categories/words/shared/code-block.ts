@@ -72,7 +72,8 @@ const escapeHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;')
 /** Highlighted code with line numbers. Big files are shown without colours to stay fast. */
 export async function codeView(text: string, language: string): Promise<HTMLElement> {
   let htmlLines: string[];
-  const hljs = text.length <= HIGHLIGHT_LIMIT && language !== 'plaintext' ? await highlighter(language) : null;
+  // Colours are optional: if the highlighter can't be loaded (e.g. offline), show plain code.
+  const hljs = text.length <= HIGHLIGHT_LIMIT && language !== 'plaintext' ? await highlighter(language).catch(() => null) : null;
   if (hljs) {
     htmlLines = splitHighlightedLines(hljs.highlight(text, { language, ignoreIllegals: true }).value);
   } else {

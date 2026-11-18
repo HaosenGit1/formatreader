@@ -1,0 +1,23 @@
+/** How each viewer is named in the offline list: what people call the files, and their extensions. */
+export const VIEWER_LABELS: Record<string, { en: string; zh: string; ext: string }> = {
+  'words/text': { en: 'Text & logs', zh: '文本和日志', ext: '.txt .log .md .srt …' },
+  'words/code': { en: 'Code & settings', zh: '代码和配置', ext: '.py .js .json .xml .yaml .ini .reg …' },
+  'words/sheets': { en: 'Spreadsheets', zh: '表格', ext: '.csv .xlsx .xls .ods .numbers …' },
+  'words/docs': { en: 'Word', zh: 'Word', ext: '.docx' },
+  'words/pdf': { en: 'PDF', zh: 'PDF', ext: '.pdf' },
+  'words/slides': { en: 'PowerPoint', zh: 'PowerPoint', ext: '.pptx' },
+  'words/legacy': { en: 'Old Office & WPS', zh: '旧版 Office 和 WPS', ext: '.doc .ppt .wps .dps' },
+  'words/books': { en: 'Ebooks & comics', zh: '电子书和漫画', ext: '.epub .mobi .azw3 .fb2 .cbz' },
+  'words/rtf': { en: 'Rich text', zh: '富文本', ext: '.rtf' },
+  'words/odf': { en: 'OpenDocument', zh: 'OpenDocument', ext: '.odt .odp' },
+  'words/email': { en: 'Email', zh: '邮件', ext: '.eml .msg .mbox .mht' },
+  'words/db': { en: 'Databases', zh: '数据库', ext: '.mdb .accdb .sqlite' },
+  'words/fixed': { en: 'XPS & OFD', zh: 'XPS 和 OFD', ext: '.xps .oxps .ofd' },
+  'words/iwork': { en: 'Apple Pages & Keynote', zh: 'Apple Pages 和 Keynote', ext: '.pages .key' },
+  'words/hwpx': { en: 'Hangul (new)', zh: '韩文 Hangul（新版）', ext: '.hwpx' },
+  'words/hwp': { en: 'Hangul (old)', zh: '韩文 Hangul（旧版）', ext: '.hwp' },
+  'words/palmdoc': { en: 'Palm ebooks', zh: 'Palm 电子书', ext: '.pdb' },
+  'archives/archive': { en: 'Archives', zh: '压缩包', ext: '.zip .7z .rar .tar .xz .iso …' },
+  'archives/gzip': { en: 'GZIP', zh: 'GZIP', ext: '.gz' },
+  'data/comtrade': { en: 'COMTRADE fault records', zh: 'COMTRADE 故障录波', ext: '.cfg + .dat, .cff' },
+};
