@@ -4,6 +4,7 @@
  * encoding, double-encoding repair, and the toolbar/notice UI for all of that.
  */
 import { h } from '../../../core/dom';
+import type { AboutFacts } from '../../../core/viewer';
 import { lang, strings } from '../../../core/i18n';
 import { decode } from './encoding/codec';
 import { detectEncoding, isBinaryResult, warmDetector, type EncodingResult } from './encoding/detect';
@@ -101,6 +102,32 @@ export class TextSource {
     return new TextSource(null, null, 'utf-8', text, repairMojibake(text));
   }
 
+  /** Facts for the "About this file" panel. */
+  about(): AboutFacts {
+    const raw = this.raw.slice(0, 200000);
+    const crlf = (raw.match(/\r\n/g) ?? []).length;
+    const lf = (raw.match(/(?<!\r)\n/g) ?? []).length;
+    const cr = (raw.match(/\r(?!\n)/g) ?? []).length;
+    const kinds = [crlf && 'CRLF', lf && 'LF', cr && 'CR'].filter(Boolean) as Array<'CRLF' | 'LF' | 'CR'>;
+    const destroyed = destroyedKind(this.raw);
+    return {
+      encoding: this.encoding,
+      bom: !!this.detected && this.detected.bomLength > 0 && this.encoding === this.detected.encoding,
+      lineEnding: kinds.length > 1 ? 'mixed' : kinds[0],
+      repaired: this.repair && !this.showOriginal ? this.repair.layers : undefined,
+      escapes: this.decoded && !this.showOriginal ? this.decoded.kinds : undefined,
+      damage: destroyed ?? (this.questionLost() > 0 ? 'question' : undefined),
+    };
+  }
+
+  private questionLost(): number {
+    if (this.qFor !== this.raw) {
+      this.qFor = this.raw;
+      this.qLost = lostToQuestionMarks(this.raw);
+    }
+    return this.qLost;
+  }
+
   /** The text to show: repaired or decoded, unless the user asked for the original. */
   get text(): string {
     if (this.showOriginal) return this.raw;
@@ -146,11 +173,7 @@ export class TextSource {
   notices(onChange: () => void): HTMLElement[] {
     const out: HTMLElement[] = [];
     const det = this.detected;
-    if (this.qFor !== this.raw) {
-      this.qFor = this.raw;
-      this.qLost = lostToQuestionMarks(this.raw);
-    }
-    const qLost = this.qLost;
+    const qLost = this.questionLost();
     const destroyed = destroyedKind(this.raw);
     if (destroyed) out.push(h('div', { class: 'notice warn' }, s(destroyed === 'lost' ? 'destroyedLost' : 'destroyedMemory')));
     if (qLost) out.push(h('div', { class: 'notice warn' }, s('questionLoss').replace('{n}', qLost.toLocaleString())));

@@ -104,6 +104,7 @@ async function openAvi(file: File, ctx: OpenContext): Promise<OpenedView | strin
   return {
     meta: () => [`${player.width} × ${player.height}`, time(player.duration), `AVI · ${player.codec}`, `${Math.round(player.fps)} fps`],
     tools: () => player.tools,
+    about: () => ({ codec: player.codec }),
     destroy: () => player.destroy(),
   };
 }
@@ -173,6 +174,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
       ...(ci?.fps ? [`${Math.round(ci.fps)} fps`] : []),
     ],
     tools: () => tools,
+    about: () => ({ codec }),
     destroy: () => {
       repack?.destroy();
       video.pause();

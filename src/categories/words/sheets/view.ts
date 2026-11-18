@@ -67,6 +67,7 @@ async function openDelimited(file: File, ctx: OpenContext): Promise<OpenedView> 
       const enc = src.tool(changed);
       return enc ? [enc] : [];
     },
+    about: () => src.about(),
     notices: () => src.notices(changed),
     onFontScale: () => {},
     onLangChange: () => draw(),

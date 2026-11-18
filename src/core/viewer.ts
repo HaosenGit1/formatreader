@@ -37,7 +37,26 @@ export interface OpenContext {
   openFile(file: File, options?: { replace?: boolean }): void;
 }
 
+/** Facts a viewer knows about the file, for the "About this file" panel. */
+export interface AboutFacts {
+  /** Text: the character encoding the file is really in (WHATWG label, e.g. 'gb18030'). */
+  encoding?: string;
+  /** Text: starts with a byte-order mark. */
+  bom?: boolean;
+  lineEnding?: 'CRLF' | 'LF' | 'CR' | 'mixed';
+  /** Text that was mis-decoded and saved: the encodings undone, e.g. ['gb18030'] or ['windows-1252→windows-1251']. */
+  repaired?: string[];
+  /** Text written as escapes (URL %…, \\u…, Base64…). */
+  escapes?: string[];
+  /** Characters already destroyed in the file. */
+  damage?: 'question' | 'lost' | 'memory';
+  /** Video/sound codec. */
+  codec?: string;
+}
+
 export interface OpenedView {
+  /** Facts for the "About this file" panel (encoding, codec…). */
+  about?(): AboutFacts;
   /** Shown in the toolbar instead of the file name (e.g. a book's title). */
   title?: string;
   /** Short facts for the toolbar's second line, e.g. ['Excel', '3 sheets']. */

@@ -59,6 +59,7 @@ async function makeView(src: TextSource, name: string, ctx: OpenContext): Promis
       }
       return out;
     },
+    about: () => src.about(),
     notices: () => src.notices(changed),
     onFontScale: () => { /* sizes follow the --reader-scale CSS variable */ },
     onLangChange: () => void draw(),

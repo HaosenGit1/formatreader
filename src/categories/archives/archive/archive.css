@@ -113,3 +113,15 @@
   color: #d03b3b;
   font-size: 13px;
 }
+
+.archive-status {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-size: 14px;
+}
+
+.archive-status:empty {
+  display: none;
+}

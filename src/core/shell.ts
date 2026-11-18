@@ -22,6 +22,8 @@ const s = strings({
   // Brand slogan: the same words for every visitor.
   readAny: { en: 'Any Format.\nOne Bridge.', zh: 'Any Format.\nOne Bridge.' },
   openAnother: { en: 'Open another', zh: '换个文件' },
+  about: { en: 'About this file: format, where it comes from, how to open it elsewhere', zh: '关于此文件：格式、来源、在其他软件中怎么打开' },
+  aboutShort: { en: 'About', zh: '文件说明' },
   fullscreen: { en: 'Full screen', zh: '全屏' },
   exitFullscreen: { en: 'Exit full screen', zh: '退出全屏' },
   smaller: { en: 'Smaller text', zh: '缩小文字' },
@@ -54,6 +56,7 @@ interface Current {
   file?: File | FolderSource;
   entry: ViewerEntry;
   view: OpenedView;
+  format: OpenContext['format'];
 }
 
 export function startApp(categoryViewers: ViewerEntry[]): void {
@@ -149,6 +152,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
         ),
       );
     }
+    if (c.size >= 0) tools.push(h('button', { type: 'button', class: 'btn about-btn', title: s('about'), onclick: () => toggleAbout(c) }, 'ⓘ ', s('aboutShort')));
     tools.push(fullscreenButton(c.view));
     tools.push(h('button', { type: 'button', class: 'btn', onclick: () => fileInput.click() }, s('openAnother')));
 
@@ -181,6 +185,27 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
       ),
       h('div', { class: 'tools' }, ...tools),
     );
+  }
+
+  /** "About this file": what it is, where it comes from, how to open it elsewhere (loaded on demand). */
+  async function toggleAbout(c: Current) {
+    const slot = app.querySelector('.about-slot');
+    if (!slot) return;
+    if (slot.firstChild) {
+      slot.replaceChildren();
+      return;
+    }
+    const { aboutPanel } = await import('./about/panel');
+    if (current !== c) return;
+    let facts = {};
+    try {
+      facts = c.view.about?.() ?? {};
+    } catch (err) {
+      console.error(`Viewer ${c.entry.id} failed to describe the file`, err);
+    }
+    const dot = c.name.lastIndexOf('.');
+    const ext = dot > 0 ? c.name.slice(dot + 1).toLowerCase() : '';
+    slot.replaceChildren(aboutPanel({ name: c.name, ext, size: c.size, format: c.format, viewerId: c.entry.id, facts }, () => slot.replaceChildren()));
   }
 
   function notices(c: Current): HTMLElement {
@@ -227,7 +252,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
   async function show(entry: ViewerEntry, name: string, size: number, format: OpenContext['format'], run: (mod: ViewerModule, ctx: OpenContext) => Promise<OpenedView>, my: number) {
     // Lay out the page first; the viewer draws into `mount` under the loading cover.
     const mount = h('div', { class: 'viewer-mount' });
-    const page = h('main', { class: `doc${entry.layout === 'fill' ? ' doc-fill' : ''}` }, h('div', { class: 'toolbar' }), h('div', { class: 'notices', hidden: true }), mount);
+    const page = h('main', { class: `doc${entry.layout === 'fill' ? ' doc-fill' : ''}` }, h('div', { class: 'toolbar' }), h('div', { class: 'about-slot' }), h('div', { class: 'notices', hidden: true }), mount);
     const cover = h('div', { class: 'loading-cover' }, loadingView());
     app.replaceChildren(header(), page, cover);
 
@@ -247,7 +272,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
       view.destroy?.();
       return;
     }
-    current = { name, size, entry, view, file: shownFile ?? undefined };
+    current = { name, size, entry, view, format, file: shownFile ?? undefined };
     shownFile = null;
     refreshChrome();
     cover.remove();

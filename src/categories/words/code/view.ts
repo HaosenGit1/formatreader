@@ -84,6 +84,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
       }
       return out;
     },
+    about: () => src.about(),
     notices: () => [...src.notices(changed), ...(jsonError ? [h('div', { class: 'notice' }, `${s('invalidJson')} ${jsonError}`)] : [])],
     onFontScale: () => {},
     onLangChange: () => void draw(),

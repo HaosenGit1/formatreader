@@ -25,12 +25,21 @@ const FORBIDDEN: Array<[RegExp, string]> = [
   [/method\s*:\s*['"](POST|PUT|PATCH|DELETE)/i, 'HTTP writes'],
 ];
 
+/**
+ * The only exception, asked for by the user: "Extract all" saves the files *inside* an
+ * archive as NEW files — into a new folder it creates, or as a new ZIP download. It never
+ * writes to the archive or to anything that already exists (tests/archives/extract-all.test.ts).
+ */
+const EXCEPTIONS: Record<string, string[]> = {
+  'src/categories/archives/archive/extract-all.ts': ['File System Access pickers (write access to disk)', 'file handles that can write', 'download links'],
+};
+
 describe('read-only guarantee', () => {
   for (const file of files(join(root, 'src'))) {
     const rel = file.slice(root.length + 1);
     test(rel, () => {
       const code = readFileSync(file, 'utf8').replace(/^\s*(\/\/|\*).*$/gm, '');
-      for (const [re, what] of FORBIDDEN) expect(re.test(code), `${rel} uses ${what}`).toBe(false);
+      for (const [re, what] of FORBIDDEN) if (!EXCEPTIONS[rel]?.includes(what)) expect(re.test(code), `${rel} uses ${what}`).toBe(false);
     });
   }
 
