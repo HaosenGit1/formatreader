@@ -25,6 +25,10 @@ export const drawingsViewers: ViewerEntry[] = [
       const id = format?.id ?? '';
       if (['glb', '3mf', 'fbx', 'stl'].includes(id)) return true;
       if (ext === 'stl' || ext === 'glb' || ext === 'fbx') return true;
+      // STEP and IFC are both "ISO-10303-21" text; the schema line tells them apart.
+      if (['step', 'stp', 'p21', 'ifc'].includes(ext)) return /ISO-10303-21/.test(text(head, 200));
+      if (ext === 'iges' || ext === 'igs') return /^.{72}S\s*1\s*$/m.test(text(head, 400)) || /S\s+1\r?\n/.test(text(head, 400));
+      if (ext === 'brep') return /DBRep_DrawableShape|CASCADE Topology/.test(text(head, 300));
       if (ext === 'ply') return text(head, 3) === 'ply';
       if (ext === 'gltf') return /"asset"/.test(text(head));
       // .obj is also a compiler's object file: only Wavefront geometry text.

@@ -44,6 +44,11 @@ function offlinePlugin(): Plugin {
       const chunks = Object.values(bundle).filter((c): c is Chunk & typeof c => c.type === 'chunk') as unknown as Chunk[];
       const byFile = new Map(chunks.map((c) => [c.fileName, c]));
       const assets = Object.values(bundle).filter((a) => a.type === 'asset').map((a) => a.fileName);
+      // Workers are emitted as assets: what they load (e.g. WebAssembly) is found in their source.
+      const assetText = (f: string) => {
+        const a = bundle[f];
+        return a?.type === 'asset' && f.endsWith('.js') ? String(a.source) : '';
+      };
       // Optional extras a viewer works without: the encoding detector (detection falls back to
       // built-in checks) and syntax colouring (code shows uncoloured).
       const optional = (c: Chunk) => /jschardet|highlight\.js|\/langs\//.test(c.facadeModuleId ?? c.fileName);
@@ -58,7 +63,12 @@ function offlinePlugin(): Plugin {
             files.add(c.fileName);
             c.viteMetadata?.importedCss.forEach((f) => files.add(f));
             c.viteMetadata?.importedAssets.forEach((f) => files.add(f));
-            for (const a of assets) if (c.code.includes(a.split('/').pop()!)) files.add(a); // e.g. WebAssembly loaded by URL
+            for (const a of assets) {
+              if (!c.code.includes(a.split('/').pop()!)) continue; // e.g. WebAssembly loaded by URL
+              files.add(a);
+              const inner = assetText(a);
+              for (const b of assets) if (inner && inner.includes(b.split('/').pop()!)) files.add(b);
+            }
             for (const f of withDynamic ? [...c.imports, ...c.dynamicImports] : c.imports) {
               const next = byFile.get(f);
               if (next) visit(next);
@@ -152,7 +162,10 @@ function portablePlugin(): Plugin {
       scripts.unshift(shim);
       page = page.replace('<script type="module">', `<script>${shim}</script>\n    <script type="module">`);
       const hashes = scripts.map((code) => `'sha256-${createHash('sha256').update(code).digest('base64')}'`).join(' ');
-      page = page.replace(/script-src 'self'/, `script-src 'self' ${hashes}`).replace(/default-src 'self' blob:;/, "default-src 'self' blob:; worker-src blob: data:;");
+      // 'unsafe-eval': the CAD engines' glue builds functions at run time. On the website they run in a
+      // worker, outside this policy; a file opened from disk can't start such a worker. Inline scripts
+      // (e.g. inside documents) stay blocked: only the hashed scripts above may run.
+      page = page.replace(/script-src 'self'/, `script-src 'self' ${hashes} 'unsafe-eval'`).replace(/default-src 'self' blob:;/, "default-src 'self' blob:; worker-src blob: data:;");
       const stamp = new Date().toISOString().slice(0, 10);
       page = page.replace('<title>FormatReader</title>', `<title>FormatReader</title>\n    <meta name="formatreader-portable" content="${stamp}" />`);
       if (/src="\.?\/?assets\//.test(page) || page.includes('__VITE_PRELOAD__')) throw new Error('portable: something was not inlined');

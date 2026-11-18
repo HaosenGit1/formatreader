@@ -18,3 +18,6 @@ declare module 'exifr/dist/lite.esm.mjs' {
   };
   export default exifr;
 }
+
+// Open CASCADE importer (Emscripten module, CommonJS).
+declare module 'occt-import-js';

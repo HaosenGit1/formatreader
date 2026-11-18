@@ -233,3 +233,118 @@ table = sentinel + struct.pack('<IB', 1 + 9 + len(logo), 1) + struct.pack('<BII'
 open(os.path.join(OUT, 'preview-only.dwg'), 'wb').write(bytes(head) + table + logo)
 
 print('samples/drawings:', ', '.join(sorted(os.listdir(OUT))))
+
+
+# ----------------------------------------------------------------------------- STEP and IFC (small, hand-written)
+
+def step_box():
+    """A 20×10×5 mm box as an advanced B-rep (STEP AP214)."""
+    P = [(0, 0, 0), (20, 0, 0), (20, 10, 0), (0, 10, 0), (0, 0, 5), (20, 0, 5), (20, 10, 5), (0, 10, 5)]
+    faces = [(0, 3, 2, 1), (4, 5, 6, 7), (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)]
+    L, n = [], [0]
+    def e(text):
+        n[0] += 1
+        L.append(f'#{n[0]}={text};')
+        return n[0]
+    # Advanced B-rep (as CAD programs export): vertices, straight edges, planar faces.
+    def pt(p):
+        return e(f"CARTESIAN_POINT('',({p[0]:.1f},{p[1]:.1f},{p[2]:.1f}))")
+    def direction(d):
+        return e(f"DIRECTION('',({d[0]:.1f},{d[1]:.1f},{d[2]:.1f}))")
+    verts = [e(f"VERTEX_POINT('',#{pt(p)})") for p in P]
+    edges = {}
+    def edge(a, b):
+        if (a, b) in edges:
+            return edges[(a, b)], '.T.'
+        if (b, a) in edges:
+            return edges[(b, a)], '.F.'
+        d = [P[b][k] - P[a][k] for k in range(3)]
+        ln = math.sqrt(sum(c * c for c in d))
+        line = e(f"LINE('',#{pt(P[a])},#{e(f'VECTOR({chr(39)}{chr(39)},#{direction([c / ln for c in d])},{ln:.1f})')})")
+        edges[(a, b)] = e(f"EDGE_CURVE('',#{verts[a]},#{verts[b]},#{line},.T.)")
+        return edges[(a, b)], '.T.'
+    face_ids = []
+    for f in faces:
+        oes = []
+        for k in range(4):
+            ec, sense = edge(f[k], f[(k + 1) % 4])
+            oes.append(e(f"ORIENTED_EDGE('',*,*,#{ec},{sense})"))
+        loop = e("EDGE_LOOP('',(" + ','.join(f'#{o}' for o in oes) + '))')
+        bound = e(f"FACE_OUTER_BOUND('',#{loop},.T.)")
+        a, b, c = (P[f[0]], P[f[1]], P[f[2]])
+        u = [b[k] - a[k] for k in range(3)]; v = [c[k] - b[k] for k in range(3)]
+        nrm = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]]
+        nl = math.sqrt(sum(x * x for x in nrm))
+        ul = math.sqrt(sum(x * x for x in u))
+        plane = e(f"PLANE('',#{e(f'AXIS2_PLACEMENT_3D({chr(39)}{chr(39)},#{pt(a)},#{direction([x / nl for x in nrm])},#{direction([x / ul for x in u])})')})")
+        face_ids.append(e(f"ADVANCED_FACE('',(#{bound}),#{plane},.T.)"))
+    shell = e('CLOSED_SHELL(\'\',(' + ','.join(f'#{i}' for i in face_ids) + '))')
+    brep = e(f"MANIFOLD_SOLID_BREP('box',#{shell})")
+    origin = e("CARTESIAN_POINT('',(0.,0.,0.))")
+    axis = e(f"AXIS2_PLACEMENT_3D('',#{origin},$,$)")
+    mm = e('( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) )')
+    rad = e('( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) )')
+    sr = e('( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() )')
+    unc = e(f"UNCERTAINTY_MEASURE_WITH_UNIT(LENGTH_MEASURE(1.E-07),#{mm},'distance_accuracy_value','')")
+    ctx = e(f"( GEOMETRIC_REPRESENTATION_CONTEXT(3) GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT((#{unc})) GLOBAL_UNIT_ASSIGNED_CONTEXT((#{mm},#{rad},#{sr})) REPRESENTATION_CONTEXT('','') )")
+    rep = e(f"ADVANCED_BREP_SHAPE_REPRESENTATION('',(#{axis},#{brep}),#{ctx})")
+    # Product structure: how STEP readers find the shape (product → definition → shape → representation).
+    app = e("APPLICATION_CONTEXT('automotive_design')")
+    e(f"APPLICATION_PROTOCOL_DEFINITION('international standard','automotive_design',2000,#{app})")
+    pctx = e(f"PRODUCT_CONTEXT('',#{app},'mechanical')")
+    prod = e(f"PRODUCT('box','Sample box','',(#{pctx}))")
+    form = e(f"PRODUCT_DEFINITION_FORMATION('','',#{prod})")
+    dctx = e(f"PRODUCT_DEFINITION_CONTEXT('part definition',#{app},'design')")
+    pdef = e(f"PRODUCT_DEFINITION('design','',#{form},#{dctx})")
+    pds = e(f"PRODUCT_DEFINITION_SHAPE('','',#{pdef})")
+    e(f"SHAPE_DEFINITION_REPRESENTATION(#{pds},#{rep})")
+    head = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('FormatReader sample box'),'2;1');\nFILE_NAME('box.step','2026-11-18T00:00:00',(''),(''),'FormatReader samples','','');\nFILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }'));\nENDSEC;\nDATA;\n"
+    return head + '\n'.join(L) + '\nENDSEC;\nEND-ISO-10303-21;\n'
+
+
+open(os.path.join(OUT, 'box.step'), 'w').write(step_box())
+
+IFC = """ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('ViewDefinition [CoordinationView]'),'2;1');
+FILE_NAME('wall.ifc','2026-11-18T00:00:00',(''),(''),'FormatReader samples','','');
+FILE_SCHEMA(('IFC4'));
+ENDSEC;
+DATA;
+#1=IFCCARTESIANPOINT((0.,0.,0.));
+#2=IFCDIRECTION((0.,0.,1.));
+#3=IFCDIRECTION((1.,0.,0.));
+#4=IFCAXIS2PLACEMENT3D(#1,#2,#3);
+#5=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,1.E-05,#4,$);
+#6=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);
+#7=IFCUNITASSIGNMENT((#6));
+#8=IFCOWNERHISTORY($,$,$,.NOCHANGE.,$,$,$,0);
+#9=IFCPROJECT('0YvctVUKr0kugbFTf53O9L',$,'FormatReader sample',$,$,$,$,(#5),#7);
+#10=IFCLOCALPLACEMENT($,#4);
+#11=IFCSITE('1YvctVUKr0kugbFTf53O9L',$,'Site',$,$,#10,$,$,.ELEMENT.,$,$,$,$,$);
+#12=IFCBUILDING('2YvctVUKr0kugbFTf53O9L',$,'Substation building',$,$,#10,$,$,.ELEMENT.,$,$,$);
+#13=IFCBUILDINGSTOREY('3YvctVUKr0kugbFTf53O9L',$,'Ground floor',$,$,#10,$,$,.ELEMENT.,0.);
+#20=IFCCARTESIANPOINT((0.,0.));
+#21=IFCAXIS2PLACEMENT2D(#20,$);
+#22=IFCRECTANGLEPROFILEDEF(.AREA.,'Wall',#21,6.,0.3);
+#23=IFCEXTRUDEDAREASOLID(#22,#4,#2,3.);
+#24=IFCSHAPEREPRESENTATION(#5,'Body','SweptSolid',(#23));
+#25=IFCPRODUCTDEFINITIONSHAPE($,$,(#24));
+#26=IFCWALL('4YvctVUKr0kugbFTf53O9L',$,'Wall',$,$,#10,#25,$,.STANDARD.);
+#27=IFCCARTESIANPOINT((0.,2.,0.));
+#28=IFCAXIS2PLACEMENT3D(#27,#2,#3);
+#29=IFCLOCALPLACEMENT($,#28);
+#30=IFCRECTANGLEPROFILEDEF(.AREA.,'Slab',#21,6.,4.);
+#31=IFCEXTRUDEDAREASOLID(#30,#4,#2,0.25);
+#32=IFCSHAPEREPRESENTATION(#5,'Body','SweptSolid',(#31));
+#33=IFCPRODUCTDEFINITIONSHAPE($,$,(#32));
+#34=IFCSLAB('5YvctVUKr0kugbFTf53O9L',$,'Floor slab',$,$,#29,#33,$,.FLOOR.);
+#40=IFCRELAGGREGATES('6YvctVUKr0kugbFTf53O9L',$,$,$,#9,(#11));
+#41=IFCRELAGGREGATES('7YvctVUKr0kugbFTf53O9L',$,$,$,#11,(#12));
+#42=IFCRELAGGREGATES('8YvctVUKr0kugbFTf53O9L',$,$,$,#12,(#13));
+#43=IFCRELCONTAINEDINSPATIALSTRUCTURE('9YvctVUKr0kugbFTf53O9L',$,$,$,(#26,#34),#13);
+ENDSEC;
+END-ISO-10303-21;
+"""
+open(os.path.join(OUT, 'substation.ifc'), 'w').write(IFC)
+print('also made box.step, substation.ifc')

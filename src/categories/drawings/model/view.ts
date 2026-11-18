@@ -24,7 +24,12 @@ const s = strings({
 const extOf = (name: string) => /\.([a-z0-9]{1,6})$/i.exec(name)?.[1]?.toLowerCase() ?? '';
 
 /** Which loader a file needs. */
-export function modelKind(formatId: string | undefined, ext: string): 'stl' | 'obj' | 'ply' | 'gltf' | 'glb' | '3mf' | 'fbx' | null {
+export function modelKind(formatId: string | undefined, ext: string): 'stl' | 'obj' | 'ply' | 'gltf' | 'glb' | '3mf' | 'fbx' | 'step' | 'iges' | 'brep' | 'ifc' | null {
+  // IFC first: it is "ISO-10303-21" text too, so the detector may call it STEP.
+  if (ext === 'ifc' || formatId === 'ifc') return 'ifc';
+  if (ext === 'step' || ext === 'stp' || ext === 'p21' || formatId === 'step') return 'step';
+  if (ext === 'iges' || ext === 'igs' || formatId === 'iges') return 'iges';
+  if (ext === 'brep') return 'brep';
   if (formatId === 'glb' || ext === 'glb') return 'glb';
   if (formatId === '3mf' || ext === '3mf') return '3mf';
   if (formatId === 'fbx' || ext === 'fbx') return 'fbx';
@@ -74,12 +79,15 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   } else if (kind === 'fbx') {
     const { FBXLoader } = await import('three/addons/loaders/FBXLoader.js');
     object = new FBXLoader().parse(data, '');
+  } else if (kind === 'step' || kind === 'iges' || kind === 'brep' || kind === 'ifc') {
+    const { loadCad } = await import('./cad');
+    object = await loadCad(THREE, new Uint8Array(data.slice(0)), kind);
   } else {
     throw new Error('Unknown 3D model type.');
   }
 
-  // 3D printing and CAD formats (STL, 3MF) use "Z is up"; three.js uses "Y is up": stand them upright.
-  if (kind === 'stl' || kind === '3mf') {
+  // 3D printing and CAD formats (STL, 3MF, STEP, IGES) use "Z is up"; three.js uses "Y is up": stand them upright.
+  if (kind === 'stl' || kind === '3mf' || kind === 'step' || kind === 'iges' || kind === 'brep') {
     object.rotation.x = -Math.PI / 2;
     object.updateMatrixWorld(true);
   }
@@ -191,7 +199,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
     meta: () => [
       kind!.toUpperCase(),
       `${Math.round(triangles).toLocaleString()} ${s('triangles')}`,
-      `${s('size')} ${fmt(size.x)} × ${fmt(size.y)} × ${fmt(size.z)}`,
+      `${s('size')} ${fmt(size.x)} × ${fmt(size.y)} × ${fmt(size.z)}${kind === 'ifc' ? ' m' : kind === 'step' || kind === 'iges' ? ' mm' : ''}`,
     ],
     tools: () => tools,
     destroy: () => {

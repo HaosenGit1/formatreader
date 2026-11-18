@@ -3,9 +3,13 @@
 Drop any file into the browser — FormatReader detects the format and shows it.
 Everything runs locally: files are never uploaded, and nothing is downloaded or saved.
 
-**Categories:** Words (now) · Images · Drawings · Sounds · Videos (later)
+**Categories:** Words · Images · Drawings (now) · Sounds · Videos (later).
+Works offline, and as one portable file (`FormatReader.html`) for computers without internet.
+The full, test-checked list is on [formatreader.com/formats.html](https://formatreader.com/formats.html).
 
-## What works today (Words)
+## What works today
+
+### Words
 
 | Kind | Formats | View |
 | --- | --- | --- |
@@ -32,7 +36,45 @@ Everything runs locally: files are never uploaded, and nothing is downloaded or 
 | COMTRADE (power systems) | .cff, .zip with .cfg+.dat, .cfg (details) | Stacked waveforms, digital lanes, trigger, zoom, table |
 | Archives | ZIP, RAR, 7Z, TAR, ISO, CAB, XZ, BZ2, GZ | File list; any file inside opens in place; passwords |
 
-Pasting text (⌘V / Ctrl+V) works too. Every viewer has a full-screen mode (F).
+### Images
+
+| Kind | Formats | View |
+| --- | --- | --- |
+| Photos & pictures | JPEG, PNG, GIF, WebP, AVIF, BMP, ICO, SVG/SVGZ | Zoom, pan, rotate, photo details (EXIF) |
+| iPhone photos | HEIC / HEIF | Decoded here in every browser (libheif) |
+| TIFF, Photoshop | TIFF (multi-page), PSD | Pages; flattened image |
+| Camera RAW | CR2, CR3, NEF, ARW, RAF, ORF, RW2, PEF, DNG… | The camera's embedded preview |
+| HDR & textures | OpenEXR, Radiance HDR, TGA | Auto exposure + tone mapping |
+| Medical | DICOM (uncompressed, RLE, JPEG baseline) | Scan window, frames; no patient identifiers shown |
+
+### Drawings
+
+| Kind | Formats | View |
+| --- | --- | --- |
+| CAD 2D | DXF (any version, any code page) | Lines, arcs, splines, text, blocks, dimensions, layers |
+| AutoCAD | DWG | The preview picture saved in the file |
+| 3D | STL, OBJ, PLY, glTF/GLB, 3MF, FBX | Turn, zoom, wireframe, size |
+| CAD & BIM | STEP, IGES, BREP, IFC | Same 3D view (engines load on demand) |
+| Diagrams | Visio VSDX, ODG, XMind | Page text; preview; outline |
+
+Pasting text (⌘V / Ctrl+V) works too. Every viewer has a full-screen mode (F); on iPhones,
+where browsers allow real full screen only for video, the page fills the screen itself.
+
+## Open-source engines
+
+Viewers load these only when a file needs them. All are used unmodified.
+
+| Engine | Used for | Licence |
+| --- | --- | --- |
+| [libheif-js](https://github.com/catdad-experiments/libheif-js) | HEIC | LGPL-3.0 |
+| [occt-import-js](https://github.com/kovacsv/occt-import-js) (Open CASCADE) | STEP, IGES, BREP | LGPL-2.1 |
+| [web-ifc](https://github.com/ThatOpen/engine_web-ifc) | IFC | MPL-2.0 |
+| [three.js](https://threejs.org) | 3D view, EXR/HDR/TGA decoding | MIT |
+| [libarchive.js](https://github.com/nika-begiashvili/libarchivejs) | Archives | MIT (libarchive: BSD) |
+| [sql.js](https://github.com/sql-js/sql.js) | SQLite | MIT |
+| [SheetJS](https://sheetjs.com) | Spreadsheets | Apache-2.0 |
+| [foliate-js](https://github.com/johnfactotum/foliate-js) | Ebooks | MIT |
+| dxf-parser, dicom-parser, UTIF, ag-psd, exifr, mdb-reader, docx-preview, pptx-preview, echarts, highlight.js, marked, DOMPurify, postal-mime, msgreader, hwp.js, fflate, jschardet | Various | MIT / Apache-2.0 / ISC / BSD-style (see each package) |
 
 ## Develop
 

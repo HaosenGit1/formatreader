@@ -42,6 +42,7 @@ const DRAWINGS = [
   { name: t('CAD drawings', 'CAD 图纸'), viewer: 'drawings/dxf', ext: ['dxf'] },
   { name: t('AutoCAD DWG (preview)', 'AutoCAD DWG（预览）'), viewer: 'drawings/preview', ext: ['dwg'] },
   { name: t('3D models', '3D 模型'), viewer: 'drawings/model', ext: ['stl', 'obj', 'ply', 'glb', 'gltf', '3mf', 'fbx'] },
+  { name: t('CAD & BIM models', 'CAD 和 BIM 模型'), viewer: 'drawings/model', ext: ['step', 'stp', 'iges', 'igs', 'brep', 'ifc'] },
   { name: t('Diagrams', '图表'), viewer: ['drawings/preview', 'drawings/mindmap'], ext: ['vsdx', 'odg', 'xmind'] },
 ];
 
@@ -56,7 +57,7 @@ const COMING = [
   { name: t('More images', '更多图片'), ext: ['jxl', 'jp2', 'dds', 'ktx2'] },
   { name: t('Sounds', '音频'), ext: ['mp3', 'wav', 'flac', 'm4a', 'aac', 'ogg', 'opus', 'wma'] },
   { name: t('Videos', '视频'), ext: ['mp4', 'mov', 'webm', 'mkv', 'avi', 'wmv'] },
-  { name: t('More drawings', '更多图纸'), ext: ['step', 'iges', 'ifc', 'vsd', 'kmz'] },
+  { name: t('More drawings', '更多图纸'), ext: ['vsd', 'kmz', 'skp'] },
   { name: t('System logs', '系统日志'), ext: ['evtx', 'plist', 'journal', 'pcap'] },
   { name: t('More documents & data', '更多文档和数据'), ext: ['chm', 'djvu', 'parquet', 'h5', 'mat', 'pst'] },
 ];
@@ -75,7 +76,7 @@ function codeGroups(root) {
     'Data / config': t('Data & settings', '数据和配置'),
   };
   // Extensions that belong to (or are shared with) another group on this page.
-  const elsewhere = new Set(['key', 'pub', 'cfg', 'mat', 'ps', 'nc', 'fb2', 'svg', 'dxf', 'obj']);
+  const elsewhere = new Set(['key', 'pub', 'cfg', 'mat', 'ps', 'nc', 'fb2', 'svg', 'dxf', 'obj', 'step', 'stp', 'p21', 'ifc']);
   const groups = new Map();
   let section = null;
   for (const line of block.split('\n')) {

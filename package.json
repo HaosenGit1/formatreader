@@ -35,11 +35,13 @@
     "libheif-js": "1.23.5",
     "marked": "18.2.1",
     "mdb-reader": "3.2.1",
+    "occt-import-js": "0.0.23",
     "postal-mime": "4.2.1",
     "pptx-preview": "1.0.7",
     "sql.js": "1.16.0",
     "three": "0.187.0",
     "utif": "3.1.0",
+    "web-ifc": "0.0.78",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
