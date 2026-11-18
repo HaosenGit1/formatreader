@@ -30,6 +30,18 @@ const s = strings({
   larger: { en: 'Larger text', zh: '放大文字' },
   pasted: { en: 'Pasted text', zh: '粘贴的文字' },
   failed: { en: 'This file could not be opened', zh: '无法打开这个文件' },
+  bigLoading: { en: 'Large file ({size}): this can take a moment.', zh: '文件较大（{size}）：需要一点时间。' },
+  stillWorking: { en: 'Still working…', zh: '仍在处理…' },
+  heavyTitle: { en: 'This file is very large', zh: '这个文件非常大' },
+  heavyText: { en: '“{name}” is {size}. Files of this kind above about {limit} usually don’t fit in a browser’s memory{phone}: the page may stop responding or close.', zh: '“{name}”有 {size}。这类文件超过约 {limit} 时，通常超出浏览器的内存{phone}：页面可能会卡住或关闭。' },
+  heavyPhone: { en: ' on a phone', zh: '（手机上）' },
+  tryAnyway: { en: 'Try anyway', zh: '仍然尝试' },
+  elsewhere: { en: 'How to open it elsewhere', zh: '在其他软件中怎么打开' },
+  memoryTitle: { en: 'Too big for this browser’s memory', zh: '超出了浏览器的内存' },
+  memoryText: { en: '“{name}” ({size}) needs more memory than this browser tab can use. Try a computer with Chrome or Edge, close other tabs, or open it with one of the apps under “About”.', zh: '“{name}”（{size}）需要的内存超过了这个浏览器标签页能用的上限。可以换用电脑上的 Chrome 或 Edge、关闭其他标签页，或用“文件说明”里列出的软件打开。' },
+  crashed: { en: 'Last time, “{name}” ({size}) did not finish opening: it was probably too big for this browser’s memory, and the page closed. On a computer with Chrome or Edge it may work; otherwise open it with the app for that format.', zh: '上次打开“{name}”（{size}）没有完成：很可能超出了浏览器的内存，页面被关闭了。换用电脑上的 Chrome 或 Edge 也许可以；否则请用对应格式的软件打开。' },
+  dismiss: { en: 'OK', zh: '知道了' },
+  cancel: { en: 'Cancel', zh: '取消' },
   trail: { en: 'Opened from', zh: '打开自' },
   offlineTitle: { en: 'Needs the internet', zh: '需要联网' },
   offlineText: {
@@ -59,7 +71,38 @@ interface Current {
   format: OpenContext['format'];
 }
 
+const isPhone = () => /iPhone|iPad|Android/i.test(navigator.userAgent) || ((navigator as { deviceMemory?: number }).deviceMemory ?? 8) <= 4;
+
+/** A file whose opening never finished (the tab ran out of memory and was closed), from the last visit. */
+const OPENING_KEY = 'formatreader-opening';
+function markOpening(name: string, size: number) {
+  try {
+    localStorage.setItem(OPENING_KEY, JSON.stringify({ name, size, at: Date.now() }));
+  } catch {
+    /* storage unavailable */
+  }
+}
+function clearOpening() {
+  try {
+    localStorage.removeItem(OPENING_KEY);
+  } catch {
+    /* storage unavailable */
+  }
+}
+function takeCrashNote(): { name: string; size: number } | null {
+  try {
+    const raw = localStorage.getItem(OPENING_KEY);
+    localStorage.removeItem(OPENING_KEY);
+    const v = raw ? (JSON.parse(raw) as { name: string; size: number; at: number }) : null;
+    // Only recent ones, and only big files (a small file never runs a tab out of memory).
+    return v && Date.now() - v.at < 30 * 60 * 1000 && v.size > 20 * 1024 * 1024 ? v : null;
+  } catch {
+    return null;
+  }
+}
+
 export function startApp(categoryViewers: ViewerEntry[]): void {
+  let crashNote = takeCrashNote();
   assertUniqueIds([...categoryViewers, infoEntry]);
   // Experimental viewers run only for whoever opens the page with ?try=<id>.
   const viewers = withTrials([...categoryViewers, infoEntry], location.search);
@@ -110,6 +153,14 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     h(
       'main',
       { class: 'landing' },
+      crashNote
+        ? h(
+            'div',
+            { class: 'crash-note', role: 'alert' },
+            h('p', {}, s('crashed').replace('{name}', crashNote.name).replace('{size}', formatBytes(crashNote.size))),
+            h('button', { type: 'button', class: 'btn', onclick: (e: Event) => ((crashNote = null), (e.currentTarget as HTMLElement).parentElement?.remove()) }, s('dismiss')),
+          )
+        : null,
       h('button', { type: 'button', class: 'circle', onclick: () => fileInput.click() }, h('span', { class: 'circle-text' }, s('readAny'))),
       import.meta.env.MODE === 'portable'
         ? h(
@@ -249,6 +300,51 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     prefetchCommonViewers();
   }
 
+  /** Asks before opening a file beyond what its kind usually fits in a browser. */
+  function heavyWarning(mount: HTMLElement, name: string, size: number, limit: number, phone: boolean, format: OpenContext['format'], viewerId: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      const guide = h('div', { class: 'heavy-guide' });
+      const card = h(
+        'div',
+        { class: 'view view-info' },
+        h(
+          'div',
+          { class: 'info-card heavy-card' },
+          h('h2', {}, s('heavyTitle')),
+          h('p', { class: 'info-note' }, s('heavyText').replace('{name}', name).replace('{size}', formatBytes(size)).replace('{limit}', formatBytes(limit)).replace('{phone}', phone ? s('heavyPhone') : '')),
+          h(
+            'div',
+            { class: 'heavy-buttons' },
+            h('button', { type: 'button', class: 'btn btn-primary', onclick: () => resolve(true) }, s('tryAnyway')),
+            h(
+              'button',
+              {
+                type: 'button',
+                class: 'btn',
+                onclick: async () => {
+                  const { aboutPanel } = await import('./about/panel');
+                  const dot = name.lastIndexOf('.');
+                  guide.replaceChildren(aboutPanel({ name, ext: dot > 0 ? name.slice(dot + 1).toLowerCase() : '', size, format, viewerId, facts: {} }, () => guide.replaceChildren()));
+                },
+              },
+              s('elsewhere'),
+            ),
+            h('button', { type: 'button', class: 'btn', onclick: () => resolve(false) }, s('cancel')),
+          ),
+          guide,
+        ),
+      );
+      mount.replaceChildren(card);
+    });
+  }
+
+  /** Under the loading animation: say a large file takes a moment, then that it is still working. */
+  function bigHint(cover: HTMLElement, size: number) {
+    const note = h('p', { class: 'loading-note' }, s('bigLoading').replace('{size}', formatBytes(size)));
+    cover.append(note);
+    setTimeout(() => cover.isConnected && note.append(' ', s('stillWorking')), 20000);
+  }
+
   async function show(entry: ViewerEntry, name: string, size: number, format: OpenContext['format'], run: (mod: ViewerModule, ctx: OpenContext) => Promise<OpenedView>, my: number) {
     // Lay out the page first; the viewer draws into `mount` under the loading cover.
     const mount = h('div', { class: 'viewer-mount' });
@@ -257,16 +353,42 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     app.replaceChildren(header(), page, cover);
 
     const ctx: OpenContext = { mount, format, fontScale: () => fontScale, refreshChrome, openFile: (f, o) => openInside(f, o?.replace) };
+
+    // Beyond what this kind of file usually fits in a browser: warn first, the user may still try.
+    const phone = isPhone();
+    const heavy = size >= 0 ? entry.heavyAbove?.(format) : undefined;
+    const limit = heavy && (phone ? heavy / 4 : heavy);
+    if (limit && size > limit) {
+      cover.remove();
+      const go = await heavyWarning(mount, name, size, limit, phone, format, entry.id);
+      if (my !== token) return;
+      if (!go) return goHome();
+      app.append(cover);
+    }
+    if (size > 150 * 1024 * 1024) bigHint(cover, size);
+
     let view: OpenedView;
+    // Remember what is being opened: if the tab runs out of memory and closes, the next visit says so.
+    markOpening(name, size);
     try {
       const mod = await entry.load();
       view = await run(mod, ctx);
     } catch (err) {
       console.error(`Viewer ${entry.id} failed`, err);
       view = {};
+      const msg = String((err as Error)?.message ?? err);
       // Offline and this viewer's code was never stored: say what to do, not a raw network error.
-      const missingCode = /dynamically imported module|Unable to preload CSS|Failed to fetch|Importing a module script failed|NetworkError|Load failed/i.test(String((err as Error)?.message));
-      mount.replaceChildren(missingCode ? messageView(s('offlineTitle'), s('offlineText')) : messageView(s('failed'), String((err as Error)?.message ?? err)));
+      const missingCode = /dynamically imported module|Unable to preload CSS|Failed to fetch|Importing a module script failed|NetworkError|Load failed/i.test(msg);
+      const memory = /allocation failed|out of memory|Invalid (typed )?(array|string) length|Maximum call stack|memory access out of bounds|\bOOM\b|Cannot enlarge memory|Array buffer allocation|could not allocate/i.test(msg);
+      mount.replaceChildren(
+        missingCode
+          ? messageView(s('offlineTitle'), s('offlineText'))
+          : memory
+            ? messageView(s('memoryTitle'), s('memoryText').replace('{name}', name).replace('{size}', formatBytes(size)))
+            : messageView(s('failed'), msg),
+      );
+    } finally {
+      clearOpening();
     }
     if (my !== token) {
       view.destroy?.();

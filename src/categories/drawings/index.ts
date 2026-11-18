@@ -10,6 +10,9 @@ const text = (head: Uint8Array, n = 4096) => new TextDecoder('latin1').decode(he
 export const drawingsViewers: ViewerEntry[] = [
   {
     id: 'drawings/dxf',
+    // DXF: 150 MB (2.7 million objects) opened in 6 s, 400 MB crashed the tab. DWG is packed
+    // several times smaller and its engine needs extra memory (estimate, no big DWG to test).
+    heavyAbove: (format) => (format?.id === 'dwg' ? 60 : 250) * 1024 * 1024,
     category: 'drawings',
     layout: 'fill',
     mimes: /dxf/,
@@ -19,6 +22,7 @@ export const drawingsViewers: ViewerEntry[] = [
   },
   {
     id: 'drawings/model',
+    heavyAbove: () => 300 * 1024 * 1024,
     category: 'drawings',
     layout: 'fill',
     mimes: /^model\//,

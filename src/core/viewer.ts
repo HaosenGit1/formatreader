@@ -91,6 +91,12 @@ export interface ViewerModule {
 export interface ViewerEntry {
   /** Unique id, e.g. 'words/sheets'. */
   id: string;
+  /**
+   * Size (bytes, on a computer) above which this kind of file usually doesn't fit in a
+   * browser's memory: the user is warned first and can still try. Measured with real files
+   * (see docs/LIMITS.md). Phones get a quarter of it.
+   */
+  heavyAbove?(format: FormatInfo | null): number | undefined;
   category: Category;
   /**
    * Higher runs first. Specific viewers use the default (50); catch-alls go

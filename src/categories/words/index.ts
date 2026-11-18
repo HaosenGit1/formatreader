@@ -38,6 +38,8 @@ export const wordsViewers: ViewerEntry[] = [
   },
   {
     id: 'words/db',
+    // The whole database is loaded into the engine's memory.
+    heavyAbove: () => 500 * 1024 * 1024,
     category: 'words',
     mimes: /x-msaccess|vnd\.ms-access|x-sqlite3|vnd\.sqlite3/,
     accepts: ({ format }) => ['mdb', 'accdb', 'sqlite'].includes(format?.id ?? ''),
@@ -115,6 +117,8 @@ export const wordsViewers: ViewerEntry[] = [
   },
   {
     id: 'words/sheets',
+    // Excel: 1 million rows (109 MB) opened in 17 s. CSV is shown in parts instead (see read.ts).
+    heavyAbove: (format) => (format && !format.text ? 150 * 1024 * 1024 : undefined),
     category: 'words',
     mimes: /^text\/(csv|tab-separated-values)$|spreadsheetml|ms-excel|opendocument\.spreadsheet|x-iwork-numbers|^application\/(x-)?dbf$/,
     prefetch: true,

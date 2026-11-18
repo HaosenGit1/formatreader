@@ -3,6 +3,7 @@
  * browsers read themselves, or a <canvas> for ones decoded here (HEIC, TIFF,
  * PSD). Decoders download only when such a file is opened.
  */
+import { strings } from '../../../core/i18n';
 import { findEmbeddedJpegs } from './raw';
 
 export interface Picture {
@@ -35,6 +36,45 @@ const LABELS: Record<string, string> = {
   heic: 'HEIC', tiff: 'TIFF', psd: 'Photoshop', jxl: 'JPEG XL', jp2: 'JPEG 2000', exr: 'OpenEXR', hdr: 'Radiance HDR', tga: 'TGA', dcm: 'DICOM',
 };
 
+const msg = strings({
+  cannot: { en: 'This browser cannot display this image.', zh: '这个浏览器无法显示这张图片。' },
+  tooBig: {
+    en: 'This image is {w} × {h} pixels ({mp} megapixels). Browsers can only draw images up to about 268 megapixels on a computer (about 16 on iPhone/iPad). Open it with Photos/Preview, GIMP or Photoshop.',
+    zh: '这张图片有 {w} × {h} 像素（{mp} 百万像素）。浏览器在电脑上最多只能显示约 2.68 亿像素的图片（iPhone/iPad 上约 1600 万）。请用“照片”/“预览”、GIMP 或 Photoshop 打开。',
+  },
+});
+
+/** Width and height from the header of a PNG, GIF, BMP, WebP or JPEG (to explain a failure). */
+export function headerSize(b: Uint8Array): { w: number; h: number } | null {
+  const v = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  if (b.length > 24 && b[0] === 0x89 && b[1] === 0x50) return { w: v.getUint32(16), h: v.getUint32(20) };
+  if (b.length > 10 && b[0] === 0x47 && b[1] === 0x49) return { w: v.getUint16(6, true), h: v.getUint16(8, true) };
+  if (b.length > 26 && b[0] === 0x42 && b[1] === 0x4d) return { w: Math.abs(v.getInt32(18, true)), h: Math.abs(v.getInt32(22, true)) };
+  if (b.length > 30 && b[8] === 0x57 && b[9] === 0x45 && b[12] === 0x56 && b[13] === 0x50) {
+    const kind = String.fromCharCode(b[12], b[13], b[14], b[15]);
+    if (kind === 'VP8X') return { w: 1 + (b[24] | (b[25] << 8) | (b[26] << 16)), h: 1 + (b[27] | (b[28] << 8) | (b[29] << 16)) };
+    if (kind === 'VP8L') return { w: 1 + (((b[22] & 0x3f) << 8) | b[21]), h: 1 + (((b[24] & 0xf) << 10) | (b[23] << 2) | ((b[22] & 0xc0) >> 6)) };
+    if (kind === 'VP8 ') return { w: v.getUint16(26, true) & 0x3fff, h: v.getUint16(28, true) & 0x3fff };
+  }
+  if (b[0] === 0xff && b[1] === 0xd8) {
+    for (let p = 2; p + 9 < b.length; ) {
+      if (b[p] !== 0xff) return null;
+      const m = b[p + 1];
+      if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) return { w: v.getUint16(p + 7), h: v.getUint16(p + 5) };
+      p += 2 + v.getUint16(p + 2);
+    }
+  }
+  return null;
+}
+
+async function explainFailure(blob: Blob): Promise<Error> {
+  const size = headerSize(new Uint8Array(await blob.slice(0, 256 * 1024).arrayBuffer()));
+  if (size && size.w * size.h > 16_000_000) {
+    return new Error(msg('tooBig').replace('{w}', size.w.toLocaleString()).replace('{h}', size.h.toLocaleString()).replace('{mp}', Math.round((size.w * size.h) / 1e6).toLocaleString()));
+  }
+  return new Error(msg('cannot'));
+}
+
 function loadImg(blob: Blob): Promise<Picture & { url: string }> {
   const url = URL.createObjectURL(blob);
   const img = new Image();
@@ -45,7 +85,7 @@ function loadImg(blob: Blob): Promise<Picture & { url: string }> {
     img.onload = () => resolve({ element: img, width: img.naturalWidth || 300, height: img.naturalHeight || 150, url });
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error('This browser cannot display this image.'));
+      void explainFailure(blob).then(reject);
     };
     img.src = url;
   });

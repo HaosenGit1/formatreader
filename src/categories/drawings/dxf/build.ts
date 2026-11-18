@@ -375,12 +375,15 @@ function robustBounds(prims: Prim[]): Built['bounds'] {
   const hi = { x: x1 + span * 2, y: y1 + span * 2 };
   const kept = boxes.filter((b) => b.minX >= lo.x && b.maxX <= hi.x && b.minY >= lo.y && b.maxY <= hi.y);
   if (kept.length < boxes.length * 0.8) return all; // not a few outliers: fit everything
-  return {
-    minX: Math.min(...kept.map((b) => b.minX)),
-    minY: Math.min(...kept.map((b) => b.minY)),
-    maxX: Math.max(...kept.map((b) => b.maxX)),
-    maxY: Math.max(...kept.map((b) => b.maxY)),
-  };
+  // A loop, not Math.min(...list): drawings can have millions of objects (too many arguments).
+  const out = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+  for (const b of kept) {
+    if (b.minX < out.minX) out.minX = b.minX;
+    if (b.minY < out.minY) out.minY = b.minY;
+    if (b.maxX > out.maxX) out.maxX = b.maxX;
+    if (b.maxY > out.maxY) out.maxY = b.maxY;
+  }
+  return out;
 }
 
 /** Extents of everything drawn (texts by an estimate of their box). */

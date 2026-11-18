@@ -6,6 +6,7 @@
 import './archive.css';
 import { formatBytes, h } from '../../../core/dom';
 import { strings } from '../../../core/i18n';
+import { messageView } from '../../../core/info-view';
 import { isJunkPath } from '../../../core/junk';
 import type { OpenContext, OpenedView } from '../../../core/viewer';
 import pkg from 'libarchive.js/package.json';
@@ -24,6 +25,8 @@ const s = strings({
   cannot: { en: 'This file could not be extracted:', zh: '无法解压这个文件：' },
   encrypted: { en: 'It is encrypted in a way that cannot be opened here (e.g. encrypted RAR5).', zh: '它使用了这里无法打开的加密方式（例如加密的 RAR5）。' },
   extractAll: { en: 'Extract all', zh: '全部解压' },
+  tooBigTitle: { en: 'This archive is too big for a browser', zh: '这个压缩包太大，浏览器打不开' },
+  tooBig: { en: 'It is {size}. The archive engine that runs in the browser can open archives up to 2 GB. Open it with 7-Zip (Windows), The Unarchiver or Keka (Mac), or the built-in tools on Linux — all free.', zh: '它有 {size}。在浏览器中运行的解压引擎最多能打开 2 GB 的压缩包。请用 7-Zip（Windows）、The Unarchiver 或 Keka（Mac），或 Linux 自带工具打开——都是免费的。' },
   extractTitleFolder: { en: 'Choose a folder: a new folder with all the files is created inside it', zh: '选择一个文件夹：会在里面新建一个文件夹，放入全部文件' },
   extractTitleZip: { en: 'Save all the files as one ordinary ZIP (with readable names)', zh: '把全部文件保存为一个普通 ZIP（文件名可正常显示）' },
 });
@@ -65,7 +68,14 @@ interface Entry {
   extract(): Promise<File>;
 }
 
+/** The WebAssembly archive engine can't address more (measured: 2.0 GB opens, 2.1 GB never answers). */
+const MAX_ARCHIVE = 2 ** 31 - 1;
+
 export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
+  if (file.size > MAX_ARCHIVE) {
+    ctx.mount.replaceChildren(messageView(s('tooBigTitle'), s('tooBig').replace('{size}', formatBytes(file.size))));
+    return {};
+  }
   const Archive = await archiveLib();
   const archive = await Archive.open(file);
   const isComic = ['cbr', 'cb7', 'cbt'].includes(ctx.format?.id ?? '') || /\.(cbr|cb7|cbt)$/i.test(file.name);

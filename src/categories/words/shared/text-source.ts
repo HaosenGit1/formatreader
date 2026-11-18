@@ -3,7 +3,7 @@
  * Shared by the Text and Sheets viewers: decoding, re-decoding with another
  * encoding, double-encoding repair, and the toolbar/notice UI for all of that.
  */
-import { h } from '../../../core/dom';
+import { formatBytes, h } from '../../../core/dom';
 import type { AboutFacts } from '../../../core/viewer';
 import { lang, strings } from '../../../core/i18n';
 import { decode } from './encoding/codec';
@@ -59,6 +59,10 @@ const s = strings({
     zh: '“烫烫烫”“屯屯屯”不是文字，而是程序错误写出的空白内存（Visual C++ 调试版本会用这些字节填充内存）。这里没有可恢复的内容。',
   },
   showDecoded: { en: 'Show decoded', zh: '查看解码后' },
+  partialStart: { en: 'This file is very large ({total}): browsers can’t show it all at once, so the first {shown} are shown.', zh: '这个文件非常大（{total}）：浏览器无法一次显示全部，这里显示前 {shown}。' },
+  partialEnd: { en: 'This file is very large ({total}): the last {shown} are shown (the newest lines of a log).', zh: '这个文件非常大（{total}）：这里显示最后 {shown}（日志中最新的部分）。' },
+  showEnd: { en: 'Show the end instead', zh: '改为显示末尾' },
+  showStart: { en: 'Show the beginning instead', zh: '改为显示开头' },
   showRepaired: { en: 'Show repaired', zh: '查看修复后' },
 });
 
@@ -74,6 +78,9 @@ export class TextSource {
     public repair: RepairResult | null,
     public showOriginal = false,
   ) {}
+
+  /** Set when only part of a very large file is shown. */
+  partial: { part: 'start' | 'end'; shown: number; total: number; toggle?: () => void } | null = null;
 
   /** Escapes/Base64 decoding: only viewers meant for reading text turn this on. */
   private decodeEnabled = false;
@@ -174,6 +181,11 @@ export class TextSource {
     const out: HTMLElement[] = [];
     const det = this.detected;
     const qLost = this.questionLost();
+    if (this.partial) {
+      const p = this.partial;
+      const text = s(p.part === 'end' ? 'partialEnd' : 'partialStart').replace('{shown}', formatBytes(p.shown)).replace('{total}', formatBytes(p.total));
+      out.push(h('div', { class: 'notice' }, text, p.toggle ? ' ' : '', p.toggle ? h('button', { type: 'button', class: 'link', onclick: p.toggle }, s(p.part === 'end' ? 'showStart' : 'showEnd')) : null));
+    }
     const destroyed = destroyedKind(this.raw);
     if (destroyed) out.push(h('div', { class: 'notice warn' }, s(destroyed === 'lost' ? 'destroyedLost' : 'destroyedMemory')));
     if (qLost) out.push(h('div', { class: 'notice warn' }, s('questionLoss').replace('{n}', qLost.toLocaleString())));

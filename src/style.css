@@ -963,3 +963,49 @@ html.fr-immersive .site-header {
 .landing-foot-portable {
   max-width: calc(100vw - 32px);
 }
+
+/* Large files: a note under the loading animation, the warning card, the note after a crash. */
+.loading-note {
+  position: absolute;
+  left: 50%;
+  bottom: 18%;
+  width: min(520px, calc(100vw - 32px));
+  margin: 0;
+  transform: translateX(-50%);
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.heavy-card {
+  max-width: 640px;
+}
+
+.heavy-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.heavy-guide:not(:empty) {
+  margin-top: 16px;
+  text-align: left;
+}
+
+.crash-note {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 720px;
+  margin: 16px auto 0;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--warn-soft);
+  font-size: 14px;
+}
+
+.crash-note p {
+  flex: 1;
+  margin: 0;
+}

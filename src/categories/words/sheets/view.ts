@@ -30,7 +30,7 @@ const extOf = (name: string) => /\.([a-z0-9]{1,8})$/i.exec(name)?.[1]?.toLowerCa
 // ---------------------------------------------------------------------------
 
 async function openDelimited(file: File, ctx: OpenContext): Promise<OpenedView> {
-  const src = await readText(file, ctx.mount);
+  const src = await readText(file, ctx.mount, () => ctx.openFile(file, { replace: true }));
   if (!isSource(src)) return src;
   const ext = extOf(file.name);
   let delimiter = ',';
