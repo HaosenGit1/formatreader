@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.08">
+  <BkToCstmrStmt>
+    <GrpHdr><MsgId>MSG-20261118</MsgId><CreDtTm>2026-11-18T18:00:00</CreDtTm></GrpHdr>
+    <Stmt>
+      <Id>STMT-1118</Id>
+      <FrToDt><FrDtTm>2026-11-18T00:00:00</FrDtTm><ToDtTm>2026-11-18T23:59:59</ToDtTm></FrToDt>
+      <Acct><Id><IBAN>CN1200001234567890123456</IBAN></Id><Ccy>CNY</Ccy><Nm>新疆某某新能源有限公司 基本户</Nm><Svcr><FinInstnId><Nm>中国银行乌鲁木齐分行</Nm></FinInstnId></Svcr></Acct>
+      <Bal><Tp><CdOrPrtry><Cd>OPBD</Cd></CdOrPrtry></Tp><Amt Ccy="CNY">500000.00</Amt><CdtDbtInd>CRDT</CdtDbtInd><Dt><Dt>2026-11-18</Dt></Dt></Bal>
+      <Bal><Tp><CdOrPrtry><Cd>CLBD</Cd></CdOrPrtry></Tp><Amt Ccy="CNY">520000.00</Amt><CdtDbtInd>CRDT</CdtDbtInd><Dt><Dt>2026-11-18</Dt></Dt></Bal>
+      <Ntry>
+        <Amt Ccy="CNY">120000.00</Amt><CdtDbtInd>CRDT</CdtDbtInd><Sts><Cd>BOOK</Cd></Sts>
+        <BookgDt><Dt>2026-11-18</Dt></BookgDt><ValDt><Dt>2026-11-18</Dt></ValDt><AcctSvcrRef>BOC-0001</AcctSvcrRef>
+        <NtryDtls><TxDtls><Refs><EndToEndId>E2E-ELEC-10</EndToEndId></Refs><RltdPties><Dbtr><Pty><Nm>国网新疆电力有限公司</Nm></Pty></Dbtr><DbtrAcct><Id><Othr><Id>6217000012345678</Id></Othr></Id></DbtrAcct></RltdPties><RmtInf><Ustrd>10月上网电费</Ustrd></RmtInf></TxDtls></NtryDtls>
+      </Ntry>
+      <Ntry>
+        <Amt Ccy="CNY">100000.00</Amt><CdtDbtInd>DBIT</CdtDbtInd><Sts><Cd>BOOK</Cd></Sts>
+        <BookgDt><Dt>2026-11-18</Dt></BookgDt><ValDt><Dt>2026-11-18</Dt></ValDt><AcctSvcrRef>BOC-0002</AcctSvcrRef>
+        <NtryDtls><TxDtls><Refs><EndToEndId>GW-2026-118</EndToEndId></Refs><RltdPties><Cdtr><Pty><Nm>江苏某某风电设备有限公司</Nm></Pty></Cdtr></RltdPties><RmtInf><Ustrd>变桨轴承货款 发票 26112000000012345678</Ustrd></RmtInf></TxDtls></NtryDtls>
+      </Ntry>
+    </Stmt>
+  </BkToCstmrStmt>
+</Document>

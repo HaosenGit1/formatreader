@@ -136,6 +136,19 @@ export const wordsViewers: ViewerEntry[] = [
     load: () => import('./sheets/view'),
   },
   {
+    // Bank statements (MT940, ISO 20022 camt, OFX/QFX/QBO, BAI2), detected by content.
+    id: 'words/bank',
+    category: 'words',
+    prefetch: false,
+    priority: 30,
+    accepts: ({ format, head }) => {
+      if (!isTextish(format)) return false;
+      const t = headText(head);
+      return /urn:iso:std:iso:20022:tech:xsd:camt\.05[234]|OFXHEADER\s*:|<OFX>/i.test(t) || (/(^|\n)\s*:20:/.test(t) && /(^|\n)\s*:25:/.test(t) && /(^|\n)\s*:6[02][FM]:/.test(t)) || (/^\s*01,/.test(t) && /\n\s*0[23],/.test(t));
+    },
+    load: () => import('./bank/view'),
+  },
+  {
     // E-invoice XML (China 数电票, UBL/Peppol, CII/ZUGFeRD): shown as an invoice. The markers
     // are checked here so the invoice code only loads for invoices.
     id: 'words/invoice',
