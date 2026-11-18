@@ -15,7 +15,7 @@
 #   aws iam delete-role --role-name formatreader-github-deploy
 set -euo pipefail
 cd "$(dirname "$0")/.."
-REPO="AChicagoGit/formatreader"
+REPO="HaosenGit1/formatreader"
 BUCKET=$(node -p "require('./deploy.config.json').bucket")
 DIST=$(node -p "require('./deploy.config.json').distributionId")
 DARN=$(node -p "require('./deploy.config.json').distributionArn")

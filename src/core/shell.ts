@@ -42,8 +42,8 @@ const s = strings({
     zh: '依据 GPL-3.0 或更新版本发布的自由软件，不提供任何担保。源代码和许可证：',
   },
   portableNote: {
-    en: 'This single file is the whole app. Copy it anywhere and open it in a browser. Free software (GPL-3.0); source: github.com/AChicagoGit/formatreader',
-    zh: '这一个文件就是完整的应用。复制到任何地方，用浏览器打开即可。自由软件（GPL-3.0），源代码：github.com/AChicagoGit/formatreader',
+    en: 'This single file is the whole app. Copy it anywhere and open it in a browser. Free software (GPL-3.0); source: github.com/HaosenGit1/formatreader',
+    zh: '这一个文件就是完整的应用。复制到任何地方，用浏览器打开即可。自由软件（GPL-3.0），源代码：github.com/HaosenGit1/formatreader',
   },
 });
 
@@ -113,7 +113,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
             'footer',
             { class: 'landing-foot landing-foot-portable' },
             h('span', { class: 'foot-link', title: s('portableNote') }, s('portable')),
-            h('span', { class: 'foot-legal' }, s('portableLicence'), h('a', { href: 'https://github.com/AChicagoGit/formatreader' }, 'github.com/AChicagoGit/formatreader')),
+            h('span', { class: 'foot-legal' }, s('portableLicence'), h('a', { href: 'https://github.com/HaosenGit1/formatreader' }, 'github.com/HaosenGit1/formatreader')),
           )
         : h('footer', { class: 'landing-foot' }, h('a', { class: 'foot-link', href: 'formats.html' }, s('formats')), offlineLine()),
     );
