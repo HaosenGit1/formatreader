@@ -15,6 +15,10 @@ const s = strings({
     en: 'This browser can’t play this video{codec}. Safari, or a player such as VLC, may play it.',
     zh: '这个浏览器无法播放此视频{codec}。可以试试 Safari，或 VLC 等播放器。',
   },
+  noBrowser: {
+    en: 'No web browser can play {format} videos{codec}. A player such as VLC can.',
+    zh: '所有网页浏览器都无法播放 {format} 视频{codec}。可以用 VLC 等播放器。',
+  },
   audioOnly: { en: 'This file has sound only, no picture.', zh: '这个文件只有声音，没有画面。' },
 });
 
@@ -79,7 +83,9 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   if (!playable) {
     video.hidden = true;
     message.hidden = false;
-    message.textContent = s('cannot').replace('{codec}', codec ? ` (${codec})` : '');
+    // Formats no browser plays at all (Windows Media, AVI, Flash, RealMedia): don't suggest Safari.
+    const legacy = ({ wmv: 'Windows Media (WMV)', avi: 'AVI', flv: 'Flash (FLV)', rmvb: 'RealMedia', asf: 'Windows Media' } as Record<string, string>)[ctx.format?.id ?? ''] ?? (ci?.container === 'ASF' ? 'Windows Media' : ci?.container === 'AVI' ? 'AVI' : '');
+    message.textContent = (legacy ? s('noBrowser').replace('{format}', legacy) : s('cannot')).replace('{codec}', codec ? ` (${codec})` : '');
   } else if (!video.videoWidth) {
     message.hidden = false;
     message.textContent = s('audioOnly');
