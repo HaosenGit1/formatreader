@@ -149,3 +149,87 @@ tbody tr:hover td {
   margin: 10px 0 0;
   color: var(--muted);
 }
+
+/* Pictures, charts and text boxes over the grid, where Excel anchors them */
+.table-wrap {
+  position: relative;
+}
+
+.xl-layer {
+  position: absolute;
+  z-index: 0; /* under the sticky column and row headers */
+  inset: 0 auto auto 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.xl-item {
+  position: absolute;
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+
+.xl-picture {
+  cursor: zoom-in;
+}
+
+.xl-picture img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.xl-chart,
+.xl-text {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.08);
+}
+
+.xl-text {
+  padding: 6px 8px;
+  overflow: hidden;
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+.xl-chart {
+  display: block;
+  width: 100%;
+  height: 100%;
+  font-family: inherit;
+}
+
+.xl-chart-bg {
+  fill: var(--surface);
+}
+
+.xl-chart-title {
+  fill: var(--fg);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.xl-chart-axis,
+.xl-chart-legend text {
+  fill: var(--muted);
+  font-size: 11px;
+}
+
+.xl-chart-grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.xl-chart-zero {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+
+.xl-chart-slice {
+  stroke: var(--surface);
+  stroke-width: 2;
+}

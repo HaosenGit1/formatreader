@@ -11,6 +11,8 @@ import { isSource, readText } from '../shared/read';
 import { DELIMITED_EXT } from './formats';
 import { CHUNK_ROWS, type RowChunk, type SheetInfo, type SheetReport } from './sheet-job';
 import { runWorker } from '../../../core/progress';
+import { drawingExtent as drawingExtentOf } from './drawings';
+import { layDrawings } from './drawings-layer';
 import { parseDelimited, sniffDelimiter } from './delimited';
 
 const s = strings({
@@ -25,7 +27,9 @@ const s = strings({
   wrongPassword: { en: 'That password is not right.', zh: '密码不正确。' },
   stepParse: { en: 'Reading the workbook…', zh: '正在读取工作簿…' },
   stepRows: { en: 'Preparing rows…', zh: '正在准备数据行…' },
-  partial: { en: 'Charts and pictures inside the sheet are not shown yet. Formulas show their saved results (hover a cell to see the formula).', zh: '表格中的图表和图片暂不显示。公式显示保存时的结果（鼠标悬停可查看公式）。' },
+  partial: { en: 'Formulas show their saved results (hover a cell to see the formula).', zh: '公式显示保存时的结果（鼠标悬停可查看公式）。' },
+  partialOld: { en: 'Pictures and charts in this file format are not shown yet. Formulas show their saved results (hover a cell to see the formula).', zh: '这种格式中的图片和图表暂不显示。公式显示保存时的结果（鼠标悬停可查看公式）。' },
+  drawn: { en: 'Pictures and charts are shown where they sit in the sheet (click a picture to open it full size). Charts are redrawn from their saved values, so styling may differ a little. Formulas show their saved results.', zh: '图片和图表显示在表格中原来的位置（点击图片可放大查看）。图表按保存的数据重新绘制，样式可能略有不同。公式显示保存时的结果。' },
   comma: { en: 'Comma', zh: '逗号' },
   tab: { en: 'Tab', zh: '制表符' },
 });
@@ -100,6 +104,8 @@ async function openWorkbook(file: File, ctx: OpenContext, password?: string): Pr
   };
   const onChunk = (c: RowChunk) => (chunks[c.sheet][c.index] = c);
   const report: SheetReport = (step, fraction) => ctx.progress?.(s(step === 'parse' ? 'stepParse' : 'stepRows'), fraction);
+  // Pictures, charts and text boxes (Excel 2007+ files), read alongside the cells.
+  const drawingsJob = /^(xlsx|xlsm|xltx|xltm)$/.test(ext) ? import('./drawings').then((m) => m.readDrawings(file)).catch(() => null) : Promise.resolve(null);
   try {
     if (import.meta.env.MODE === 'portable') {
       const { readSheets } = await import('./sheet-job');
@@ -119,6 +125,8 @@ async function openWorkbook(file: File, ctx: OpenContext, password?: string): Pr
     throw e;
   }
 
+  const drawings = await drawingsJob;
+  let undraw = () => {};
   const names = infos.map((x) => x.name);
   const hiddenFlags = infos.map((x) => x.hidden);
   let active = Math.max(0, hiddenFlags.findIndex((hdn) => !hdn));
@@ -128,6 +136,7 @@ async function openWorkbook(file: File, ctx: OpenContext, password?: string): Pr
   let size = { rows: 0, cols: 0 };
 
   const cellOf = (si: number, r: number, c: number): GridCell | null => {
+    if (r >= infos[si].rows || c >= infos[si].cols) return null; // beyond the data (room for a chart)
     const chunk = chunks[si]?.[Math.floor(r / CHUNK_ROWS)];
     if (!chunk) return null;
     const i = (r % CHUNK_ROWS) * infos[si].cols + c;
@@ -138,22 +147,34 @@ async function openWorkbook(file: File, ctx: OpenContext, password?: string): Pr
   };
 
   const drawSheet = () => {
+    undraw();
+    undraw = () => {};
     const info = infos[active];
+    const items = (info && drawings?.bySheet.get(info.name)) || [];
     size = info ? { rows: info.rows, cols: info.cols } : { rows: 0, cols: 0 };
-    if (!info || size.rows === 0) {
+    // The grid reaches far enough for every picture and chart.
+    const reach = items.length ? (drawingExtentOf(items)) : { rows: 0, cols: 0 };
+    const gridSize = { rows: Math.max(size.rows, reach.rows), cols: Math.max(size.cols, reach.cols) };
+    if (!info || gridSize.rows === 0) {
       body.replaceChildren(h('div', { class: 'sheet-empty' }, s('empty')));
     } else {
       const si = active;
       body.replaceChildren(
         renderGrid({
-          rows: size.rows,
-          cols: size.cols,
+          rows: gridSize.rows,
+          cols: gridSize.cols,
           header: 'letters',
           cell: (r, c) => cellOf(si, r, c),
           merges: info.merges as GridCellMerge[] | undefined,
-          widths: info.widths,
+          // Columns without a saved width get Excel's default (8.43 characters), so pictures and
+          // charts over empty columns keep their shape.
+          widths: items.length ? Array.from({ length: gridSize.cols }, (_, c) => info.widths[c] ?? 8.43) : info.widths,
         }),
       );
+      const wrap = body.querySelector<HTMLElement>('.table-wrap');
+      if (wrap && items.length) {
+        undraw = layDrawings(wrap, items, (pic) => ctx.openFile(new File([pic.blob], pic.name, { type: pic.blob.type })));
+      }
     }
     tabs.replaceChildren(
       ...names.map((name, i) =>
@@ -185,7 +206,11 @@ async function openWorkbook(file: File, ctx: OpenContext, password?: string): Pr
       ...(names.length > 1 ? [`${names.length} ${s('sheets')}`] : []),
       `${formatCount(size.rows)} ${s('rows')} × ${size.cols} ${s('columns')}`,
     ],
-    notices: () => [h('div', { class: 'notice subtle' }, s('partial'))],
+    notices: () => [h('div', { class: 'notice subtle' }, drawings?.bySheet.size ? s('drawn') : /^(xlsx|xlsm|xltx|xltm)$/.test(ext) ? s('partial') : s('partialOld'))],
+    destroy: () => {
+      undraw();
+      drawings?.revoke();
+    },
     onFontScale: () => {},
     onLangChange: () => drawSheet(),
   };
