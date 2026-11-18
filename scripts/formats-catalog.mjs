@@ -53,6 +53,7 @@ const VIDEOS = [
   { name: t('Videos', '视频'), viewer: 'videos/video', ext: ['mp4', 'm4v', 'webm', 'mov', 'mkv', 'ogv'] },
   // MPEG-TS '.ts' video is recognised by content; the extension itself belongs to TypeScript here.
   { name: t('FLV & MPEG-TS (H.264)', 'FLV 和 MPEG-TS（H.264）'), viewer: 'videos/video', ext: ['flv', 'm2ts'] },
+  { name: t('AVI from cameras, CCTV & dashcams (MJPEG, H.264)', '相机、监控和行车记录仪的 AVI（MJPEG、H.264）'), viewer: 'videos/video', ext: ['avi'] },
 ];
 
 const DATA = [{ name: t('COMTRADE fault records', 'COMTRADE 故障录波'), viewer: 'data/comtrade', ext: ['cfg', 'dat', 'cff'] }];
@@ -64,7 +65,7 @@ const ARCHIVES = [
 
 const COMING = [
   { name: t('More images', '更多图片'), ext: ['jxl', 'jp2', 'dds', 'ktx2'] },
-  { name: t('More audio & video (details only for now)', '更多音视频（暂只显示信息）'), ext: ['wma', 'ape', 'amr', 'mid', 'avi', 'wmv', 'rmvb', 'mpg'] },
+  { name: t('More audio & video, DivX/Xvid AVI (details only for now)', '更多音视频、DivX/Xvid 的 AVI（暂只显示信息）'), ext: ['wma', 'ape', 'amr', 'mid', 'wmv', 'rmvb', 'mpg'] },
   { name: t('More drawings', '更多图纸'), ext: ['vsd', 'kmz', 'skp'] },
   { name: t('System logs', '系统日志'), ext: ['evtx', 'plist', 'journal', 'pcap'] },
   { name: t('More documents & data', '更多文档和数据'), ext: ['chm', 'djvu', 'parquet', 'h5', 'mat', 'pst'] },

@@ -1,7 +1,8 @@
 /**
  * Video player: the browser plays the file (MP4, WebM, MOV, MKV and OGV where
  * the codecs are supported). Speed, picture-in-picture, resolution and codec.
- * Formats browsers can't play (AVI, WMV, FLV, RMVB…) show their details instead.
+ * AVI with MJPEG or H.264 is played by avi-player.ts; FLV/TS are repackaged (mpegts.js).
+ * Formats nothing here can play (WMV, DivX AVI, RMVB…) show their details instead.
  */
 import './video.css';
 import { h } from '../../../core/dom';
@@ -94,7 +95,26 @@ async function repackage(video: HTMLVideoElement, url: string, type: 'flv' | 'mp
   return { destroy: () => { player.pause(); player.unload(); player.detachMediaElement(); player.destroy(); } };
 }
 
+/** AVI: played by FormatReader itself when it holds MJPEG or H.264 (most camera, CCTV and dashcam files). */
+async function openAvi(file: File, ctx: OpenContext): Promise<OpenedView | string | null> {
+  const { openAviPlayer } = await import('./avi-player');
+  const player = await openAviPlayer(file, ctx.mount).catch(() => null);
+  if (!player) return null;
+  if ('unsupported' in player) return player.unsupported; // the codec, for the message
+  return {
+    meta: () => [`${player.width} × ${player.height}`, time(player.duration), `AVI · ${player.codec}`, `${Math.round(player.fps)} fps`],
+    tools: () => player.tools,
+    destroy: () => player.destroy(),
+  };
+}
+
 export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
+  let aviCodec: string | undefined;
+  if (ctx.format?.id === 'avi') {
+    const avi = await openAvi(file, ctx);
+    if (avi && typeof avi === 'object') return avi;
+    aviCodec = avi ?? undefined;
+  }
   const url = URL.createObjectURL(file);
   const video = h('video', { class: 'vd-video', src: url, controls: true, playsinline: true, preload: 'metadata' }) as HTMLVideoElement;
   const message = h('div', { class: 'vd-message', hidden: true });
@@ -117,7 +137,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
     });
   }
   const ci = await info;
-  const codec = ci?.codec ?? (id === 'flv' ? await flvCodec(file) : undefined);
+  const codec = aviCodec ?? ci?.codec ?? (id === 'flv' ? await flvCodec(file) : undefined);
   if (!playable) {
     video.hidden = true;
     message.hidden = false;
