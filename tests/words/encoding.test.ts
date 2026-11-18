@@ -120,3 +120,25 @@ describe('mojibake repair', () => {
     }
   });
 });
+
+describe('UTF-8 with a few damaged characters', () => {
+  test('a Chinese log with one character cut in half is still UTF-8 (not CP866)', async () => {
+    const line = '前置组播的数据个数与能量管理Propaths_all中该协议的数据个数不一致，请检查确认！-----:9/21/2026 7:20:31 PM\n';
+    const good = new TextEncoder().encode(line.repeat(300));
+    const cut = new TextEncoder().encode('能量管理Propaths_all中该协议\n').subarray(1); // drops the lead byte of 能
+    const bytes = new Uint8Array(good.length + cut.length);
+    bytes.set(good.subarray(0, good.length / 2));
+    bytes.set(cut, good.length / 2);
+    bytes.set(good.subarray(good.length / 2), good.length / 2 + cut.length);
+    const r = await detectEncoding(bytes);
+    expect('binary' in r).toBe(false);
+    if (!('binary' in r)) expect(r.encoding).toBe('utf-8');
+  });
+
+  test('real GBK text is not mistaken for damaged UTF-8', async () => {
+    const { encode } = await import('../../src/categories/words/shared/encoding/codec');
+    const gbk = encode('前置组播的数据个数与能量管理中该协议的数据个数不一致，请检查确认！\n'.repeat(200), 'gb18030')!;
+    const r = await detectEncoding(gbk);
+    if (!('binary' in r)) expect(r.encoding).not.toBe('utf-8');
+  });
+});

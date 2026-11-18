@@ -64,6 +64,47 @@ export function isValidUtf8(bytes: Uint8Array, truncated = false): boolean {
   }
 }
 
+/**
+ * UTF-8 with a few damaged spots: logs where two writers interleaved, or a line cut in
+ * the middle of a character. Counts well-formed multi-byte characters and broken
+ * sequences; real legacy text (GBK, Big5, CP866…) produces broken sequences almost
+ * everywhere, so "many good, very few broken" is UTF-8.
+ */
+export function mostlyUtf8(bytes: Uint8Array, truncated = false): boolean {
+  let good = 0;
+  let bad = 0;
+  const n = bytes.length;
+  for (let i = 0; i < n; ) {
+    const b = bytes[i];
+    if (b < 0x80) {
+      i++;
+      continue;
+    }
+    const len = b >= 0xc2 && b <= 0xdf ? 2 : b >= 0xe0 && b <= 0xef ? 3 : b >= 0xf0 && b <= 0xf4 ? 4 : 0;
+    if (!len) {
+      bad++;
+      i++;
+      continue;
+    }
+    if (i + len > n) {
+      if (!truncated) bad++;
+      break;
+    }
+    let ok = true;
+    for (let k = 1; k < len; k++) if ((bytes[i + k] & 0xc0) !== 0x80) ok = false;
+    if (ok && len === 3 && ((b === 0xe0 && bytes[i + 1] < 0xa0) || (b === 0xed && bytes[i + 1] > 0x9f))) ok = false;
+    if (ok && len === 4 && ((b === 0xf0 && bytes[i + 1] < 0x90) || (b === 0xf4 && bytes[i + 1] > 0x8f))) ok = false;
+    if (ok) {
+      good++;
+      i += len;
+    } else {
+      bad++;
+      i++;
+    }
+  }
+  return good >= 16 && bad * 50 <= good;
+}
+
 function buildEncoder(label: string): Map<string, number[]> {
   const map = new Map<string, number[]>();
   for (let b = 0; b < 0x80; b++) map.set(String.fromCharCode(b), [b]);

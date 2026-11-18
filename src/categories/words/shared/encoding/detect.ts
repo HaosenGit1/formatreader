@@ -1,5 +1,5 @@
 import { plausibility } from '../../../../core/plausibility';
-import { decode, isValidUtf8 } from './codec';
+import { decode, isValidUtf8, mostlyUtf8 } from './codec';
 import { fastLegacy } from './fast';
 import { toWhatwgLabel } from './names';
 
@@ -226,6 +226,17 @@ async function detectEncodingRaw(all: Uint8Array): Promise<EncodingResult | Bina
     return {
       encoding: 'utf-8',
       confidence: 0.99,
+      reason: 'utf8',
+      bomLength: 0,
+      alternatives: ['gb18030', 'big5', 'shift_jis', 'windows-1252'],
+    };
+  }
+
+  // UTF-8 with a few damaged characters (interleaved log writes, a cut line): still UTF-8.
+  if (mostlyUtf8(bytes, truncated)) {
+    return {
+      encoding: 'utf-8',
+      confidence: 0.95,
       reason: 'utf8',
       bomLength: 0,
       alternatives: ['gb18030', 'big5', 'shift_jis', 'windows-1252'],
