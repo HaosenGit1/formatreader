@@ -1,0 +1,54 @@
+/* Password-protected Office files */
+.view-locked {
+  display: grid;
+  place-items: center;
+  min-height: 360px;
+  padding: 24px 16px;
+}
+
+.locked-card {
+  width: min(440px, 100%);
+  padding: 28px 24px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  text-align: center;
+}
+
+.locked-icon {
+  font-size: 34px;
+}
+
+.locked-card h2 {
+  margin: 8px 0 6px;
+  font-size: 18px;
+}
+
+.locked-note {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.locked-row {
+  display: flex;
+  gap: 8px;
+}
+
+.locked-input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.locked-msg {
+  min-height: 1.4em;
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}

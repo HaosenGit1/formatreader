@@ -70,7 +70,8 @@ for (const folder of Object.keys(FOLDER_VIEWER)) {
         const format = await detectFormat(new Blob([bytes]), name);
         const viewer = pickViewer(viewers, { format, name, ext: extOf(name), head: bytes.subarray(0, 8192) });
         // In samples/data the folder decides (a ZIP there is a COMTRADE record, not a plain archive).
-        expect(viewer?.id).toBe(folder === 'data' ? FOLDER_VIEWER[folder] : EXT_VIEWER[extOf(name)] ?? FOLDER_VIEWER[folder]);
+        // Password-protected Office files go to the unlock screen first.
+        expect(viewer?.id).toBe(name.startsWith('locked-') ? 'words/locked' : folder === 'data' ? FOLDER_VIEWER[folder] : EXT_VIEWER[extOf(name)] ?? FOLDER_VIEWER[folder]);
 
         if (BINARY_EXT.has(extOf(name))) return;
 

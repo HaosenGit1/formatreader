@@ -46,6 +46,14 @@ export const wordsViewers: ViewerEntry[] = [
     load: () => import('./db/view'),
   },
   {
+    id: 'words/locked',
+    category: 'words',
+    layout: 'fill',
+    prefetch: false,
+    accepts: ({ format }) => format?.id === 'locked',
+    load: () => import('./locked/view'),
+  },
+  {
     id: 'words/rtf',
     category: 'words',
     mimes: /rtf/,

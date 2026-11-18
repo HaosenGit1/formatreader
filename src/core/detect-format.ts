@@ -256,6 +256,26 @@ function fromZip(names: string[], head: Uint8Array, ext: string): FormatInfo {
  * Returns null when nothing binary matched — the caller then treats the file
  * as text if the encoding detector agrees.
  */
+/** Does a compound (OLE) file's directory list this stream? Reads the first directory sectors. */
+async function cfbHasEntry(blob: BlobLike, head: Uint8Array, name: string): Promise<boolean> {
+  const needle = new Uint8Array([...name].flatMap((c) => [c.charCodeAt(0), 0]));
+  const find = (b: Uint8Array) => {
+    outer: for (let i = 0; i + needle.length <= b.length; i += 2) {
+      for (let j = 0; j < needle.length; j++) if (b[i + j] !== needle[j]) continue outer;
+      return true;
+    }
+    return false;
+  };
+  if (head.length < 0x40) return false;
+  const v = new DataView(head.buffer, head.byteOffset, head.byteLength);
+  const sector = 1 << v.getUint16(0x1e, true);
+  const dirStart = v.getUint32(0x30, true);
+  if (sector !== 512 && sector !== 4096) return false;
+  const at = (dirStart + 1) * sector;
+  const dir = at + 4 * sector <= head.length ? head.subarray(at, at + 4 * sector) : new Uint8Array(await blob.slice(at, at + 4 * sector).arrayBuffer());
+  return find(dir);
+}
+
 export async function detectFormat(blob: BlobLike, fileName: string): Promise<FormatInfo | null> {
   const head = new Uint8Array(await blob.slice(0, Math.max(HEAD_BYTES, 0x8006)).arrayBuffer());
   const ext = extOf(fileName);
@@ -264,6 +284,11 @@ export async function detectFormat(blob: BlobLike, fileName: string): Promise<Fo
     const names = await listZipEntries(blob);
     if (names) return fromZip(names, head, ext);
     return F('zip', 'ZIP archive', 'archives');
+  }
+
+  // Word/Excel/PowerPoint saved with a password: a compound file holding "EncryptedPackage".
+  if (startsWith(head, [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]) && (await cfbHasEntry(blob, head, 'EncryptedPackage'))) {
+    return F('locked', 'Password-protected Office file', 'words');
   }
 
   const magic = fromMagic(head, ext);

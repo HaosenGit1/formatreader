@@ -19,7 +19,7 @@ const walk = (dir: string) => {
   for (const f of readdirSync(dir)) {
     const p = join(dir, f);
     if (statSync(p).isDirectory()) walk(p);
-    else if (!samples.has(extOf(f))) samples.set(extOf(f), p);
+    else if (!samples.has(extOf(f)) && !f.startsWith('locked-')) samples.set(extOf(f), p); // locked files open the unlock screen
   }
 };
 walk(join(root, 'samples'));

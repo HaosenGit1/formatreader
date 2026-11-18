@@ -19,7 +19,10 @@ const s = strings({
   sheets: { en: 'sheets', zh: '个工作表' },
   hidden: { en: 'hidden', zh: '隐藏' },
   empty: { en: 'This sheet is empty.', zh: '这个工作表是空的。' },
-  password: { en: 'This spreadsheet is password-protected and cannot be opened.', zh: '这个表格设置了密码，无法打开。' },
+  password: { en: 'This spreadsheet is password-protected. Enter its password to open it here (it stays on this computer).', zh: '这个表格设置了密码。输入密码即可在这里打开（密码只留在这台电脑上）。' },
+  passwordLabel: { en: 'Password', zh: '密码' },
+  unlock: { en: 'Open', zh: '打开' },
+  wrongPassword: { en: 'That password is not right.', zh: '密码不正确。' },
   stepParse: { en: 'Reading the workbook…', zh: '正在读取工作簿…' },
   stepRows: { en: 'Preparing rows…', zh: '正在准备数据行…' },
   partial: { en: 'Charts and pictures inside the sheet are not shown yet. Formulas show their saved results (hover a cell to see the formula).', zh: '表格中的图表和图片暂不显示。公式显示保存时的结果（鼠标悬停可查看公式）。' },
@@ -85,7 +88,7 @@ async function openDelimited(file: File, ctx: OpenContext): Promise<OpenedView> 
 /** Formats that may store text in legacy code pages (need SheetJS's code-page tables). */
 
 
-async function openWorkbook(file: File, ctx: OpenContext): Promise<OpenedView> {
+async function openWorkbook(file: File, ctx: OpenContext, password?: string): Promise<OpenedView> {
   const ext = extOf(file.name);
   const data = await file.arrayBuffer();
   // Read in the background (website) or on the page (portable file), rows arriving in chunks.
@@ -100,17 +103,19 @@ async function openWorkbook(file: File, ctx: OpenContext): Promise<OpenedView> {
   try {
     if (import.meta.env.MODE === 'portable') {
       const { readSheets } = await import('./sheet-job');
-      await readSheets(data, ext, report, onInfo, onChunk);
+      await readSheets(data, ext, report, onInfo, onChunk, password);
     } else {
       const { startSheetWorker } = await import('./sheet-worker-host');
-      await runWorker(startSheetWorker(), { data, ext }, [data], (step, f) => report(step as 'parse' | 'rows', f), ctx.signal, (m) => {
+      await runWorker(startSheetWorker(), { data, ext, password }, [data], (step, f) => report(step as 'parse' | 'rows', f), ctx.signal, (m) => {
         const msg = m as { sheets?: SheetInfo[]; chunk?: RowChunk };
         if (msg.sheets) onInfo(msg.sheets);
         if (msg.chunk) onChunk(msg.chunk);
       });
     }
   } catch (e) {
-    if ((e as Error)?.message === 'PASSWORD') throw new Error(s('password'));
+    const msg = (e as Error)?.message;
+    // An old .xls with a password: ask for it and read again.
+    if (msg === 'PASSWORD' || msg === 'WRONG_PASSWORD') return askPassword(file, ctx, msg === 'WRONG_PASSWORD');
     throw e;
   }
 
@@ -184,6 +189,28 @@ async function openWorkbook(file: File, ctx: OpenContext): Promise<OpenedView> {
     onFontScale: () => {},
     onLangChange: () => drawSheet(),
   };
+}
+
+/** Password form for old .xls files (newer locked files are handled by the "locked" viewer). */
+function askPassword(file: File, ctx: OpenContext, wrong: boolean): Promise<OpenedView> {
+  return new Promise((resolve) => {
+    const input = h('input', { type: 'password', class: 'locked-input', autocomplete: 'off', placeholder: s('passwordLabel'), 'aria-label': s('passwordLabel') }) as HTMLInputElement;
+    const form = h(
+      'form',
+      {
+        class: 'sheet-password',
+        onsubmit: (e: Event) => {
+          e.preventDefault();
+          if (input.value) resolve(openWorkbook(file, ctx, input.value));
+        },
+      },
+      h('p', {}, s('password')),
+      h('div', { class: 'sheet-password-row' }, input, h('button', { type: 'submit', class: 'btn btn-primary' }, s('unlock'))),
+      wrong ? h('p', { class: 'sheet-password-wrong', role: 'alert' }, s('wrongPassword')) : null,
+    );
+    ctx.mount.replaceChildren(h('div', { class: 'view view-sheet-locked' }, form));
+    setTimeout(() => input.focus(), 0);
+  });
 }
 
 type GridCellMerge = { s: { r: number; c: number }; e: { r: number; c: number } };

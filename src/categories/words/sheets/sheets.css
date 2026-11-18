@@ -112,3 +112,40 @@ tbody tr:hover td {
   font-style: italic;
   opacity: 0.6;
 }
+
+.view-sheet-locked {
+  display: grid;
+  place-items: center;
+  min-height: 320px;
+  padding: 24px 16px;
+}
+
+.sheet-password {
+  width: min(440px, 100%);
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.sheet-password-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.sheet-password-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.sheet-password-wrong {
+  margin: 10px 0 0;
+  color: var(--muted);
+}

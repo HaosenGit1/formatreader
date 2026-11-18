@@ -50,16 +50,18 @@ function usedSize(XLSX: XLSXModule, ws: WorkSheet): { rows: number; cols: number
   return { rows, cols };
 }
 
-export async function readSheets(data: ArrayBuffer, ext: string, report: SheetReport, emitInfo: (sheets: SheetInfo[]) => void, emitChunk: (c: RowChunk) => void): Promise<void> {
+export async function readSheets(data: ArrayBuffer, ext: string, report: SheetReport, emitInfo: (sheets: SheetInfo[]) => void, emitChunk: (c: RowChunk) => void, password?: string): Promise<void> {
   const [XLSX, cptable] = await Promise.all([import('xlsx'), NEEDS_CODEPAGES.has(ext) ? import('xlsx/dist/cpexcel.full.mjs') : Promise.resolve(null)]);
   if (cptable) XLSX.set_cptable(cptable);
   report('parse');
   let wb: import('xlsx').WorkBook;
   try {
     // cellHTML off: the HTML copy of each cell is never used and costs ~20% of the reading time.
-    wb = XLSX.read(data, { type: 'array', cellDates: true, cellFormula: true, cellStyles: false, cellHTML: false, dense: false });
+    wb = XLSX.read(data, { type: 'array', cellDates: true, cellFormula: true, cellStyles: false, cellHTML: false, dense: false, ...(password ? { password } : {}) });
   } catch (e) {
     const msg = String((e as Error)?.message ?? e);
+    // Old .xls files with a password can be opened with it (the library decrypts them).
+    if (/password is incorrect/i.test(msg)) throw new Error('WRONG_PASSWORD');
     throw new Error(/password|encrypt/i.test(msg) ? 'PASSWORD' : msg);
   }
   const hidden = (wb.Workbook?.Sheets ?? []).map((sh) => !!sh.Hidden);
