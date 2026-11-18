@@ -1,0 +1,88 @@
+/* DXF viewer */
+.view-dxf {
+  display: flex;
+  height: 100%;
+}
+
+.dx-stage {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  outline: none;
+  cursor: grab;
+  touch-action: none;
+}
+
+.dx-stage:active {
+  cursor: grabbing;
+}
+
+.dx-stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.dx-hint,
+.dx-empty {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  color: var(--muted);
+  font-size: 12px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.dx-hint {
+  bottom: 10px;
+}
+
+.dx-empty {
+  top: 45%;
+  font-size: 14px;
+}
+
+.dx-layers {
+  flex: none;
+  width: 240px;
+  padding: 10px 12px;
+  overflow: auto;
+  border-left: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 13px;
+}
+
+.dx-layer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.dx-swatch {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+
+@media (max-width: 640px) {
+  .view-dxf {
+    flex-direction: column;
+  }
+
+  .dx-layers {
+    width: auto;
+    max-height: 40%;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+}

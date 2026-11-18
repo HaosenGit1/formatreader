@@ -1,0 +1,46 @@
+.view-mindmap {
+  padding: 18px 22px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.mm-sheet + .mm-sheet {
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.mm-sheet h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.mm-tree,
+.mm-tree ul {
+  margin: 0;
+  padding-left: 22px;
+  list-style: none;
+  border-left: 1px solid var(--line);
+}
+
+.mm-tree {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.mm-tree > li > details > summary .mm-title,
+.mm-tree > li > .mm-title {
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.mm-tree summary {
+  cursor: pointer;
+}
+
+.mm-note {
+  margin: 2px 0 4px 18px;
+  color: var(--muted);
+  font-size: 13px;
+  white-space: pre-wrap;
+}
