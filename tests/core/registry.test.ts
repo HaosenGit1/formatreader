@@ -53,7 +53,8 @@ describe('routing: each file goes to the right viewer', () => {
 
   test('binary formats', async () => {
     expect(await route('doc.pdf', '%PDF-1.7\n')).toBe('words/pdf');
-    expect(await route('photo.jpg', new Uint8Array([0xff, 0xd8, 0xff, 0xe0]))).toBe('core/info');
+    expect(await route('photo.jpg', new Uint8Array([0xff, 0xd8, 0xff, 0xe0]))).toBe('images/photo');
+    expect(await route('model.fbx', 'Kaydara FBX Binary  \0')).not.toBe('words/text');
   });
 });
 

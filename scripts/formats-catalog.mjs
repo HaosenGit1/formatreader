@@ -29,6 +29,13 @@ const TABLES = [
   { name: t('Databases', '数据库'), viewer: 'words/db', ext: ['mdb', 'accdb', 'sqlite', 'sqlite3', 'db'] },
 ];
 
+const IMAGES = [
+  { name: t('Photos & pictures', '照片和图片'), viewer: 'images/photo', ext: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'bmp', 'ico', 'svg', 'svgz'] },
+  { name: t('iPhone photos (HEIC)', 'iPhone 照片（HEIC）'), viewer: 'images/photo', ext: ['heic', 'heif'] },
+  { name: t('TIFF & Photoshop', 'TIFF 和 Photoshop'), viewer: 'images/photo', ext: ['tiff', 'tif', 'psd'] },
+  { name: t('Camera RAW (preview)', '相机 RAW（预览）'), viewer: 'images/photo', ext: ['dng', 'cr2', 'cr3', 'nef', 'arw', 'raf', 'orf', 'rw2', 'pef', 'srw'] },
+];
+
 const DATA = [{ name: t('COMTRADE fault records', 'COMTRADE 故障录波'), viewer: 'data/comtrade', ext: ['cfg', 'dat', 'cff'] }];
 
 const ARCHIVES = [
@@ -37,7 +44,7 @@ const ARCHIVES = [
 ];
 
 const COMING = [
-  { name: t('Images', '图片'), ext: ['jpg', 'png', 'heic', 'webp', 'gif', 'avif', 'tiff', 'bmp', 'svg', 'psd', 'raw'] },
+  { name: t('More images', '更多图片'), ext: ['jxl', 'jp2', 'exr', 'dcm', 'tga'] },
   { name: t('Sounds', '音频'), ext: ['mp3', 'wav', 'flac', 'm4a', 'aac', 'ogg', 'opus', 'wma'] },
   { name: t('Videos', '视频'), ext: ['mp4', 'mov', 'webm', 'mkv', 'avi', 'wmv'] },
   { name: t('Drawings & CAD', '图纸和 CAD'), ext: ['dwg', 'dxf', 'vsdx', 'step', 'stl', 'ifc'] },
@@ -59,7 +66,7 @@ function codeGroups(root) {
     'Data / config': t('Data & settings', '数据和配置'),
   };
   // Extensions that belong to (or are shared with) another group on this page.
-  const elsewhere = new Set(['key', 'pub', 'cfg', 'mat', 'ps', 'nc', 'fb2']);
+  const elsewhere = new Set(['key', 'pub', 'cfg', 'mat', 'ps', 'nc', 'fb2', 'svg']);
   const groups = new Map();
   let section = null;
   for (const line of block.split('\n')) {
@@ -84,6 +91,7 @@ export function formatsCatalog(root = process.cwd()) {
   return [
     { id: 'words', name: t('Documents & ebooks', '文档和电子书'), groups: WORDS },
     { id: 'tables', name: t('Tables & databases', '表格和数据库'), groups: TABLES },
+    { id: 'images', name: t('Images', '图片'), groups: IMAGES },
     { id: 'code', name: t('Code & settings', '代码和配置'), groups: codeGroups(root) },
     { id: 'data', name: t('Engineering data', '工程数据'), groups: DATA },
     { id: 'archives', name: t('Archives', '压缩包'), groups: ARCHIVES },

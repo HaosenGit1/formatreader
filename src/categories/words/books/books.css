@@ -1,21 +1,5 @@
 /* Ebook reader */
 
-.doc-fill {
-  display: flex;
-  flex-direction: column;
-  height: calc(100dvh - 57px);
-  padding-bottom: 16px;
-}
-
-.doc-fill .toolbar {
-  position: static;
-  flex: none;
-}
-
-.doc-fill .viewer-mount {
-  flex: 1;
-  min-height: 0;
-}
 
 .view-book {
   display: flex;

@@ -1,5 +1,6 @@
 /** How each viewer is named in the offline list: what people call the files, and their extensions. */
 export const VIEWER_LABELS: Record<string, { en: string; zh: string; ext: string }> = {
+  'images/photo': { en: 'Images', zh: '图片', ext: '.jpg .png .heic .webp .tiff .psd .raw …' },
   'words/text': { en: 'Text & logs', zh: '文本和日志', ext: '.txt .log .md .srt …' },
   'words/code': { en: 'Code & settings', zh: '代码和配置', ext: '.py .js .json .xml .yaml .ini .reg …' },
   'words/sheets': { en: 'Spreadsheets', zh: '表格', ext: '.csv .xlsx .xls .ods .numbers …' },

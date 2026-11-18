@@ -25,7 +25,7 @@ const walk = (dir: string) => {
 walk(join(root, 'samples'));
 
 /** Only recognised by content no sample here has (e.g. a .dat needs its .cfg; .cfg must look like COMTRADE). */
-const CONTENT_ONLY = new Set(['cfg', 'dat', 'db', 'sqlite3', 'tab', 'prn', 'wk1', 'qpw', 'fods', 'dotm', 'dotx', 'ppsx', 'potx', 'xltx', 'xlsm', 'docm', 'pptm', 'oxps', 'azw3', 'fbz', 'cbr', 'mobi', 'pdb', 'mht', 'iso', 'cab', 'zst', 'bz2', 'xz', 'tgz', 'numbers', 'et', 'dps', 'wps', 'dot', 'pps', 'pot', 'xlsb', 'dif', 'slk', 'dbf', 'mbox', 'mdx', 'xhtml']);
+const CONTENT_ONLY = new Set(['cfg', 'dat', 'db', 'sqlite3', 'tab', 'prn', 'wk1', 'qpw', 'fods', 'dotm', 'dotx', 'ppsx', 'potx', 'xltx', 'xlsm', 'docm', 'pptm', 'oxps', 'azw3', 'fbz', 'cbr', 'mobi', 'pdb', 'mht', 'iso', 'cab', 'zst', 'bz2', 'xz', 'tgz', 'numbers', 'et', 'dps', 'wps', 'dot', 'pps', 'pot', 'xlsb', 'dif', 'slk', 'dbf', 'mbox', 'mdx', 'xhtml', 'jpeg', 'avif', 'heif', 'tif', 'cr2', 'cr3', 'nef', 'arw', 'raf', 'orf', 'rw2', 'pef', 'srw']);
 
 type Group = { name: { en: string }; viewer?: string | string[]; ext: string[] };
 type Cat = { id: string; coming?: boolean; groups: Group[] };
