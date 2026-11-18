@@ -40,13 +40,62 @@ export const canWriteFolder = () => typeof (window as unknown as { showDirectory
 
 /** The parts of a folder handle used here (a fake one in tests). */
 export interface DirHandle {
+  readonly name: string;
+  queryPermission?(o: { mode: 'readwrite' }): Promise<PermissionState>;
+  requestPermission?(o: { mode: 'readwrite' }): Promise<PermissionState>;
   getDirectoryHandle(name: string, options?: { create?: boolean }): Promise<DirHandle>;
   getFileHandle(name: string, options?: { create?: boolean }): Promise<{ createWritable(): Promise<{ write(data: Blob): Promise<void>; close(): Promise<void> }> }>;
 }
 
-/** Must be called directly from the click (the folder picker needs the user's gesture). */
-export function pickFolder(): Promise<DirHandle> {
-  return (window as unknown as { showDirectoryPicker(o: object): Promise<DirHandle> }).showDirectoryPicker({ mode: 'readwrite', id: 'formatreader-extract' });
+/**
+ * The browser's folder chooser. Must be called directly from a click (it needs the user's
+ * gesture). Opens at the last folder used, or at Downloads.
+ */
+export function pickFolder(startIn?: DirHandle | null): Promise<DirHandle> {
+  return (window as unknown as { showDirectoryPicker(o: object): Promise<DirHandle> }).showDirectoryPicker({ mode: 'readwrite', id: 'formatreader-extract', startIn: startIn ?? 'downloads' });
+}
+
+/** Write permission for a remembered folder (asks the user if needed; call from a click). */
+export async function allowWrite(dir: DirHandle): Promise<boolean> {
+  try {
+    if ((await dir.queryPermission?.({ mode: 'readwrite' })) === 'granted') return true;
+    return (await dir.requestPermission?.({ mode: 'readwrite' })) === 'granted';
+  } catch {
+    return false;
+  }
+}
+
+// The last folder used is remembered in this browser only (IndexedDB can keep folder handles).
+const DB = 'formatreader-extract';
+function store<T>(mode: IDBTransactionMode, run: (s: IDBObjectStore) => IDBRequest<T>): Promise<T | undefined> {
+  return new Promise((resolve) => {
+    try {
+      const open = indexedDB.open(DB, 1);
+      open.onupgradeneeded = () => open.result.createObjectStore('folders');
+      open.onerror = () => resolve(undefined);
+      open.onsuccess = () => {
+        try {
+          const req = run(open.result.transaction('folders', mode).objectStore('folders'));
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => resolve(undefined);
+        } catch {
+          resolve(undefined);
+        }
+      };
+    } catch {
+      resolve(undefined);
+    }
+  });
+}
+export const lastFolder = () => store<DirHandle>('readonly', (s) => s.get('last') as IDBRequest<DirHandle>);
+export const rememberFolder = (dir: DirHandle) => store('readwrite', (s) => s.put(dir, 'last'));
+
+/** A folder name not used yet inside `parent`: "report", "report (2)"… */
+export async function freeName(parent: DirHandle, wanted: string): Promise<string> {
+  const base = safeParts(wanted)[0] ?? 'archive';
+  let name = base;
+  for (let n = 2; await exists(parent, name); n++) name = `${base} (${n})`;
+  return name;
 }
 
 async function exists(dir: DirHandle, name: string) {
@@ -65,9 +114,7 @@ async function exists(dir: DirHandle, name: string) {
 
 export async function extractToFolder(parent: DirHandle, baseName: string, entries: ExtractEntry[], progress: (done: number, total: number) => void): Promise<ExtractResult> {
   // Always a new folder: "report", then "report (2)"…
-  const base = safeParts(baseName)[0] ?? 'archive';
-  let name = base;
-  for (let n = 2; await exists(parent, name); n++) name = `${base} (${n})`;
+  const name = await freeName(parent, baseName);
   const root = await parent.getDirectoryHandle(name, { create: true });
   const dirs = new Map<string, DirHandle>([['', root]]);
   const dirFor = async (parts: string[]) => {

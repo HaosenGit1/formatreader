@@ -10,7 +10,7 @@ import { isJunkPath } from '../../../core/junk';
 import type { OpenContext, OpenedView } from '../../../core/viewer';
 import pkg from 'libarchive.js/package.json';
 import { nameRepair } from './names';
-import { canWriteFolder, extractToFolder, extractToZip, pickFolder, saveZip, type ExtractResult } from './extract-all';
+import { canWriteFolder } from './extract-all';
 
 const s = strings({
   files: { en: 'files', zh: '个文件' },
@@ -26,10 +26,6 @@ const s = strings({
   extractAll: { en: 'Extract all', zh: '全部解压' },
   extractTitleFolder: { en: 'Choose a folder: a new folder with all the files is created inside it', zh: '选择一个文件夹：会在里面新建一个文件夹，放入全部文件' },
   extractTitleZip: { en: 'Save all the files as one ordinary ZIP (with readable names)', zh: '把全部文件保存为一个普通 ZIP（文件名可正常显示）' },
-  extracting: { en: 'Extracting {n} of {total}…', zh: '正在解压 {n} / {total}…' },
-  extractedFolder: { en: 'Done: {n} files saved in the new folder “{where}”.', zh: '完成：{n} 个文件已保存到新文件夹“{where}”。' },
-  extractedZip: { en: 'Done: {n} files saved as “{where}” (see your downloads).', zh: '完成：{n} 个文件已保存为“{where}”（见下载文件夹）。' },
-  extractFailed: { en: '{n} could not be extracted: {names}', zh: '{n} 个无法解压：{names}' },
 });
 
 type LibArchive = typeof import('libarchive.js');
@@ -214,40 +210,12 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   if ((await archive.hasEncryptedData()) === true) passwordForm(load);
   else await load();
 
-  // Extract all: into a new folder (Chrome/Edge) or as one ZIP (other browsers).
-  const status = h('p', { class: 'archive-status', role: 'status' });
-  let extracting = false;
+  // Extract all: a dialog suggests a new folder, asks, extracts, then says where the files are.
   const baseName = file.name.replace(/(\.tar)?\.[^.]+$/i, '') || 'archive';
-  const report = (r: ExtractResult, folder: boolean) => {
-    status.textContent = (folder ? s('extractedFolder') : s('extractedZip')).replace('{n}', String(r.written)).replace('{where}', r.where);
-    if (r.failed.length) status.textContent += ' ' + s('extractFailed').replace('{n}', String(r.failed.length)).replace('{names}', r.failed.slice(0, 5).join(', ') + (r.failed.length > 5 ? '…' : ''));
-  };
-  const progress = (n: number, total: number) => (status.textContent = s('extracting').replace('{n}', String(n)).replace('{total}', String(total)));
   const extractAll = async () => {
-    if (extracting || !entries.length) return;
-    const folder = canWriteFolder();
-    let dir: Awaited<ReturnType<typeof pickFolder>> | null = null;
-    if (folder) {
-      try {
-        dir = await pickFolder(); // first, while the click still counts as the user's gesture
-      } catch {
-        return; // cancelled
-      }
-    }
-    extracting = true;
-    if (!body.contains(status)) body.prepend(status);
-    try {
-      if (dir) report(await extractToFolder(dir, baseName, entries, progress), true);
-      else {
-        const { result, blob } = await extractToZip(baseName, entries, progress);
-        saveZip(blob, result.where);
-        report(result, false);
-      }
-    } catch (err) {
-      status.textContent = String((err as Error)?.message ?? err);
-    } finally {
-      extracting = false;
-    }
+    if (!entries.length) return;
+    const { openExtractDialog } = await import('./extract-dialog');
+    await openExtractDialog(entries, baseName);
   };
 
   const kind = (ctx.format?.name ?? 'Archive').replace(/ archive$/i, '');
