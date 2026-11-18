@@ -34,6 +34,12 @@ describe('analytics never sends file names', () => {
     expect(p.allow_ad_personalization_signals).toBe(false);
   });
 
+  test("Google's automatic page view (it reads the browser title) is off; ours uses the fixed title", () => {
+    const code = readFileSync(join(root, 'src/core/analytics.ts'), 'utf8');
+    expect(code).toContain('send_page_view: false');
+    expect(code).toContain("gtag('event', 'page_view', params)");
+  });
+
   test('only a GA4 measurement ID is accepted (not Tag Manager)', () => {
     expect(validId('G-4VXFDZTMF0')).toBe(true);
     expect(validId('GTM-MDMSXJD3')).toBe(false);

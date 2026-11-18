@@ -53,7 +53,10 @@ export function startAnalytics(pageTitle: string): void {
   const params = baseParams(pageTitle, location.origin, location.pathname);
   gtag('js', new Date());
   gtag('set', params); // also applies to automatic events (scrolls, outbound clicks)
-  gtag('config', ID, params);
+  // Google's automatic page view reads the browser's title, which names the open file
+  // once one is shown (gtag.js loads after the page is up). Send our own instead.
+  gtag('config', ID, { ...params, send_page_view: false });
+  gtag('event', 'page_view', params);
   const load = () => {
     const s = document.createElement('script');
     s.async = true;
