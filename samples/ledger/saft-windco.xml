@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AuditFile xmlns="urn:StandardAuditFile-Taxation-Financial:NO">
+  <Header>
+    <AuditFileVersion>1.30</AuditFileVersion>
+    <AuditFileCountry>NO</AuditFileCountry>
+    <AuditFileDateCreated>2026-01-31</AuditFileDateCreated>
+    <SoftwareCompanyName>Fjord Regnskap AS</SoftwareCompanyName>
+    <SoftwareID>FjordLedger</SoftwareID>
+    <SoftwareVersion>7.2</SoftwareVersion>
+    <Company>
+      <RegistrationNumber>987654321</RegistrationNumber>
+      <Name>Vindkraft Nord AS</Name>
+    </Company>
+    <DefaultCurrencyCode>NOK</DefaultCurrencyCode>
+    <SelectionCriteria><SelectionStartDate>2025-01-01</SelectionStartDate><SelectionEndDate>2025-12-31</SelectionEndDate></SelectionCriteria>
+  </Header>
+  <MasterFiles>
+    <GeneralLedgerAccounts>
+      <Account><AccountID>1920</AccountID><AccountDescription>Bankinnskudd</AccountDescription><AccountType>GL</AccountType><OpeningDebitBalance>250000.00</OpeningDebitBalance><ClosingDebitBalance>287500.00</ClosingDebitBalance></Account>
+      <Account><AccountID>3000</AccountID><AccountDescription>Salgsinntekt kraft</AccountDescription><AccountType>GL</AccountType><OpeningCreditBalance>0.00</OpeningCreditBalance><ClosingCreditBalance>50000.00</ClosingCreditBalance></Account>
+      <Account><AccountID>6300</AccountID><AccountDescription>Vedlikehold turbiner</AccountDescription><AccountType>GL</AccountType><OpeningDebitBalance>0.00</OpeningDebitBalance><ClosingDebitBalance>12500.00</ClosingDebitBalance></Account>
+    </GeneralLedgerAccounts>
+    <Customers><Customer><CustomerID>K100</CustomerID><Name>Nordpool Settlement</Name></Customer><Customer><CustomerID>K200</CustomerID><Name>Statnett SF</Name></Customer></Customers>
+  </MasterFiles>
+  <GeneralLedgerEntries>
+    <NumberOfEntries>2</NumberOfEntries>
+    <TotalDebit>62500.00</TotalDebit>
+    <TotalCredit>62500.00</TotalCredit>
+    <Journal>
+      <JournalID>GL</JournalID>
+      <Description>General ledger</Description>
+      <Transaction>
+        <TransactionID>2025-0001</TransactionID><Period>3</Period><TransactionDate>2025-03-31</TransactionDate><Description>Kraftsalg mars</Description>
+        <Line><RecordID>1</RecordID><AccountID>1920</AccountID><Description>Innbetaling</Description><DebitAmount><Amount>50000.00</Amount></DebitAmount></Line>
+        <Line><RecordID>2</RecordID><AccountID>3000</AccountID><Description>Salg</Description><CreditAmount><Amount>50000.00</Amount></CreditAmount></Line>
+      </Transaction>
+      <Transaction>
+        <TransactionID>2025-0002</TransactionID><Period>6</Period><TransactionDate>2025-06-15</TransactionDate><Description>Service WTG-04</Description>
+        <Line><RecordID>1</RecordID><AccountID>6300</AccountID><Description>Vedlikehold</Description><DebitAmount><Amount>12500.00</Amount></DebitAmount></Line>
+        <Line><RecordID>2</RecordID><AccountID>1920</AccountID><Description>Betaling</Description><CreditAmount><Amount>12500.00</Amount></CreditAmount></Line>
+      </Transaction>
+    </Journal>
+  </GeneralLedgerEntries>
+</AuditFile>

@@ -136,6 +136,15 @@ export const wordsViewers: ViewerEntry[] = [
     load: () => import('./sheets/view'),
   },
   {
+    // SAF-T audit files and GB/T 24589 accounting data.
+    id: 'words/ledger',
+    category: 'words',
+    prefetch: false,
+    priority: 30,
+    accepts: ({ format, head }) => isTextish(format) && /StandardAuditFile|<(\w+:)?AuditFile[\s>]|GB\/T\s*24589|<(\w+:)?(电子账簿|记账凭证|会计科目|科目余额|会计凭证)[\s>]/i.test(headText(head)),
+    load: () => import('./ledger/view'),
+  },
+  {
     // XBRL and Inline XBRL financial reports, detected by their namespaces.
     id: 'words/xbrl',
     category: 'words',

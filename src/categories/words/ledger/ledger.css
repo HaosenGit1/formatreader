@@ -1,0 +1,130 @@
+/* SAF-T / GB/T 24589 accounting data */
+.view-ledger {
+  padding: 18px 16px 40px;
+}
+
+.lg {
+  max-width: 1200px;
+  margin: 0 auto;
+  font-size: 14px;
+}
+
+.lg h2 {
+  margin: 2px 0 12px;
+  font-size: 20px;
+}
+
+.lg-kind,
+.lg-count {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.lg-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.lg-card {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.lg-card span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.lg-card strong {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.lg-check {
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+}
+
+.lg-check.ok {
+  background: color-mix(in srgb, #1a7f37 12%, transparent);
+}
+
+.lg-check.bad {
+  background: var(--warn-soft);
+  font-weight: 600;
+}
+
+.lg-h {
+  margin: 22px 0 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.lg-table {
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.lg-table summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.lg-table summary .btn {
+  margin-left: auto;
+}
+
+.lg-wrap {
+  max-height: 60vh;
+  overflow: auto;
+  border-top: 1px solid var(--line);
+}
+
+.lg-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.lg-wrap th,
+.lg-wrap td {
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.lg-wrap th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.lg-wrap .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.lg-search {
+  width: 200px;
+  max-width: 40vw;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}

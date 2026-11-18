@@ -20,7 +20,7 @@ const walk = (dir: string) => {
     const p = join(dir, f);
     if (statSync(p).isDirectory()) {
       // Bank statements and e-invoices are XML/text recognised by content: not "the .xml sample".
-      if (!/[\\/](bank|invoices|animations|xbrl)$/.test(p)) walk(p);
+      if (!/[\\/](bank|invoices|animations|xbrl|ledger)$/.test(p)) walk(p);
     }
     else if (!samples.has(extOf(f)) && !f.startsWith('locked-')) samples.set(extOf(f), p); // locked files open the unlock screen
   }
