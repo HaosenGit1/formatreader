@@ -8,7 +8,7 @@ import { lang, strings } from '../core/i18n';
 import { VIEWER_LABELS } from './labels';
 
 const s = strings({
-  offline: { en: 'Offline', zh: '离线' },
+  offline: { en: 'Offline ready', zh: '离线可用' },
   title: { en: 'Use offline', zh: '离线使用' },
   lead: { en: 'Files are never uploaded. Download once, use offline.', zh: '文件从不上传。下载一次，离线可用。' },
   makeAll: { en: 'Download · {size}', zh: '下载 · {size}' },
@@ -62,7 +62,7 @@ export function offlineLine(): HTMLElement {
         'button',
         { type: 'button', class: 'offline-line', onclick: () => openPanel(status, ids, render) },
         h('span', { class: `offline-dot${full ? ' full' : ready ? ' some' : ''}`, 'aria-hidden': 'true' }),
-        `${s('offline')} · ${ready}/${ids.length}`,
+        `${s('offline')}: ${ready}/${ids.length}`,
       ),
     );
   };
