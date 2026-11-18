@@ -35,6 +35,8 @@ const s = strings({
   },
   back: { en: 'Back', zh: '返回' },
   formats: { en: 'Formats', zh: '支持的格式' },
+  portable: { en: 'Portable · works without internet', zh: '便携版 · 无需联网' },
+  portableNote: { en: 'This single file is the whole app. Copy it anywhere and open it in a browser.', zh: '这一个文件就是完整的应用。复制到任何地方，用浏览器打开即可。' },
 });
 
 interface Current {
@@ -98,7 +100,9 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
       'main',
       { class: 'landing' },
       h('button', { type: 'button', class: 'circle', onclick: () => fileInput.click() }, h('span', { class: 'circle-text' }, s('readAny'))),
-      h('footer', { class: 'landing-foot' }, h('a', { class: 'foot-link', href: 'formats.html' }, s('formats')), offlineLine()),
+      import.meta.env.MODE === 'portable'
+        ? h('footer', { class: 'landing-foot' }, h('span', { class: 'foot-link', title: s('portableNote') }, s('portable')))
+        : h('footer', { class: 'landing-foot' }, h('a', { class: 'foot-link', href: 'formats.html' }, s('formats')), offlineLine()),
     );
 
   /** The only loading state: the name fills with colour like a progress bar. */

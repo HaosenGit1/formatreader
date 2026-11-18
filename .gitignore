@@ -6,3 +6,4 @@ dist/
 coverage/
 !samples/**/*.log
 public/vendor/
+dist-portable

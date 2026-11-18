@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { defineConfig, type Plugin } from 'vite';
@@ -114,29 +114,96 @@ function formatsPagePlugin(): Plugin {
   };
 }
 
-export default defineConfig({
-  base: './',
-  plugins: [formatsPagePlugin(), offlinePlugin()],
-  build: {
-    target: 'es2022',
-    sourcemap: false,
-    rollupOptions: {
-      input: { main: resolve('index.html'), formats: resolve('formats.html') },
-      output: {
-        // Small helpers shared by the app and every viewer live in their own file. Otherwise they sit
-        // in the app's entry file, and any change to the front page would rename every viewer file
-        // (each refers to the entry by name) and make returning visitors download everything again.
-        manualChunks(id: string) {
-          if (/[\\/]src[\\/]core[\\/](dom|i18n|viewer|info-view|info-entry|registry|detect-format|zip|mime)\.ts$/.test(id)) return 'core';
-          // Vite's helper for loading viewers (and their styles) on demand.
-          if (id.includes('vite/preload-helper') || id.includes('vite/modulepreload-polyfill')) return 'core';
-          return undefined;
+/**
+ * Portable build (`npm run build:portable`): the whole app in ONE file,
+ * dist-portable/FormatReader.html, for computers without internet. Carry it on
+ * a USB stick and open it in any browser (double-click, or drag it in).
+ * Every script, style and WebAssembly engine is inlined; the page's security
+ * rule allows only this exact inlined script (by its hash), so scripts inside
+ * opened documents still cannot run.
+ */
+function portablePlugin(): Plugin {
+  let outDir = 'dist-portable';
+  return {
+    name: 'formatreader-portable',
+    apply: 'build',
+    configResolved(c) {
+      outDir = c.build.outDir;
+    },
+    // Runs on the finished files (after every Vite step), then leaves only FormatReader.html.
+    closeBundle() {
+      const read = (file: string) => readFileSync(join(outDir, file), 'utf8');
+      let page = read('index.html');
+      const scripts: string[] = [];
+      page = page.replace(/<script type="module"[^>]*src="\.?\/?([^"]+)"[^>]*><\/script>/g, (_m, file) => {
+        const code = read(file).replace(/<\/script/gi, '<\\/script');
+        scripts.push(code);
+        return `<script type="module">${code}</script>`;
+      });
+      page = page.replace(/<link rel="stylesheet"[^>]*href="\.?\/?([^"]+)"[^>]*>/g, (_m, file) => `<style>${read(file)}</style>`);
+      page = page.replace(/<link rel="modulepreload"[^>]*>/g, '');
+      // Only the favicon is kept (inlined); the app manifest and touch icon belong to the website.
+      page = page.replace(/<link rel="(manifest|apple-touch-icon)"[^>]*>\s*/g, '');
+      const favicon = readFileSync('public/favicon.svg');
+      page = page.replace(/<link rel="icon"[^>]*>/, `<link rel="icon" href="data:image/svg+xml;base64,${favicon.toString('base64')}" />`);
+      // Node-style `process` that some bundled libraries (Access reader) touch when they load:
+      // in the single file they load together, so the stand-in must exist before anything runs.
+      const shim = "globalThis.process ??= { browser: true, version: '', versions: {}, env: {}, nextTick: (f, ...a) => queueMicrotask(() => f(...a)) };";
+      scripts.unshift(shim);
+      page = page.replace('<script type="module">', `<script>${shim}</script>\n    <script type="module">`);
+      const hashes = scripts.map((code) => `'sha256-${createHash('sha256').update(code).digest('base64')}'`).join(' ');
+      page = page.replace(/script-src 'self'/, `script-src 'self' ${hashes}`).replace(/default-src 'self' blob:;/, "default-src 'self' blob:; worker-src blob: data:;");
+      const stamp = new Date().toISOString().slice(0, 10);
+      page = page.replace('<title>FormatReader</title>', `<title>FormatReader</title>\n    <meta name="formatreader-portable" content="${stamp}" />`);
+      if (/src="\.?\/?assets\//.test(page) || page.includes('__VITE_PRELOAD__')) throw new Error('portable: something was not inlined');
+      for (const f of readdirSync(outDir)) rmSync(join(outDir, f), { recursive: true, force: true });
+      writeFileSync(join(outDir, 'FormatReader.html'), page);
+      console.log(`  portable: ${outDir}/FormatReader.html ${(page.length / 1e6).toFixed(1)} MB (${stamp})`);
+    },
+  };
+}
+
+export default defineConfig(({ mode }) =>
+  mode === 'portable'
+    ? {
+        base: './',
+        plugins: [portablePlugin()],
+        build: {
+          target: 'es2022',
+          sourcemap: false,
+          outDir: 'dist-portable',
+          emptyOutDir: true,
+          copyPublicDir: false,
+          assetsInlineLimit: 100_000_000, // WebAssembly engines become data: URLs
+          cssCodeSplit: false,
+          chunkSizeWarningLimit: 100_000,
+          rollupOptions: { input: resolve('index.html'), output: { inlineDynamicImports: true } },
+        },
+      }
+    : {
+        base: './',
+        plugins: [formatsPagePlugin(), offlinePlugin()],
+        build: {
+          target: 'es2022',
+          sourcemap: false,
+          rollupOptions: {
+            input: { main: resolve('index.html'), formats: resolve('formats.html') },
+            output: {
+              // Small helpers shared by the app and every viewer live in their own file. Otherwise they sit
+              // in the app's entry file, and any change to the front page would rename every viewer file
+              // (each refers to the entry by name) and make returning visitors download everything again.
+              manualChunks(id: string) {
+                if (/[\\/]src[\\/]core[\\/](dom|i18n|viewer|info-view|info-entry|registry|detect-format|zip|mime)\.ts$/.test(id)) return 'core';
+                // Vite's helper for loading viewers (and their styles) on demand.
+                if (id.includes('vite/preload-helper') || id.includes('vite/modulepreload-polyfill')) return 'core';
+                return undefined;
+              },
+            },
+          },
+        },
+        test: {
+          environment: 'node',
+          include: ['tests/**/*.test.ts'],
         },
       },
-    },
-  },
-  test: {
-    environment: 'node',
-    include: ['tests/**/*.test.ts'],
-  },
-});
+);

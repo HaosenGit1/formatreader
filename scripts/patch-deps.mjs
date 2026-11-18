@@ -14,6 +14,19 @@ const patches = [
     from: 'throw new Error("Unsupported column type");',
     to: 'return `unsupported-0x${Number(typeValue).toString(16)}`;',
   },
+  {
+    // foliate-js (ebooks): opened from a file on disk (the portable FormatReader.html), every
+    // blob: page gets its own opaque origin, so the reader cannot reach into the frame it made.
+    // There, put the page's HTML into the frame directly (srcdoc keeps the parent's origin).
+    files: ['node_modules/foliate-js/paginator.js'],
+    from: 'this.#iframe.src = src',
+    to: "globalThis.__formatreaderSrcdoc ? fetch(src).then((r) => r.text()).then((t) => { this.#iframe.srcdoc = t }) : (this.#iframe.src = src)",
+  },
+  {
+    files: ['node_modules/foliate-js/fixed-layout.js'],
+    from: 'iframe.src = src',
+    to: "globalThis.__formatreaderSrcdoc ? fetch(src).then((r) => r.text()).then((t) => { iframe.srcdoc = t }) : (iframe.src = src)",
+  },
 ];
 
 for (const { files, from, to } of patches)

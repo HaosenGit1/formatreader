@@ -167,3 +167,19 @@ FormatReader works with no internet once its code is stored in the browser.
   change. Old versioned files stay on S3, so tabs open during a deploy keep working.
 - The worker only handles GET requests for this site's own files; it never sees
   the files people open (`tests/core/read-only.test.ts` checks this).
+
+## Portable file (computers without internet)
+
+`npm run build:portable` makes `dist-portable/FormatReader.html`: the whole app in
+one file (~8 MB). Download it anywhere, copy it to a computer with no internet
+(USB stick, shared drive), and open it in a browser. No install, no server.
+
+- `portablePlugin` (vite.config.ts) inlines every script, style and WebAssembly
+  engine into the page. Only those exact inlined scripts may run (CSP hashes), so
+  scripts inside opened documents are still blocked.
+- Opened from disk, browsers refuse workers from blob: addresses and give blob:
+  frames their own origin. So the archive worker starts from a `data:` address,
+  and ebook pages are put into their frames with `srcdoc` (scripts/patch-deps.mjs).
+- No offline worker or panel; the footer says "Portable · works without internet".
+- Deploy uploads it as formatreader.com/FormatReader.html (saved, not displayed);
+  the Offline panel links to it. It is a snapshot: save it again for updates.

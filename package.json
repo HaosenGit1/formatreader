@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "build:portable": "node scripts/patch-deps.mjs && vite build --mode portable",
     "build": "tsc --noEmit && vite build && node scripts/check-size.mjs",
     "preview": "vite preview",
     "test": "vitest run",

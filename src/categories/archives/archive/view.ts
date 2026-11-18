@@ -25,9 +25,22 @@ const s = strings({
 type LibArchive = typeof import('libarchive.js');
 let lib: Promise<LibArchive['Archive']> | null = null;
 function archiveLib() {
-  lib ??= import('libarchive.js').then(({ Archive }) => {
+  lib ??= import('libarchive.js').then(async ({ Archive }) => {
     // The worker and its WebAssembly are copied to /vendor by scripts/copy-vendor.mjs.
-    Archive.init({ workerUrl: new URL(`vendor/libarchive-js-${pkg.version}/worker-bundle.js`, document.baseURI).href });
+    if (import.meta.env.MODE === 'portable') {
+      // Portable file: no separate files can be loaded, so the worker and its WebAssembly
+      // come from inside the page (as a blob and a data: URL).
+      const [{ default: source }, { default: wasm }] = await Promise.all([
+        import('libarchive.js/dist/worker-bundle.js?raw'),
+        import('libarchive.js/dist/libarchive.wasm?url'),
+      ]);
+      const patched = source.replace('new URL("libarchive.wasm",import.meta.url).href', JSON.stringify(wasm));
+      if (patched === source) throw new Error('portable: libarchive worker layout changed');
+      // A data: address: browsers refuse workers started from blob: addresses of a file opened from disk.
+      Archive.init({ workerUrl: 'data:text/javascript;charset=utf-8,' + encodeURIComponent(patched) });
+    } else {
+      Archive.init({ workerUrl: new URL(`vendor/libarchive-js-${pkg.version}/worker-bundle.js`, document.baseURI).href });
+    }
     return Archive;
   });
   return lib;

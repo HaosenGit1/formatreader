@@ -31,6 +31,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      - run: npm run build:portable
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
@@ -38,6 +39,8 @@ jobs:
       - name: Upload (versioned files first, then the page; old versioned files are kept so open tabs keep working)
         run: |
           aws s3 sync dist/assets "s3://${{ vars.SITE_BUCKET }}/assets" --cache-control "public, max-age=31536000, immutable" --only-show-errors
-          aws s3 sync dist "s3://${{ vars.SITE_BUCKET }}" --exclude "assets/*" --delete --cache-control "public, max-age=0, must-revalidate" --only-show-errors
+          aws s3 sync dist "s3://${{ vars.SITE_BUCKET }}" --exclude "assets/*" --exclude "FormatReader.html" --delete --cache-control "public, max-age=0, must-revalidate" --only-show-errors
+          # The portable single file (for computers without internet): saved, not shown.
+          aws s3 cp dist-portable/FormatReader.html "s3://${{ vars.SITE_BUCKET }}/FormatReader.html" --content-type "text/html; charset=utf-8" --content-disposition 'attachment; filename="FormatReader.html"' --cache-control "public, max-age=0, must-revalidate" --only-show-errors
       - name: Refresh the CDN
-        run: aws cloudfront create-invalidation --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" --paths "/" "/index.html" "/sw.js" "/manifest.json"
+        run: aws cloudfront create-invalidation --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" --paths "/" "/index.html" "/sw.js" "/manifest.json" "/FormatReader.html"

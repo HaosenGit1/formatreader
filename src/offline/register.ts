@@ -4,7 +4,7 @@
  * app, everything is stored so every format opens offline.
  */
 export function registerOffline(): void {
-  if (!import.meta.env.PROD || !('serviceWorker' in navigator) || !window.isSecureContext) return;
+  if (!import.meta.env.PROD || import.meta.env.MODE === 'portable' || !('serviceWorker' in navigator) || !window.isSecureContext) return;
   const start = async () => {
     try {
       const reg = await navigator.serviceWorker.register('./sw.js', { scope: './' });

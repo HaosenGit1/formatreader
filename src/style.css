@@ -851,3 +851,8 @@ a.btn {
   color: inherit;
   text-decoration: none;
 }
+
+.offline-portable a {
+  color: var(--accent);
+  font-weight: 550;
+}
