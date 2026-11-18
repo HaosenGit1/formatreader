@@ -8,6 +8,7 @@ import { h } from '../../../core/dom';
 import { strings } from '../../../core/i18n';
 import type { OpenContext, OpenedView } from '../../../core/viewer';
 import { ACAD_VERSIONS } from '../shared/acad';
+import { dwgPreview } from '../shared/dwg-preview';
 import { buildDxf, dxfEncoding, type Built, type Prim } from './build';
 
 const s = strings({
@@ -18,6 +19,11 @@ const s = strings({
   layerCount: { en: 'layers', zh: '个图层' },
   empty: { en: 'This drawing has nothing to draw.', zh: '这个图纸没有可显示的内容。' },
   binary: { en: 'This is a binary DXF, which is not supported yet. Save it as an ASCII DXF.', zh: '这是二进制 DXF，暂不支持。请另存为 ASCII DXF。' },
+  dwgFallback: {
+    en: 'This DWG could not be read in full ({why}). Showing the preview picture AutoCAD saved in it.',
+    zh: '无法完整读取这个 DWG（{why}）。显示 AutoCAD 保存在其中的预览图。',
+  },
+  dwgNothing: { en: 'This DWG could not be read ({why}) and has no saved preview picture.', zh: '无法读取这个 DWG（{why}），文件中也没有预览图。' },
   skipped: { en: 'Not drawn yet: {list}.', zh: '暂未绘制：{list}。' },
   hint: { en: 'Scroll to zoom · drag to move · double-click to fit', zh: '滚轮缩放 · 拖动平移 · 双击适应窗口' },
 });
@@ -25,13 +31,27 @@ const s = strings({
 export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   const bytes = new Uint8Array(await file.arrayBuffer());
   const head = new TextDecoder('latin1').decode(bytes.subarray(0, 65536));
-  if (head.startsWith('AutoCAD Binary DXF')) throw new Error(s('binary'));
-  const text = new TextDecoder(dxfEncoding(head)).decode(bytes);
-  const version = /\$ACADVER\s*\r?\n\s*1\s*\r?\n\s*(AC\d{4})/.exec(head)?.[1];
-
-  const { default: DxfParser } = await import('dxf-parser');
-  const parsed = new DxfParser().parseSync(text);
+  const isDwg = ctx.format?.id === 'dwg';
+  let version: string | undefined;
+  let parsed: unknown;
+  if (isDwg) {
+    version = head.slice(0, 6);
+    try {
+      const { readDwgAsDxf } = await import('./dwg');
+      parsed = await readDwgAsDxf(bytes.slice());
+    } catch (err) {
+      return dwgFallback(bytes, version, String((err as Error)?.message ?? err), ctx);
+    }
+  } else {
+    if (head.startsWith('AutoCAD Binary DXF')) throw new Error(s('binary'));
+    const text = new TextDecoder(dxfEncoding(head)).decode(bytes);
+    version = /\$ACADVER\s*\r?\n\s*1\s*\r?\n\s*(AC\d{4})/.exec(head)?.[1];
+    const { default: DxfParser } = await import('dxf-parser');
+    parsed = new DxfParser().parseSync(text);
+  }
   const built: Built = buildDxf(parsed as never);
+  // A DWG with no drawing data (only a saved preview): show the preview.
+  if (isDwg && !built.bounds) return dwgFallback(bytes, version ?? '', 'no drawing data', ctx);
 
   const canvas = document.createElement('canvas');
   const stage = h('div', { class: 'dx-stage', tabindex: '0' }, canvas, h('div', { class: 'dx-hint' }, s('hint')));
@@ -198,13 +218,27 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
 
   const skipped = [...built.skipped.entries()].filter(([t]) => !['VIEWPORT', 'ATTRIB', 'SEQEND'].includes(t));
   return {
-    meta: () => ['DXF', ...(version ? [`AutoCAD ${ACAD_VERSIONS[version] ?? version}`] : []), `${built.entityCount.toLocaleString()} ${s('entities')}`, `${built.layers.size} ${s('layerCount')}`],
+    meta: () => [isDwg ? 'DWG' : 'DXF', ...(version ? [`AutoCAD ${ACAD_VERSIONS[version] ?? version}`] : []), `${built.entityCount.toLocaleString()} ${s('entities')}`, `${built.layers.size} ${s('layerCount')}`],
     tools: () => tools,
     notices: () => (skipped.length ? [h('div', { class: 'notice subtle' }, s('skipped').replace('{list}', skipped.map(([t, n]) => `${t} (${n})`).join(', ')))] : []),
     destroy: () => {
       ro.disconnect();
       cancelAnimationFrame(pending);
     },
+  };
+}
+
+/** A DWG LibreDWG can't read: show the preview AutoCAD saved in it, with the reason. */
+function dwgFallback(bytes: Uint8Array, version: string, why: string, ctx: OpenContext): OpenedView {
+  const preview = dwgPreview(bytes);
+  const url = preview ? URL.createObjectURL(preview.blob) : '';
+  ctx.mount.replaceChildren(
+    h('div', { class: 'view dx-fallback' }, preview ? h('img', { src: url, alt: '' }) : h('p', {}, s('dwgNothing').replace('{why}', why))),
+  );
+  return {
+    meta: () => ['DWG', `AutoCAD ${ACAD_VERSIONS[version] ?? version}`],
+    notices: () => (preview ? [h('div', { class: 'notice' }, s('dwgFallback').replace('{why}', why))] : []),
+    destroy: () => url && URL.revokeObjectURL(url),
   };
 }
 

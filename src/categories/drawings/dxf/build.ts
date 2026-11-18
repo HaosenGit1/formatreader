@@ -350,7 +350,37 @@ export function buildDxf(dxf: Dxf): Built {
     });
   }
 
-  return { prims, layers, bounds: boundsOf(prims), entityCount, skipped };
+  return { prims, layers, bounds: robustBounds(prims), entityCount, skipped };
+}
+
+/**
+ * Extents for "fit": the region where the drawing actually is. A few stray or
+ * mis-scaled objects far away (common in real files) would otherwise shrink
+ * everything to a dot. Objects whose box sits far outside the box holding the
+ * middle 90% of objects are ignored for fitting (they are still drawn).
+ */
+function robustBounds(prims: Prim[]): Built['bounds'] {
+  const all = boundsOf(prims);
+  if (!all || prims.length < 10) return all;
+  const boxes = prims.map((p) => boundsOf([p])).filter((b): b is NonNullable<Built['bounds']> => !!b);
+  const pct = (vals: number[], q: number) => vals.sort((a, b) => a - b)[Math.floor((vals.length - 1) * q)];
+  const cx = boxes.map((b) => (b.minX + b.maxX) / 2);
+  const cy = boxes.map((b) => (b.minY + b.maxY) / 2);
+  const x0 = pct([...cx], 0.05);
+  const x1 = pct([...cx], 0.95);
+  const y0 = pct([...cy], 0.05);
+  const y1 = pct([...cy], 0.95);
+  const span = Math.max(x1 - x0, y1 - y0, 1e-9);
+  const lo = { x: x0 - span * 2, y: y0 - span * 2 };
+  const hi = { x: x1 + span * 2, y: y1 + span * 2 };
+  const kept = boxes.filter((b) => b.minX >= lo.x && b.maxX <= hi.x && b.minY >= lo.y && b.maxY <= hi.y);
+  if (kept.length < boxes.length * 0.8) return all; // not a few outliers: fit everything
+  return {
+    minX: Math.min(...kept.map((b) => b.minX)),
+    minY: Math.min(...kept.map((b) => b.minY)),
+    maxX: Math.max(...kept.map((b) => b.maxX)),
+    maxY: Math.max(...kept.map((b) => b.maxY)),
+  };
 }
 
 /** Extents of everything drawn (texts by an estimate of their box). */

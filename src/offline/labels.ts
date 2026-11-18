@@ -1,9 +1,9 @@
 /** How each viewer is named in the offline list: what people call the files, and their extensions. */
 export const VIEWER_LABELS: Record<string, { en: string; zh: string; ext: string }> = {
   'images/photo': { en: 'Images', zh: '图片', ext: '.jpg .png .heic .webp .tiff .psd .raw .exr .dcm …' },
-  'drawings/dxf': { en: 'CAD drawings (DXF)', zh: 'CAD 图纸（DXF）', ext: '.dxf' },
+  'drawings/dxf': { en: 'CAD drawings (DWG, DXF)', zh: 'CAD 图纸（DWG、DXF）', ext: '.dwg .dxf' },
   'drawings/model': { en: '3D models & CAD', zh: '3D 模型和 CAD', ext: '.stl .obj .glb .3mf .step .iges .ifc …' },
-  'drawings/preview': { en: 'DWG, ODG & Visio (preview)', zh: 'DWG、ODG 和 Visio（预览）', ext: '.dwg .odg .vsdx' },
+  'drawings/preview': { en: 'ODG & Visio', zh: 'ODG 和 Visio', ext: '.odg .vsdx' },
   'drawings/mindmap': { en: 'Mind maps', zh: '思维导图', ext: '.xmind' },
   'sounds/audio': { en: 'Music & sound', zh: '音乐和音频', ext: '.mp3 .m4a .wav .flac .ogg .opus …' },
   'videos/video': { en: 'Videos', zh: '视频', ext: '.mp4 .webm .mov .mkv …' },

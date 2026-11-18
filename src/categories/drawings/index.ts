@@ -13,7 +13,8 @@ export const drawingsViewers: ViewerEntry[] = [
     category: 'drawings',
     layout: 'fill',
     mimes: /dxf/,
-    accepts: ({ format, ext, head }) => (format?.id === 'dxf' || ext === 'dxf') && /(^|\n)\s*0\s*\r?\n\s*SECTION|^AutoCAD Binary DXF/.test(text(head)),
+    // DXF, and DWG (read with LibreDWG, then drawn by the same renderer).
+    accepts: ({ format, ext, head }) => format?.id === 'dwg' || ((format?.id === 'dxf' || ext === 'dxf') && /(^|\n)\s*0\s*\r?\n\s*SECTION|^AutoCAD Binary DXF/.test(text(head))),
     load: () => import('./dxf/view'),
   },
   {
@@ -40,7 +41,7 @@ export const drawingsViewers: ViewerEntry[] = [
   {
     id: 'drawings/preview',
     category: 'drawings',
-    accepts: ({ format }) => ['dwg', 'odg', 'vsdx'].includes(format?.id ?? ''),
+    accepts: ({ format }) => ['odg', 'vsdx'].includes(format?.id ?? ''),
     load: () => import('./preview/view'),
   },
   {

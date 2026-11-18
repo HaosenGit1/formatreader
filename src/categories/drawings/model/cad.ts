@@ -13,7 +13,8 @@ async function meshes(bytes: Uint8Array, kind: CadKind): Promise<MeshData[]> {
     const { ifcMeshes, occtMeshes } = await import('./cad-engines');
     return kind === 'ifc' ? ifcMeshes(bytes) : occtMeshes(bytes, kind);
   }
-  const worker = new Worker(new URL('./cad-worker.ts', import.meta.url), { type: 'module' });
+  const { startCadWorker } = await import('./cad-worker-host');
+  const worker = startCadWorker();
   try {
     return await new Promise<MeshData[]>((resolve, reject) => {
       worker.onmessage = (e: MessageEvent<{ ok: boolean; meshes?: MeshData[]; error?: string }>) => (e.data.ok ? resolve(e.data.meshes!) : reject(new Error(e.data.error)));

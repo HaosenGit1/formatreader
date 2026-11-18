@@ -179,6 +179,12 @@ function portablePlugin(): Plugin {
 export default defineConfig(({ mode }) =>
   mode === 'portable'
     ? {
+        resolve: {
+          alias: [
+            // No workers in the single file: stand-ins keep the worker bundles (and a second copy of each engine) out.
+            { find: /^\.\/(dwg|cad)-worker-host$/, replacement: resolve('src/offline/worker-host-stub.ts') },
+          ],
+        },
         base: './',
         plugins: [portablePlugin()],
         build: {

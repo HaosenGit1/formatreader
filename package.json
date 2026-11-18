@@ -1,7 +1,7 @@
 {
   "name": "formatreader",
   "version": "0.1.0",
-  "description": "Drop any file into your browser \u2014 it detects the format and shows it. Nothing is uploaded.",
+  "description": "Drop any file into your browser — it detects the format and shows it. Nothing is uploaded.",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@kenjiuno/msgreader": "1.29.0",
+    "@mlightcad/libredwg-web": "0.8.3",
     "ag-psd": "34.1.0",
     "buffer": "6.0.3",
     "dicom-parser": "1.8.21",

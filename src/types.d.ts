@@ -21,3 +21,7 @@ declare module 'exifr/dist/lite.esm.mjs' {
 
 // Open CASCADE importer (Emscripten module, CommonJS).
 declare module 'occt-import-js';
+declare module 'dxf-parser/dist/AutoCadColorIndex.js' {
+  const colors: number[];
+  export default colors;
+}

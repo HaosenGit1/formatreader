@@ -1,24 +1,14 @@
 /**
  * Drawings whose full rendering isn't available here yet, shown through what
- * the file itself carries: the preview picture AutoCAD saves in DWG files, the
- * thumbnail in OpenDocument drawings, and the pages and shape texts of Visio files.
+ * the file itself carries: the thumbnail in OpenDocument drawings, and the pages
+ * and shape texts of Visio files. (DWG is drawn in full by the dxf viewer.)
  */
 import './preview.css';
 import { h } from '../../../core/dom';
 import { strings } from '../../../core/i18n';
 import type { OpenContext, OpenedView } from '../../../core/viewer';
-import { ACAD_VERSIONS } from '../shared/acad';
-import { dwgPreview } from './dwg';
 
 const s = strings({
-  dwgNote: {
-    en: 'Showing the preview picture AutoCAD saved inside this file. Full DWG drawing view is not available yet; a DXF export of the drawing opens fully here.',
-    zh: '显示 AutoCAD 保存在文件中的预览图。暂不支持完整显示 DWG 图纸；导出为 DXF 后可在这里完整打开。',
-  },
-  dwgNone: {
-    en: 'This DWG file has no saved preview picture, and full DWG drawing view is not available yet. A DXF export of the drawing opens fully here.',
-    zh: '这个 DWG 文件没有保存预览图，暂不支持完整显示 DWG 图纸。导出为 DXF 后可在这里完整打开。',
-  },
   odgNote: { en: 'Showing the preview picture saved inside this drawing.', zh: '显示保存在图纸中的预览图。' },
   noPreview: { en: 'This file has no preview picture.', zh: '这个文件没有预览图。' },
   visioNote: { en: 'Visio pages and the text on their shapes. Shapes themselves are not drawn yet.', zh: 'Visio 页面及其形状上的文字。暂不绘制形状本身。' },
@@ -39,19 +29,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   let meta: string[] = [];
   let note = '';
 
-  if (id === 'dwg') {
-    const ver = new TextDecoder('latin1').decode(bytes.subarray(0, 6));
-    const preview = dwgPreview(bytes);
-    meta = ['DWG', `AutoCAD ${ACAD_VERSIONS[ver] ?? ver}`];
-    if (preview) {
-      const { el, url } = img(preview.blob);
-      urls.push(url);
-      ctx.mount.replaceChildren(h('div', { class: 'view view-preview' }, el));
-      note = s('dwgNote');
-    } else {
-      ctx.mount.replaceChildren(h('div', { class: 'view view-preview pv-empty' }, s('dwgNone')));
-    }
-  } else {
+  {
     const { unzipSync, strFromU8 } = await import('fflate');
     const files = unzipSync(bytes, { filter: (f) => /^(Thumbnails\/|docProps\/thumbnail|visio\/pages\/|content\.xml$)/.test(f.name) });
     if (id === 'odg') {

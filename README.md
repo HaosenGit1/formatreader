@@ -51,11 +51,12 @@ The full, test-checked list is on [formatreader.com/formats.html](https://format
 
 | Kind | Formats | View |
 | --- | --- | --- |
-| CAD 2D | DXF (any version, any code page) | Lines, arcs, splines, text, blocks, dimensions, layers |
-| AutoCAD | DWG | The preview picture saved in the file |
+| CAD 2D | DWG (R13–2018+), DXF (any version, any code page) | Lines, arcs, splines, text, blocks, dimensions, layers |
 | 3D | STL, OBJ, PLY, glTF/GLB, 3MF, FBX | Turn, zoom, wireframe, size |
 | CAD & BIM | STEP, IGES, BREP, IFC | Same 3D view (engines load on demand) |
 | Diagrams | Visio VSDX, ODG, XMind | Page text; preview; outline |
+
+DWG files are read with GNU LibreDWG; if one can't be read, the preview picture AutoCAD saves inside it is shown.
 
 Pasting text (⌘V / Ctrl+V) works too. Every viewer has a full-screen mode (F); on iPhones,
 where browsers allow real full screen only for video, the page fills the screen itself.
@@ -69,6 +70,7 @@ Viewers load these only when a file needs them. All are used unmodified.
 | [libheif-js](https://github.com/catdad-experiments/libheif-js) | HEIC | LGPL-3.0 |
 | [occt-import-js](https://github.com/kovacsv/occt-import-js) (Open CASCADE) | STEP, IGES, BREP | LGPL-2.1 |
 | [web-ifc](https://github.com/ThatOpen/engine_web-ifc) | IFC | MPL-2.0 |
+| [libredwg-web](https://github.com/mlightcad/libredwg-web) ([GNU LibreDWG](https://www.gnu.org/software/libredwg/)) | DWG | GPL-3.0 |
 | [three.js](https://threejs.org) | 3D view, EXR/HDR/TGA decoding | MIT |
 | [libarchive.js](https://github.com/nika-begiashvili/libarchivejs) | Archives | MIT (libarchive: BSD) |
 | [sql.js](https://github.com/sql-js/sql.js) | SQLite | MIT |

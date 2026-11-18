@@ -39,8 +39,7 @@ const IMAGES = [
 ];
 
 const DRAWINGS = [
-  { name: t('CAD drawings', 'CAD 图纸'), viewer: 'drawings/dxf', ext: ['dxf'] },
-  { name: t('AutoCAD DWG (preview)', 'AutoCAD DWG（预览）'), viewer: 'drawings/preview', ext: ['dwg'] },
+  { name: t('CAD drawings', 'CAD 图纸'), viewer: 'drawings/dxf', ext: ['dwg', 'dxf'] },
   { name: t('3D models', '3D 模型'), viewer: 'drawings/model', ext: ['stl', 'obj', 'ply', 'glb', 'gltf', '3mf', 'fbx'] },
   { name: t('CAD & BIM models', 'CAD 和 BIM 模型'), viewer: 'drawings/model', ext: ['step', 'stp', 'iges', 'igs', 'brep', 'ifc'] },
   { name: t('Diagrams', '图表'), viewer: ['drawings/preview', 'drawings/mindmap'], ext: ['vsdx', 'odg', 'xmind'] },
