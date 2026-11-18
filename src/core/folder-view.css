@@ -1,0 +1,95 @@
+/* Dropped folder: a tree like the archive view */
+.view-folder {
+  padding: 14px 18px 20px;
+}
+
+.fv-hint {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.fv-list {
+  margin: 0;
+  padding: 0 0 0 18px;
+  list-style: none;
+  border-left: 1px solid var(--line);
+}
+
+.view-folder > .fv-list {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.fv-list summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.fv-list summary:hover,
+.fv-file:hover {
+  background: var(--surface-2);
+}
+
+.fv-count {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.fv-file {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 5px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fv-name {
+  overflow-wrap: anywhere;
+}
+
+.fv-size {
+  flex: none;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.fv-empty {
+  margin: 4px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.fv-list summary {
+  list-style: none;
+}
+
+.fv-list summary::-webkit-details-marker {
+  display: none;
+}
+
+.fv-list summary::before {
+  content: '▸';
+  width: 12px;
+  color: var(--muted);
+  font-size: 11px;
+  transition: transform 0.15s;
+}
+
+.fv-list details[open] > summary::before {
+  transform: rotate(90deg);
+}

@@ -58,6 +58,11 @@ The full, test-checked list is on [formatreader.com/formats.html](https://format
 
 DWG files are read with GNU LibreDWG; if one can't be read, the preview picture AutoCAD saves inside it is shown.
 
+Dropping a **folder** opens it as a tree like an archive; files open with the folder on the
+path trail, and ← / Back return to it (website only: browsers don't allow it for a page opened
+from disk). Mac/Windows clutter (`__MACOSX`, `._*`, `.DS_Store`, `Thumbs.db`) is hidden in
+folders and archives.
+
 Pasting text (⌘V / Ctrl+V) works too. Every viewer has a full-screen mode (F); on iPhones,
 where browsers allow real full screen only for video, the page fills the screen itself.
 

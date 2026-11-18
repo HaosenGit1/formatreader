@@ -6,6 +6,7 @@
 import './archive.css';
 import { formatBytes, h } from '../../../core/dom';
 import { strings } from '../../../core/i18n';
+import { isJunkPath } from '../../../core/junk';
 import type { OpenContext, OpenedView } from '../../../core/viewer';
 import pkg from 'libarchive.js/package.json';
 
@@ -64,11 +65,14 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   const archive = await Archive.open(file);
   const isComic = ['cbr', 'cb7', 'cbt'].includes(ctx.format?.id ?? '') || /\.(cbr|cb7|cbt)$/i.test(file.name);
 
+  // Mac/Windows clutter (__MACOSX/, ._*, .DS_Store, Thumbs.db) is left out of the listing.
   const list = async (): Promise<Entry[]> =>
-    (await archive.getFilesArray()).map(({ file: f, path }) => {
-      const cf = f as unknown as { name: string; size: number; extract(): Promise<File> };
-      return { path: `${path}${cf.name}`, name: cf.name, size: cf.size, extract: () => cf.extract() };
-    });
+    (await archive.getFilesArray())
+      .map(({ file: f, path }) => {
+        const cf = f as unknown as { name: string; size: number; extract(): Promise<File> };
+        return { path: `${path}${cf.name}`, name: cf.name, size: cf.size, extract: () => cf.extract() };
+      })
+      .filter((e) => !isJunkPath(e.path));
 
   const body = h('div', { class: 'archive-body' });
   ctx.mount.replaceChildren(h('div', { class: 'view view-archive' }, body));

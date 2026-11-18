@@ -8,6 +8,7 @@
  * file shows an error card; the shell and all other viewers keep working.
  */
 import { withDetectedType } from './mime';
+import { FolderSource } from './folder-source';
 import { offlineLine } from '../offline/panel';
 import { detectFormat, extOf } from './detect-format';
 import { formatBytes, h } from './dom';
@@ -45,8 +46,8 @@ const s = strings({
 interface Current {
   name: string;
   size: number;
-  /** The file being shown (kept so it can be reopened from the trail). */
-  file?: File;
+  /** The file or folder being shown (kept so it can be reopened from the trail). */
+  file?: File | FolderSource;
   entry: ViewerEntry;
   view: OpenedView;
 }
@@ -68,7 +69,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
    * Opening a file from inside another (archive, email attachment, .gz) adds
    * to it; dropping or choosing a file starts afresh.
    */
-  let trail: File[] = [];
+  let trail: Array<File | FolderSource> = [];
 
   // ---- reading size (A− / A+), remembered per browser
   let fontScale = 1;
@@ -163,11 +164,11 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
           ? h(
               'nav',
               { class: 'trail', 'aria-label': s('trail') },
-              ...trail.flatMap((f, i) => [h('button', { type: 'button', class: 'trail-link', title: f.name, onclick: () => backTo(i) }, f.name), h('span', { class: 'trail-sep', 'aria-hidden': 'true' }, '›')]),
+              ...trail.flatMap((f, i) => [h('button', { type: 'button', class: 'trail-link', title: f.name, onclick: () => goBackTo(i) }, f.name), h('span', { class: 'trail-sep', 'aria-hidden': 'true' }, '›')]),
             )
           : null,
         h('div', { class: 'file-name', title }, title),
-        h('div', { class: 'file-meta' }, [...meta, formatBytes(c.size)].join(' · ')),
+        h('div', { class: 'file-meta' }, [...meta, ...(c.size >= 0 ? [formatBytes(c.size)] : [])].join(' · ')),
       ),
       h('div', { class: 'tools' }, ...tools),
     );
@@ -244,8 +245,8 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     window.scrollTo(0, 0);
   }
 
-  /** The file `show()` is about to display (set by openFile). */
-  let shownFile: File | null = null;
+  /** The file or folder `show()` is about to display (set by openFile / openFolder). */
+  let shownFile: File | FolderSource | null = null;
 
   /** Open a file found inside the current one, remembering the way back. */
   function openInside(file: File, replace = false) {
@@ -261,9 +262,17 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
 
   /** One step back: through history when we added the entry, otherwise directly. */
   function goBack() {
-    if (!trail.length) return;
-    if (history.state?.formatreaderDepth === trail.length) history.back();
-    else backTo(trail.length - 1);
+    if (trail.length) goBackTo(trail.length - 1);
+  }
+
+  /**
+   * Back to trail item `index`, through the browser history when our entries are on top
+   * (so the browser's Back button stays in step), otherwise directly.
+   */
+  function goBackTo(index: number) {
+    const steps = trail.length - index;
+    if (steps > 0 && history.state?.formatreaderDepth === trail.length) history.go(-steps);
+    else backTo(index);
   }
 
   window.addEventListener('popstate', () => {
@@ -275,7 +284,19 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
   function backTo(index: number) {
     const target = trail[index];
     trail = trail.slice(0, index);
-    void openFile(target, true);
+    if (target instanceof FolderSource) void openFolder(target, true);
+    else void openFile(target, true);
+  }
+
+  /** A dropped folder: shown as a tree like an archive; its files open with the folder on the trail. */
+  const folderEntry: ViewerEntry = { id: 'core/folder', category: 'other', accepts: () => false, load: () => import('./folder-view') };
+  async function openFolder(folder: FolderSource, keepTrail = false) {
+    if (!keepTrail) trail = [];
+    closeCurrent();
+    const my = ++token;
+    app.replaceChildren(loadingView());
+    shownFile = folder;
+    await show(folderEntry, folder.name, -1, null, async (_mod, ctx) => (await import('./folder-view')).openFolder(folder, ctx), my);
   }
 
   async function openFile(file: File, keepTrail = false) {
@@ -466,6 +487,9 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     e.preventDefault();
     dragDepth = 0;
     overlay.classList.remove('show');
+    // A folder dropped (perhaps by accident): browse it like an archive.
+    const entry = e.dataTransfer?.items?.[0]?.webkitGetAsEntry?.();
+    if (entry?.isDirectory) return void openFolder(new FolderSource(entry as FileSystemDirectoryEntry));
     const file = e.dataTransfer?.files?.[0];
     if (file) void openFile(file);
   });
