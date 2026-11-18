@@ -4,6 +4,7 @@ import { strings } from '../../../core/i18n';
 import type { OpenContext, OpenedView } from '../../../core/viewer';
 import { codeView, preloadHighlighter } from '../shared/code-block';
 import { isSource, readText } from '../shared/read';
+import { editing } from '../shared/edit/editor';
 import { codeKind, languageName } from './languages';
 import { isNotebook, renderNotebook, type Notebook } from './notebook';
 import './notebook.css';
@@ -64,6 +65,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
     ctx.refreshChrome();
   };
   await draw();
+  const ed = editing({ src, name: file.name, mount: ctx.mount, mode: 'text', redraw: draw, refreshChrome: ctx.refreshChrome });
 
   return {
     meta: () => {
@@ -74,7 +76,8 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
       return [kind.language === 'plaintext' && ext ? ext.toUpperCase() : languageName(kind.language)];
     },
     tools: () => {
-      const out: HTMLElement[] = [];
+      if (ed.active()) return ed.tools();
+      const out: HTMLElement[] = [...ed.tools()];
       const enc = src.tool(changed);
       if (enc) out.push(enc);
       if (notebook) {
@@ -85,8 +88,9 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
       return out;
     },
     about: () => src.about(),
-    notices: () => [...src.notices(changed), ...(jsonError ? [h('div', { class: 'notice' }, `${s('invalidJson')} ${jsonError}`)] : [])],
+    notices: () => (ed.active() ? [ed.notice()].filter((n): n is HTMLElement => !!n) : [...src.notices(changed), ...(jsonError ? [h('div', { class: 'notice' }, `${s('invalidJson')} ${jsonError}`)] : [])]),
+    unsaved: () => ed.unsaved(),
     onFontScale: () => {},
-    onLangChange: () => void draw(),
+    onLangChange: () => void (ed.active() ? undefined : draw()),
   };
 }

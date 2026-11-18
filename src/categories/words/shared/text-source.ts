@@ -109,6 +109,11 @@ export class TextSource {
     return new TextSource(null, null, 'utf-8', text, repairMojibake(text));
   }
 
+  /** The file's text as decoded with its encoding (before any 乱码 repair or decoding). */
+  get original(): string {
+    return this.raw;
+  }
+
   /** Facts for the "About this file" panel. */
   about(): AboutFacts {
     const raw = this.raw.slice(0, 200000);

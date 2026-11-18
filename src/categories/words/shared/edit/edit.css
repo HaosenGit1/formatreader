@@ -1,0 +1,79 @@
+/* Basic editing (text, code, CSV) */
+.view-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  min-height: 60vh;
+  padding: 12px;
+}
+
+.ed-text {
+  flex: 1;
+  width: 100%;
+  min-height: 60vh;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--fg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: calc(13px * var(--reader-scale, 1));
+  line-height: 1.5;
+  tab-size: 4;
+  resize: none;
+}
+
+.ed-table-wrap {
+  flex: 1;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.ed-table {
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ed-table td {
+  min-width: 80px;
+  max-width: 420px;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  vertical-align: top;
+  white-space: pre-wrap;
+}
+
+.ed-table tr:first-child td.ed-cell {
+  background: var(--surface-2);
+  font-weight: 600;
+}
+
+.ed-cell:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.ed-rownum {
+  min-width: 0 !important;
+  padding: 0 4px !important;
+  background: var(--surface-2);
+}
+
+.ed-del {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.ed-del:hover {
+  color: #b42318;
+}
+
+.ed-add {
+  align-self: flex-start;
+}

@@ -39,6 +39,7 @@ const s = strings({
   slow: { en: 'This is taking longer than usual. Large files can take a while.', zh: '比平时慢一些。大文件需要更长时间。' },
   keepWaiting: { en: 'Keep waiting', zh: '继续等待' },
   stop: { en: 'Stop', zh: '停止' },
+  unsavedLeave: { en: 'You have edits that are not saved as a copy. Leave without saving?', zh: '有修改还没有另存为副本。不保存就离开吗？' },
   heavyTitle: { en: 'This file is very large', zh: '这个文件非常大' },
   heavyText: { en: '“{name}” is {size}. Files of this kind above about {limit} usually don’t fit in a browser’s memory{phone}: the page may stop responding or close.', zh: '“{name}”有 {size}。这类文件超过约 {limit} 时，通常超出浏览器的内存{phone}：页面可能会卡住或关闭。' },
   heavyPhone: { en: ' on a phone', zh: '（手机上）' },
@@ -299,7 +300,19 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     }
   }
 
+  /** Edits not saved as a copy: ask before leaving the file (any way of leaving). */
+  function leaveOk(): boolean {
+    let unsaved = false;
+    try {
+      unsaved = !!current?.view.unsaved?.();
+    } catch {
+      /* a viewer error must not trap the user */
+    }
+    return !unsaved || confirm(s('unsavedLeave'));
+  }
+
   function goHome() {
+    if (!leaveOk()) return;
     closeCurrent();
     ++token;
     app.replaceChildren(header(), landing());
@@ -439,6 +452,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
    * (so the browser's Back button stays in step), otherwise directly.
    */
   function goBackTo(index: number) {
+    if (!leaveOk()) return;
     const steps = trail.length - index;
     if (steps > 0 && history.state?.formatreaderDepth === trail.length) history.go(-steps);
     else backTo(index);
@@ -446,7 +460,14 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
 
   window.addEventListener('popstate', () => {
     const depth = Number(history.state?.formatreaderDepth ?? 0);
-    if (trail.length > depth) backTo(depth);
+    if (trail.length > depth) {
+      // Browser Back with unsaved edits: stay (put our history entry back).
+      if (current?.view.unsaved?.() && !confirm(s('unsavedLeave'))) {
+        history.pushState({ formatreaderDepth: trail.length }, '');
+        return;
+      }
+      backTo(depth);
+    }
   });
 
   /** Go back up the trail to the file at `index`. */
@@ -460,6 +481,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
   /** A dropped folder: shown as a tree like an archive; its files open with the folder on the trail. */
   const folderEntry: ViewerEntry = { id: 'core/folder', category: 'other', accepts: () => false, load: () => import('./folder-view') };
   async function openFolder(folder: FolderSource, keepTrail = false) {
+    if (!keepTrail && !leaveOk()) return;
     if (!keepTrail) trail = [];
     closeCurrent();
     const my = ++token;
@@ -469,6 +491,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
   }
 
   async function openFile(file: File, keepTrail = false) {
+    if (!keepTrail && !leaveOk()) return;
     if (!keepTrail) trail = [];
     closeCurrent();
     const my = ++token;

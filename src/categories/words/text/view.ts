@@ -6,6 +6,7 @@ import type { OpenContext, OpenedView } from '../../../core/viewer';
 import { codeView } from '../shared/code-block';
 import { isSource, readText } from '../shared/read';
 import { TextSource } from '../shared/text-source';
+import { editing } from '../shared/edit/editor';
 import { markdownView, htmlView, plainView, subtitleView } from './render';
 import { classifyText, type TextKind } from './text-kind';
 
@@ -45,11 +46,13 @@ async function makeView(src: TextSource, name: string, ctx: OpenContext): Promis
     ctx.refreshChrome();
   };
   await draw();
+  const ed = editing({ src, name, mount: ctx.mount, mode: 'text', redraw: draw, refreshChrome: ctx.refreshChrome });
 
   return {
     meta: () => [kindLabel(kind)],
     tools: () => {
-      const out: HTMLElement[] = [];
+      if (ed.active()) return ed.tools();
+      const out: HTMLElement[] = [...ed.tools()];
       const enc = src.tool(changed);
       if (enc) out.push(enc);
       if (kind.kind === 'markdown' || kind.kind === 'html') {
@@ -60,9 +63,10 @@ async function makeView(src: TextSource, name: string, ctx: OpenContext): Promis
       return out;
     },
     about: () => src.about(),
-    notices: () => src.notices(changed),
+    notices: () => (ed.active() ? [ed.notice()].filter((n): n is HTMLElement => !!n) : src.notices(changed)),
+    unsaved: () => ed.unsaved(),
     onFontScale: () => { /* sizes follow the --reader-scale CSS variable */ },
-    onLangChange: () => void draw(),
+    onLangChange: () => void (ed.active() ? undefined : draw()),
   };
 }
 

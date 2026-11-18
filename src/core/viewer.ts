@@ -80,6 +80,8 @@ export interface OpenedView {
   fullscreenLabel?(): string;
   /** Called after the interface language changes. */
   onLangChange?(): void;
+  /** True while there are edits not saved as a copy: the shell asks before leaving. */
+  unsaved?(): boolean;
   /** Release resources (object URLs, observers, listeners). */
   destroy?(): void;
 }

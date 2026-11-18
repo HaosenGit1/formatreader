@@ -8,6 +8,7 @@ import { strings } from '../../../core/i18n';
 import type { OpenContext, OpenedView } from '../../../core/viewer';
 import { renderGrid, type GridCell } from '../shared/grid';
 import { isSource, readText } from '../shared/read';
+import { editing } from '../shared/edit/editor';
 import { DELIMITED_EXT } from './formats';
 import { CHUNK_ROWS, type RowChunk, type SheetInfo, type SheetReport } from './sheet-job';
 import { runWorker } from '../../../core/progress';
@@ -68,6 +69,7 @@ async function openDelimited(file: File, ctx: OpenContext): Promise<OpenedView> 
   draw();
 
   const delimName = () => (delimiter === '\t' ? s('tab') : delimiter === ',' ? s('comma') : `"${delimiter}"`);
+  const ed = editing({ src, name: file.name, mount: ctx.mount, mode: 'table', get delimiter() { return delimiter; }, redraw: draw, refreshChrome: ctx.refreshChrome });
   return {
     meta: () => [
       delimiter === '\t' ? 'TSV' : 'CSV',
@@ -75,11 +77,13 @@ async function openDelimited(file: File, ctx: OpenContext): Promise<OpenedView> 
       delimName(),
     ],
     tools: () => {
+      if (ed.active()) return ed.tools();
       const enc = src.tool(changed);
-      return enc ? [enc] : [];
+      return [...ed.tools(), ...(enc ? [enc] : [])];
     },
     about: () => src.about(),
-    notices: () => src.notices(changed),
+    notices: () => (ed.active() ? [ed.notice()].filter((n): n is HTMLElement => !!n) : src.notices(changed)),
+    unsaved: () => ed.unsaved(),
     onFontScale: () => {},
     onLangChange: () => draw(),
   };

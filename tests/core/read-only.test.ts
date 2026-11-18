@@ -26,11 +26,14 @@ const FORBIDDEN: Array<[RegExp, string]> = [
 ];
 
 /**
- * The only exception, asked for by the user: "Extract all" saves the files *inside* an
+ * Exceptions, asked for by the user: "Extract all" saves the files *inside* an
  * archive as NEW files — into a new folder it creates, or as a new ZIP download. It never
  * writes to the archive or to anything that already exists (tests/archives/extract-all.test.ts).
  */
 const EXCEPTIONS: Record<string, string[]> = {
+  // Basic editing of simple text formats: "Save a copy" offers a NEW file as a download;
+  // the original is never written (tests/words/edit.test.ts).
+  'src/categories/words/shared/edit/save.ts': ['download links'],
   'src/categories/archives/archive/extract-all.ts': ['File System Access pickers (write access to disk)', 'file handles that can write', 'download links'],
 };
 

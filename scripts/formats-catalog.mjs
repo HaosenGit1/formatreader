@@ -137,6 +137,12 @@ const both = (x) => `<span data-en="${esc(x.en)}" data-zh="${esc(x.zh)}">${esc(x
 export function formatsHtml(root = process.cwd()) {
   const cats = formatsCatalog(root);
   const supported = new Set(cats.filter((c) => !c.coming).flatMap((c) => c.groups.flatMap((g) => g.ext)));
+  // ✏️ Basic editing (save a copy; the original is never changed): plain-text formats only.
+  const editable = new Set(['csv', 'tsv', 'tab', 'psv']);
+  const textOnly = (g) => [].concat(g.viewer ?? []).length > 0 && [].concat(g.viewer).every((v) => v === 'words/text' || v === 'words/code');
+  for (const c of cats) for (const g of c.groups) if (!c.coming && textOnly(g)) for (const e of g.ext) editable.add(e);
+  // Marked in text/code groups and on CSV/TSV in the spreadsheet group only.
+  const mark = (g, e) => editable.has(e) && (textOnly(g) || [].concat(g.viewer ?? []).includes('words/sheets'));
   const sections = cats
     .map(
       (c) => `
@@ -147,7 +153,7 @@ export function formatsHtml(root = process.cwd()) {
             (g) => `
         <div class="fmt-group">
           <div class="fmt-name">${both(g.name)}</div>
-          <div class="fmt-exts">${g.ext.map((e) => `<span class="fmt-ext">.${esc(e)}</span>`).join('')}</div>
+          <div class="fmt-exts">${g.ext.map((e) => (mark(g, e) ? `<span class="fmt-ext fmt-edit" title="Basic editing · 可编辑">.${esc(e)} ✏️</span>` : `<span class="fmt-ext">.${esc(e)}</span>`)).join('')}</div>
         </div>`,
           )
           .join('')}
