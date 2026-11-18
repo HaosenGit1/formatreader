@@ -66,6 +66,34 @@ async function codecInfo(file: File): Promise<{ container?: string; codec?: stri
   }
 }
 
+/** The video codec named in an FLV's first video tag. */
+async function flvCodec(file: File): Promise<string | undefined> {
+  const b = new Uint8Array(await file.slice(0, 64 * 1024).arrayBuffer());
+  for (let i = 13; i + 12 < b.length; ) {
+    const type = b[i] & 0x1f;
+    const size = (b[i + 1] << 16) | (b[i + 2] << 8) | b[i + 3];
+    if (type === 9) return ({ 2: 'Sorenson Spark (H.263)', 3: 'Screen video', 4: 'VP6', 5: 'VP6 + alpha', 7: 'H.264', 12: 'HEVC' } as Record<number, string>)[b[i + 11] & 0x0f];
+    i += 11 + size + 4;
+  }
+  return undefined;
+}
+
+/** Plays FLV / MPEG-TS through mpegts.js (repackaged to fragmented MP4 for Media Source Extensions). */
+async function repackage(video: HTMLVideoElement, url: string, type: 'flv' | 'mpegts'): Promise<{ destroy(): void }> {
+  const { default: mpegts } = await import('mpegts.js');
+  if (!mpegts.isSupported()) throw new Error('Media Source Extensions not available');
+  video.removeAttribute('src');
+  const player = mpegts.createPlayer({ type, isLive: false, url }, { enableWorker: false, lazyLoad: false });
+  player.attachMediaElement(video);
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timeout')), 15000);
+    video.addEventListener('loadedmetadata', () => { clearTimeout(timer); resolve(); }, { once: true });
+    player.on(mpegts.Events.ERROR, () => { clearTimeout(timer); reject(new Error('cannot repackage')); });
+    player.load();
+  });
+  return { destroy: () => { player.pause(); player.unload(); player.detachMediaElement(); player.destroy(); } };
+}
+
 export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   const url = URL.createObjectURL(file);
   const video = h('video', { class: 'vd-video', src: url, controls: true, playsinline: true, preload: 'metadata' }) as HTMLVideoElement;
@@ -73,13 +101,23 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   ctx.mount.replaceChildren(h('div', { class: 'view view-video' }, video, message));
   const info = codecInfo(file);
 
-  // Wait until the browser knows whether it can play the file.
-  const playable = await new Promise<boolean>((resolve) => {
-    video.addEventListener('loadedmetadata', () => resolve(true), { once: true });
-    video.addEventListener('error', () => resolve(false), { once: true });
-  });
+  // FLV and MPEG-TS usually hold H.264/AAC, which the browser can decode; only the container is
+  // unknown to it. mpegts.js repackages them on the fly for the browser's own player (MSE).
+  let repack: { destroy(): void } | null = null;
+  const id = ctx.format?.id ?? '';
+  const viaRepack = id === 'flv' || id === 'ts';
+  let playable: boolean;
+  if (viaRepack) {
+    playable = await repackage(video, url, id === 'flv' ? 'flv' : 'mpegts').then((p) => ((repack = p), true)).catch(() => false);
+  } else {
+    // Wait until the browser knows whether it can play the file.
+    playable = await new Promise<boolean>((resolve) => {
+      video.addEventListener('loadedmetadata', () => resolve(true), { once: true });
+      video.addEventListener('error', () => resolve(false), { once: true });
+    });
+  }
   const ci = await info;
-  const codec = ci?.codec;
+  const codec = ci?.codec ?? (id === 'flv' ? await flvCodec(file) : undefined);
   if (!playable) {
     video.hidden = true;
     message.hidden = false;
@@ -109,11 +147,14 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
     meta: () => [
       ...(video.videoWidth ? [`${video.videoWidth} × ${video.videoHeight}`] : []),
       ...(Number.isFinite(video.duration) ? [time(video.duration)] : []),
-      ...[ci?.container, codec].filter(Boolean).length ? [[ci?.container, codec].filter(Boolean).join(' · ')] : [ctx.format?.name ?? 'Video'],
+      ...[ci?.container ?? (id === 'flv' ? 'FLV' : id === 'ts' ? 'MPEG-TS' : undefined), codec].filter(Boolean).length
+        ? [[ci?.container ?? (id === 'flv' ? 'FLV' : id === 'ts' ? 'MPEG-TS' : undefined), codec].filter(Boolean).join(' · ')]
+        : [ctx.format?.name ?? 'Video'],
       ...(ci?.fps ? [`${Math.round(ci.fps)} fps`] : []),
     ],
     tools: () => tools,
     destroy: () => {
+      repack?.destroy();
       video.pause();
       video.removeAttribute('src');
       video.load();

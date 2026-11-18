@@ -161,6 +161,8 @@ function fromMagic(h: Uint8Array, ext: string): FormatInfo | null {
   if (ascii(h, 0, 4) === '.RMF') return ext === 'ra' ? F('ra', 'RealAudio', 'sounds') : F('rmvb', 'RealMedia video', 'videos');
   if (startsWith(h, [0, 0, 1, 0xba]) || startsWith(h, [0, 0, 1, 0xb3])) return F('mpg', 'MPEG video', 'videos');
   if (h[0] === 0x47 && h.length > 188 && h[188] === 0x47) return F('ts', 'MPEG transport stream', 'videos');
+  // Blu-ray / camcorder (AVCHD) .m2ts/.mts: 192-byte packets, a 4-byte timestamp before each sync byte.
+  if (h[4] === 0x47 && h.length > 196 && h[196] === 0x47 && h[388] === 0x47) return F('ts', 'MPEG transport stream (M2TS)', 'videos');
   if (ascii(h, 0, 4) === 'OggS') {
     const head = ascii(h, 0, 64);
     if (head.includes('theora') || ext === 'ogv') return F('ogv', 'Ogg video', 'videos');
