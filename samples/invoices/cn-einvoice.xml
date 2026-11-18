@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EInvoice>
+  <Header>
+    <EIid>26112000000012345678</EIid>
+    <EInvoiceTag>SWEI3200</EInvoiceTag>
+    <Version>0.1</Version>
+    <InherentLabel>
+      <InIssuType><LabelCode>Y</LabelCode><LabelName>是</LabelName></InIssuType>
+      <EInvoiceType><LabelCode>01</LabelCode><LabelName>电子发票（增值税专用发票）</LabelName></EInvoiceType>
+    </InherentLabel>
+  </Header>
+  <EInvoiceData>
+    <SellerInformation>
+      <SellerIdNum>91320000MA1XXXXX0Q</SellerIdNum>
+      <SellerName>江苏某某风电设备有限公司</SellerName>
+      <SellerAddr>江苏省南京市江宁区风电路 8 号</SellerAddr>
+      <SellerBankName>中国银行南京江宁支行</SellerBankName>
+    </SellerInformation>
+    <BuyerInformation>
+      <BuyerIdNum>91650000MA7YYYYY2K</BuyerIdNum>
+      <BuyerName>新疆某某新能源有限公司</BuyerName>
+    </BuyerInformation>
+    <BasicInformation>
+      <TotalAmWithoutTax>88495.58</TotalAmWithoutTax>
+      <TotalTaxAm>11504.42</TotalTaxAm>
+      <TotalTax-includedAmount>100000.00</TotalTax-includedAmount>
+      <TotalTax-includedAmountInChinese>壹拾万圆整</TotalTax-includedAmountInChinese>
+      <Drawer>王会计</Drawer>
+      <RequestTime>2026-11-18 10:22:31</RequestTime>
+    </BasicInformation>
+    <IssuItemInformation>
+      <ItemName>*机械设备*变桨轴承</ItemName>
+      <SpecMod>YRB-2310</SpecMod>
+      <MeaUnits>套</MeaUnits>
+      <Quantity>2</Quantity>
+      <UnPrice>35398.23</UnPrice>
+      <Amount>70796.46</Amount>
+      <TaxRate>0.13</TaxRate>
+      <ComTaxAm>9203.54</ComTaxAm>
+    </IssuItemInformation>
+    <IssuItemInformation>
+      <ItemName>*服务*现场安装服务</ItemName>
+      <MeaUnits>次</MeaUnits>
+      <Quantity>1</Quantity>
+      <UnPrice>17699.12</UnPrice>
+      <Amount>17699.12</Amount>
+      <TaxRate>0.13</TaxRate>
+      <ComTaxAm>2300.88</ComTaxAm>
+    </IssuItemInformation>
+    <AdditionalInformation><Remark>合同号 GW-2026-118</Remark></AdditionalInformation>
+  </EInvoiceData>
+  <TaxSupervisionInfo>
+    <InvoiceNumber>26112000000012345678</InvoiceNumber>
+    <IssueTime>2026-11-18 10:22:35</IssueTime>
+    <TaxBureauCode>13200000000</TaxBureauCode>
+  </TaxSupervisionInfo>
+</EInvoice>

@@ -22,6 +22,7 @@ const WORDS = [
   { name: t('Hangul', '韩文 Hangul'), viewer: ['words/hwpx', 'words/hwp'], ext: ['hwpx', 'hwp'] },
   { name: t('Ebooks & comics', '电子书和漫画'), viewer: ['words/books', 'archives/archive', 'words/palmdoc'], ext: ['epub', 'mobi', 'azw3', 'fb2', 'fbz', 'cbz', 'cbr', 'cb7', 'pdb'] },
   { name: t('Email', '邮件'), viewer: 'words/email', ext: ['eml', 'msg', 'mbox', 'mht', 'mhtml'] },
+  { name: t('E-invoices (China 数电票, UBL/Peppol, ZUGFeRD/Factur-X)', '电子发票（数电票、UBL/Peppol、ZUGFeRD/Factur-X）'), viewer: ['words/invoice', 'words/code'], ext: ['xml'] },
 ];
 
 const TABLES = [

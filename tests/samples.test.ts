@@ -22,6 +22,7 @@ const FOLDER_VIEWER: Record<string, string> = {
   text: 'words/text',
   code: 'words/code',
   sheets: 'words/sheets',
+  invoices: 'words/invoice',
   books: 'words/books',
   slides: 'words/slides',
   docs: 'words/docs',

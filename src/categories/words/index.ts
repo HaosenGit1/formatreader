@@ -136,6 +136,17 @@ export const wordsViewers: ViewerEntry[] = [
     load: () => import('./sheets/view'),
   },
   {
+    // E-invoice XML (China 数电票, UBL/Peppol, CII/ZUGFeRD): shown as an invoice. The markers
+    // are checked here so the invoice code only loads for invoices.
+    id: 'words/invoice',
+    category: 'words',
+    prefetch: false,
+    priority: 30,
+    accepts: ({ format, head }) =>
+      isTextish(format) && /<(\w+:)?EInvoice[\s>]|urn:oasis:names:specification:ubl:schema:xsd:(Invoice|CreditNote)-2|CrossIndustryInvoice/.test(headText(head)),
+    load: () => import('./invoice/view'),
+  },
+  {
     id: 'words/code',
     category: 'words',
     mimes: /^(text\/(x-|javascript|css|xml)|application\/(json|javascript|xml|x-sh|x-yaml|yaml|toml|x-httpd-php|sql|x-ipynb\+json))/,

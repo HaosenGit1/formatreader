@@ -1,0 +1,172 @@
+/* E-invoices */
+.view-invoice {
+  padding: 20px 16px 40px;
+}
+
+.inv {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  font-size: 14px;
+}
+
+.inv-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--line);
+}
+
+.inv-head h2 {
+  margin: 2px 0 0;
+  font-size: 22px;
+}
+
+.inv-kind {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.inv-meta {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.inv-parties {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.inv-party {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.inv-party h3 {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.inv-party-name {
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+
+.inv-kv {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.inv-kv span:first-child {
+  flex: none;
+  color: var(--muted);
+}
+
+.inv-kv span:last-child {
+  overflow-wrap: anywhere;
+}
+
+.inv-lines-wrap {
+  overflow-x: auto;
+}
+
+.inv-lines {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.inv-lines th,
+.inv-lines td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+.inv-lines th {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.inv-lines .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.inv-totals {
+  display: grid;
+  justify-content: end;
+  gap: 4px;
+  margin-top: 14px;
+}
+
+.inv-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  min-width: 280px;
+  font-variant-numeric: tabular-nums;
+}
+
+.inv-total span:first-child {
+  color: var(--muted);
+}
+
+.inv-total.strong {
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.inv-foot {
+  margin-top: 16px;
+  color: var(--muted);
+}
+
+.inv-foot p {
+  margin: 2px 0;
+}
+
+.inv-all {
+  margin-top: 20px;
+}
+
+.inv-all summary {
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.inv-all table {
+  width: 100%;
+  margin-top: 8px;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.inv-all th,
+.inv-all td {
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.inv-all th {
+  width: 45%;
+  color: var(--muted);
+  font-weight: 400;
+}
