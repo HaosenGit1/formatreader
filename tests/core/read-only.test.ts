@@ -51,7 +51,7 @@ describe('offline service worker (scripts/sw-template.js)', () => {
   test('only stores the build’s own files and the page', () => {
     // Every cache.put stores either the page or a URL from this build's file list.
     const puts = [...sw.matchAll(/cache\.put\(([^,]+),/g)].map((m) => m[1].trim());
-    expect(new Set(puts)).toEqual(new Set(['PAGE', 'clean', 'href', 'req']));
+    expect(new Set(puts)).toEqual(new Set(['key', 'clean', 'href', 'req']));
     expect(sw).toContain('if (!KNOWN.has(clean)) return;');
     expect(sw).not.toMatch(/https?:\/\//);
   });

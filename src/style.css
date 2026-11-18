@@ -654,11 +654,34 @@ select {
 }
 
 /* Offline status on the front page, and its list */
-.offline-slot {
+.landing-foot {
   position: fixed;
-  bottom: 16px;
+  bottom: 14px;
   left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.foot-link {
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.foot-link:hover,
+.foot-link:focus-visible {
+  background: var(--surface-2);
+  color: var(--fg);
+}
+
+a.brand {
+  color: inherit;
+  text-decoration: none;
 }
 
 .offline-line {
@@ -822,4 +845,9 @@ select {
   color: var(--muted);
   font-size: 12px;
   white-space: pre-wrap;
+}
+
+a.btn {
+  color: inherit;
+  text-decoration: none;
 }

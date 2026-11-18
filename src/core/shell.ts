@@ -34,6 +34,7 @@ const s = strings({
     zh: '无法下载这类文件的阅读器。请联网后再打开一次：下载过一次之后，离线也能使用。',
   },
   back: { en: 'Back', zh: '返回' },
+  formats: { en: 'Formats', zh: '支持的格式' },
 });
 
 interface Current {
@@ -97,7 +98,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
       'main',
       { class: 'landing' },
       h('button', { type: 'button', class: 'circle', onclick: () => fileInput.click() }, h('span', { class: 'circle-text' }, s('readAny'))),
-      offlineLine(),
+      h('footer', { class: 'landing-foot' }, h('a', { class: 'foot-link', href: 'formats.html' }, s('formats')), offlineLine()),
     );
 
   /** The only loading state: the name fills with colour like a progress bar. */

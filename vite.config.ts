@@ -3,6 +3,8 @@ import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { defineConfig, type Plugin } from 'vite';
+// @ts-expect-error plain JS module shared with the tests
+import { formatsHtml } from './scripts/formats-catalog.mjs';
 
 /** Viewer id → its module file, read from src/categories/<category>/index.ts. */
 function viewerModules(): Map<string, string> {
@@ -100,12 +102,25 @@ function offlinePlugin(): Plugin {
   };
 }
 
+/** Fills formats.html with the supported-format list (static HTML, readable by search engines). */
+function formatsPagePlugin(): Plugin {
+  return {
+    name: 'formatreader-formats-page',
+    transformIndexHtml(html, ctx) {
+      if (!ctx.filename.endsWith('formats.html')) return html;
+      const { html: list, count } = formatsHtml();
+      return html.replace('<!--FORMATS-->', list).replace('<!--FORMATS_COUNT-->', String(count));
+    },
+  };
+}
+
 export default defineConfig({
   base: './',
-  plugins: [offlinePlugin()],
+  plugins: [formatsPagePlugin(), offlinePlugin()],
   build: {
     target: 'es2022',
     sourcemap: false,
+    rollupOptions: { input: { main: resolve('index.html'), formats: resolve('formats.html') } },
   },
   test: {
     environment: 'node',

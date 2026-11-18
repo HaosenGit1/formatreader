@@ -1,0 +1,121 @@
+/* formats.html — same look as the app */
+.formats {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+}
+
+.formats h1 {
+  margin: 0 0 6px;
+  font-size: 30px;
+  letter-spacing: -0.02em;
+}
+
+.fmt-total {
+  color: var(--muted);
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.formats-lead {
+  margin: 0 0 20px;
+  color: var(--muted);
+}
+
+.fmt-search {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--fg);
+  font: inherit;
+  font-size: 15px;
+}
+
+.fmt-search:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.fmt-none {
+  margin: 16px 0 0;
+  color: var(--muted);
+}
+
+.fmt-cat {
+  margin-top: 28px;
+  padding: 6px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.fmt-cat h2 {
+  margin: 12px 0 6px;
+  font-size: 17px;
+}
+
+.fmt-count {
+  margin-left: 4px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.fmt-group {
+  display: grid;
+  grid-template-columns: minmax(140px, 200px) 1fr;
+  gap: 6px 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.fmt-group:first-of-type {
+  border-top: 0;
+}
+
+.fmt-name {
+  font-size: 14px;
+  font-weight: 550;
+}
+
+.fmt-exts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+}
+
+.fmt-ext {
+  padding: 1px 7px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.fmt-ext.fmt-hit {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.fmt-coming {
+  background: transparent;
+  border-style: dashed;
+}
+
+.fmt-coming h2,
+.fmt-coming .fmt-name {
+  color: var(--muted);
+}
+
+@media (max-width: 560px) {
+  .fmt-group {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fmt-cat {
+  scroll-margin-top: 80px;
+}

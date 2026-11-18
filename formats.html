@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob:; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' blob: 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self' blob: data:; media-src 'self' blob: data:; connect-src 'self' blob: data:; frame-src 'self' blob: data:; object-src blob:; form-action 'none'; base-uri 'self'" />
+    <title>Supported formats — FormatReader</title>
+    <meta name="description" content="Every file format FormatReader opens in your browser: documents, ebooks, spreadsheets, databases, code, logs and archives. Nothing is uploaded." />
+    <meta name="theme-color" content="#f6f6f8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121316" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">F</span><span class="brand-name">FormatReader</span></a>
+      <a class="btn" href="./"><span data-en="Open a file" data-zh="打开文件">Open a file</span></a>
+    </header>
+    <main class="formats">
+      <h1><span data-en="Formats" data-zh="支持的格式">Formats</span> <span class="fmt-total"><!--FORMATS_COUNT--></span></h1>
+      <p class="formats-lead"><span data-en="Open in your browser. Nothing is uploaded." data-zh="在浏览器中直接打开，文件不会上传。">Open in your browser. Nothing is uploaded.</span></p>
+      <input class="fmt-search" type="search" placeholder="Find an extension, e.g. mdb" data-placeholder-zh="查找扩展名，例如 mdb" aria-label="Find a format" autocomplete="off" spellcheck="false" />
+      <p class="fmt-none" hidden><span data-en="Not supported yet." data-zh="暂不支持。">Not supported yet.</span></p>
+      <!--FORMATS-->
+    </main>
+    <script type="module" src="/src/formats-page.ts"></script>
+  </body>
+</html>
