@@ -18,9 +18,12 @@ const s = strings({
   legend: { en: '✓ offline   ◐ mostly   ○ needs internet', zh: '✓ 可离线   ◐ 大部分   ○ 需联网' },
   safari: { en: 'Safari: add to Home Screen to keep it.', zh: 'Safari：添加到主屏幕才能长期保留。' },
   close: { en: 'Close', zh: '关闭' },
-  portableAsk: { en: 'Computer without internet?', zh: '电脑没有网络？' },
-  portableLink: { en: 'Save FormatReader.html', zh: '保存 FormatReader.html' },
-  portableHow: { en: ', copy it over, open it in a browser.', zh: '，复制过去，用浏览器打开。' },
+  portableAsk: { en: 'If your computer doesn’t have internet access,', zh: '如果你的电脑无法上网，请' },
+  portableLink: { en: 'save the file FormatReader.html', zh: '保存文件 FormatReader.html' },
+  portableHow: {
+    en: ', transfer it to that computer, and open it in a web browser. Then you can use it offline.',
+    zh: '，把它传到那台电脑上，用浏览器打开，即可离线使用。',
+  },
 });
 
 /** Safari (and every iPhone/iPad browser) deletes a site's stored data after ~7 days unused, unless installed. */
@@ -134,7 +137,7 @@ function openPanel(status: Status, ids: string[], refresh: () => Promise<void>) 
       h(
         'p',
         { class: 'offline-note offline-portable' },
-        `${s('portableAsk')} `,
+        lang() === 'zh' ? s('portableAsk') : `${s('portableAsk')} `,
         h('a', { href: 'FormatReader.html' }, s('portableLink')),
         s('portableHow'),
       ),
