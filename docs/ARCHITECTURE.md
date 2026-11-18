@@ -181,8 +181,10 @@ one file (~8 MB). Download it anywhere, copy it to a computer with no internet
   frames their own origin. So the archive worker starts from a `data:` address,
   and ebook pages are put into their frames with `srcdoc` (scripts/patch-deps.mjs).
 - No offline worker or panel; the footer says "Portable · works without internet".
-- Deploy uploads it as formatreader.com/FormatReader.html (saved, not displayed);
-  the Offline panel links to it. It is a snapshot: save it again for updates.
+- Deploy publishes it on GitHub Releases (tag `portable`, file replaced on every
+  deploy), where downloads cost nothing; the Offline panel links there
+  (`PORTABLE_URL`). formatreader.com/FormatReader.html is a tiny page that forwards
+  to it, for old links. It is a snapshot: save it again for updates.
 
 ### CAD engines and the security policy
 

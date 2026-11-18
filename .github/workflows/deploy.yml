@@ -33,7 +33,6 @@ jobs:
       - run: npm run build
         env:
           VITE_GA_ID: ${{ vars.VITE_GA_ID }} # anonymous visit statistics (website only)
-      - run: npm run build:portable
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
@@ -42,7 +41,32 @@ jobs:
         run: |
           aws s3 sync dist/assets "s3://${{ vars.SITE_BUCKET }}/assets" --cache-control "public, max-age=31536000, immutable" --only-show-errors
           aws s3 sync dist "s3://${{ vars.SITE_BUCKET }}" --exclude "assets/*" --exclude "FormatReader.html" --delete --cache-control "public, max-age=0, must-revalidate" --only-show-errors
-          # The portable single file (for computers without internet): saved, not shown.
-          aws s3 cp dist-portable/FormatReader.html "s3://${{ vars.SITE_BUCKET }}/FormatReader.html" --content-type "text/html; charset=utf-8" --content-disposition 'attachment; filename="FormatReader.html"' --cache-control "public, max-age=0, must-revalidate" --only-show-errors
+          # The portable file now lives on GitHub Releases (job below). Old links to
+          # formatreader.com/FormatReader.html get a tiny page that forwards there.
+          printf '%s' '<!doctype html><meta charset="utf-8"><title>FormatReader portable</title><meta http-equiv="refresh" content="0; url=https://github.com/HaosenGit1/formatreader/releases/download/portable/FormatReader.html"><p><a href="https://github.com/HaosenGit1/formatreader/releases/download/portable/FormatReader.html">Download FormatReader.html</a></p>' \
+            | aws s3 cp - "s3://${{ vars.SITE_BUCKET }}/FormatReader.html" --content-type "text/html; charset=utf-8" --cache-control "public, max-age=3600" --only-show-errors
       - name: Refresh the CDN
         run: aws cloudfront create-invalidation --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" --paths "/" "/index.html" "/sw.js" "/manifest.json" "/FormatReader.html"
+
+  # The portable single file (~43 MB, for computers without internet) is served by
+  # GitHub Releases: downloads there are free, so nobody can run up the AWS bill with it.
+  # One release, tag `portable`; each deploy replaces its file.
+  portable:
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # only to update the release file
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build:portable
+      - name: Publish to the `portable` release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view portable >/dev/null 2>&1 || gh release create portable --title "FormatReader portable (always the latest)" --notes "The whole FormatReader app in one file, for computers without internet. Save FormatReader.html, copy it to the other computer (USB stick, shared drive) and open it in a browser. This file is replaced with the newest version on every update of formatreader.com."
+          gh release upload portable dist-portable/FormatReader.html --clobber

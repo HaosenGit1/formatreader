@@ -7,6 +7,9 @@ import { h } from '../core/dom';
 import { lang, strings } from '../core/i18n';
 import { VIEWER_LABELS } from './labels';
 
+/** The portable single file, published on GitHub Releases by each deploy (free downloads, not billed on AWS). */
+export const PORTABLE_URL = 'https://github.com/HaosenGit1/formatreader/releases/download/portable/FormatReader.html';
+
 const s = strings({
   offline: { en: 'Offline ready', zh: '离线可用' },
   title: { en: 'Use offline', zh: '离线使用' },
@@ -138,7 +141,7 @@ function openPanel(status: Status, ids: string[], refresh: () => Promise<void>) 
         'p',
         { class: 'offline-note offline-portable' },
         lang() === 'zh' ? s('portableAsk') : `${s('portableAsk')} `,
-        h('a', { href: 'FormatReader.html' }, s('portableLink')),
+        h('a', { href: PORTABLE_URL, rel: 'noopener' }, s('portableLink')),
         s('portableHow'),
       ),
       h('p', { class: 'offline-legend' }, s('legend')),
