@@ -1,3 +1,4 @@
+import { plausibility } from '../../../../core/plausibility';
 import { decode, isValidUtf8 } from './codec';
 import { fastLegacy } from './fast';
 import { toWhatwgLabel } from './names';
@@ -74,7 +75,51 @@ function utf16Pattern(bytes: Uint8Array): string | null {
   const pairs = n / 2;
   if (oddZero / pairs > 0.35 && evenZero / pairs < 0.05) return 'utf-16le';
   if (evenZero / pairs > 0.35 && oddZero / pairs < 0.05) return 'utf-16be';
-  return null;
+  return utf16Cjk(bytes.subarray(0, n));
+}
+
+/**
+ * UTF-16 Chinese / Japanese / Korean without a BOM has almost no zero bytes, so
+ * the pattern above misses it (and it looks like binary data). Decode both ways
+ * and accept one only if it reads clearly as real text.
+ */
+function highByteUniform(bytes: Uint8Array, offset: number): boolean {
+  const counts = new Map<number, number>();
+  let pairs = 0;
+  for (let i = offset; i < bytes.length; i += 2, pairs++) counts.set(bytes[i], (counts.get(bytes[i]) ?? 0) + 1);
+  const top = [...counts.values()].sort((a, b) => b - a);
+  return (top[0] ?? 0) + (top[1] ?? 0) >= pairs * 0.9;
+}
+
+function utf16Cjk(bytes: Uint8Array): string | null {
+  if (bytes.length < 16) return null;
+  // Valid UTF-8 is UTF-8 — unless it is full of control bytes (Arabic/Hebrew/Cyrillic UTF-16 bytes are all below 0x80).
+  let low = 0;
+  for (const b of bytes) if (b < 0x09 || (b > 0x0d && b < 0x20)) low++;
+  if (low < bytes.length * 0.1 && isValidUtf8(bytes, true)) return null;
+  let best: { label: string; score: number } | null = null;
+  for (const label of ['utf-16le', 'utf-16be']) {
+    let text: string;
+    try {
+      text = new TextDecoder(label, { fatal: true }).decode(bytes);
+    } catch {
+      continue; // unpaired surrogates: not UTF-16 this way round
+    }
+    let nonAscii = 0;
+    let control = 0;
+    for (const ch of text) {
+      const cp = ch.codePointAt(0)!;
+      if (cp >= 0x80) nonAscii++;
+      else if (cp < 0x20 && cp !== 0x09 && cp !== 0x0a && cp !== 0x0d) control++;
+    }
+    if (nonAscii < 8 || control > text.length * 0.02) continue;
+    const score = plausibility(text);
+    // One alphabet (Arabic, Russian, Greek, Hindi…): nearly every high byte is the same one or two
+    // values (0x06 for Arabic, 0x00 for spaces), which random binary never does.
+    const need = highByteUniform(bytes, label === 'utf-16le' ? 1 : 0) ? 0.6 : 1.0;
+    if (score >= need && (!best || score > best.score)) best = { label, score };
+  }
+  return best?.label ?? null;
 }
 
 /**
@@ -120,7 +165,44 @@ export function badnessRatio(text: string): number {
  * Detect the text encoding of a file. The statistical detector (language
  * models, ~700 KB) is only loaded when a file is not Unicode.
  */
+/**
+ * Single-byte code pages (especially of one family) differ in only a few letters (Turkish ş ğ ı vs
+ * Western; Czech ť š in ISO-8859-2 vs Windows-1250; Russian in KOI8 vs Windows-1251).
+ * Statistical detectors often pick the wrong sibling, so compare the family members by
+ * how much the decoded text reads like real writing.
+ */
+const SINGLE_BYTE = [
+  'windows-1252', 'iso-8859-15', 'windows-1250', 'iso-8859-2', 'windows-1254', 'windows-1257', 'windows-1258', 'macintosh',
+  'windows-1251', 'koi8-r', 'koi8-u', 'ibm866', 'iso-8859-5', 'x-mac-cyrillic',
+  'windows-1253', 'iso-8859-7', 'windows-1255', 'iso-8859-8', 'windows-1256', 'iso-8859-6', 'windows-874',
+];
+
+function refineSingleByte(result: EncodingResult | BinaryResult, bytes: Uint8Array): EncodingResult | BinaryResult {
+  if ('binary' in result || result.reason === 'bom' || result.reason === 'ascii' || result.reason === 'utf8') return result;
+  if (!SINGLE_BYTE.includes(result.encoding)) return result;
+  const family = SINGLE_BYTE;
+  const sample = bytes.subarray(0, 64 * 1024);
+  const scoreOf = (label: string) => {
+    const text = decode(sample, label);
+    return plausibility(text) - badnessRatio(text) * 10;
+  };
+  const current = scoreOf(result.encoding);
+  let best = { label: result.encoding, score: current };
+  for (const label of family) {
+    if (label === result.encoding) continue;
+    const score = scoreOf(label);
+    if (score > best.score) best = { label, score };
+  }
+  if (best.label === result.encoding || best.score - current < 0.15) return result;
+  return { ...result, encoding: best.label, alternatives: [result.encoding, ...result.alternatives.filter((a) => a !== best.label)] };
+}
+
 export async function detectEncoding(all: Uint8Array): Promise<EncodingResult | BinaryResult> {
+  const bytes = all.length > SAMPLE_BYTES ? all.subarray(0, SAMPLE_BYTES) : all;
+  return refineSingleByte(await detectEncodingRaw(all), bytes);
+}
+
+async function detectEncodingRaw(all: Uint8Array): Promise<EncodingResult | BinaryResult> {
   const bytes = all.length > SAMPLE_BYTES ? all.subarray(0, SAMPLE_BYTES) : all;
   const truncated = all.length > bytes.length;
 

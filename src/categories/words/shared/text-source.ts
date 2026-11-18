@@ -8,7 +8,7 @@ import { lang, strings } from '../../../core/i18n';
 import { decode } from './encoding/codec';
 import { detectEncoding, isBinaryResult, warmDetector, type EncodingResult } from './encoding/detect';
 import { decodeEscapes, type DecodedText, type EscapeKind } from './encoding/escapes';
-import { repairMojibake, type RepairResult } from './encoding/mojibake';
+import { destroyedKind, repairMojibake, type RepairResult } from './encoding/mojibake';
 import { lostToQuestionMarks } from './encoding/question-loss';
 import { ENCODING_CHOICES, encodingName } from './encoding/names';
 
@@ -46,6 +46,17 @@ const s = strings({
   url: { en: 'URL encoding (%…)', zh: 'URL 编码（%…）' },
   html: { en: 'HTML entities (&#…;)', zh: 'HTML 实体（&#…;）' },
   base64: { en: 'Base64', zh: 'Base64' },
+  octal: { en: 'octal byte escapes (\\344…)', zh: '八进制字节转义（\\344…）' },
+  qp: { en: 'quoted-printable (=E4…)', zh: 'Quoted-Printable 编码（=E4…）' },
+  mime: { en: 'MIME encoded words (=?…?=)', zh: 'MIME 编码字（=?…?=）' },
+  destroyedLost: {
+    en: 'Characters in this text were destroyed before it was saved: “锟斤拷” / “嚙踝蕭” are what lost characters turn into after a wrong conversion. The original text is not in the file any more and cannot be recovered; use the original file.',
+    zh: '这段文字在保存前就已经损坏：“锟斤拷”“嚙踝蕭”是字符在错误转换中丢失后留下的痕迹。原文已不在文件中，无法恢复，请使用原始文件。',
+  },
+  destroyedMemory: {
+    en: '“烫烫烫” / “屯屯屯” is not text: it is empty memory written out by a program bug (Visual C++ debug builds fill memory with these bytes). There is nothing to recover.',
+    zh: '“烫烫烫”“屯屯屯”不是文字，而是程序错误写出的空白内存（Visual C++ 调试版本会用这些字节填充内存）。这里没有可恢复的内容。',
+  },
   showDecoded: { en: 'Show decoded', zh: '查看解码后' },
   showRepaired: { en: 'Show repaired', zh: '查看修复后' },
 });
@@ -140,6 +151,8 @@ export class TextSource {
       this.qLost = lostToQuestionMarks(this.raw);
     }
     const qLost = this.qLost;
+    const destroyed = destroyedKind(this.raw);
+    if (destroyed) out.push(h('div', { class: 'notice warn' }, s(destroyed === 'lost' ? 'destroyedLost' : 'destroyedMemory')));
     if (qLost) out.push(h('div', { class: 'notice warn' }, s('questionLoss').replace('{n}', qLost.toLocaleString())));
     // "Decoded correctly" would contradict the loss notice: the text is gone whatever the encoding.
     if (det && this.bytes && this.encoding === det.encoding && !qLost) {

@@ -9,6 +9,7 @@ import { strings } from '../../../core/i18n';
 import { isJunkPath } from '../../../core/junk';
 import type { OpenContext, OpenedView } from '../../../core/viewer';
 import pkg from 'libarchive.js/package.json';
+import { nameRepair } from './names';
 
 const s = strings({
   files: { en: 'files', zh: '个文件' },
@@ -66,13 +67,17 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   const isComic = ['cbr', 'cb7', 'cbt'].includes(ctx.format?.id ?? '') || /\.(cbr|cb7|cbt)$/i.test(file.name);
 
   // Mac/Windows clutter (__MACOSX/, ._*, .DS_Store, Thumbs.db) is left out of the listing.
-  const list = async (): Promise<Entry[]> =>
-    (await archive.getFilesArray())
-      .map(({ file: f, path }) => {
-        const cf = f as unknown as { name: string; size: number; extract(): Promise<File> };
-        return { path: `${path}${cf.name}`, name: cf.name, size: cf.size, extract: () => cf.extract() };
+  const list = async (): Promise<Entry[]> => {
+    const raw = (await archive.getFilesArray()).map(({ file: f, path }) => ({ f: f as unknown as { name: string; size: number; extract(): Promise<File> }, path }));
+    // Names saved in GBK / Big5 / Shift-JIS by Chinese/Japanese/Korean Windows come out garbled: repair them.
+    const fix = nameRepair(raw.map(({ f, path }) => `${path}${f.name}`)) ?? ((n: string) => n);
+    return raw
+      .map(({ f, path }) => {
+        const name = fix(f.name);
+        return { path: fix(`${path}${f.name}`), name, size: f.size, extract: async () => (name === f.name ? f.extract() : new File([await f.extract()], name)) };
       })
       .filter((e) => !isJunkPath(e.path));
+  };
 
   const body = h('div', { class: 'archive-body' });
   ctx.mount.replaceChildren(h('div', { class: 'view view-archive' }, body));
