@@ -136,6 +136,15 @@ export const wordsViewers: ViewerEntry[] = [
     load: () => import('./sheets/view'),
   },
   {
+    // XBRL and Inline XBRL financial reports, detected by their namespaces.
+    id: 'words/xbrl',
+    category: 'words',
+    prefetch: false,
+    priority: 30,
+    accepts: ({ format, head }) => isTextish(format) && /http:\/\/www\.xbrl\.org\/2013\/inlineXBRL|<ix:(header|nonFraction)|http:\/\/www\.xbrl\.org\/2003\/instance/.test(headText(head)),
+    load: () => import('./xbrl/view'),
+  },
+  {
     // Bank statements (MT940, ISO 20022 camt, OFX/QFX/QBO, BAI2), detected by content.
     id: 'words/bank',
     category: 'words',

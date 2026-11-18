@@ -22,6 +22,7 @@ const WORDS = [
   { name: t('Hangul', '韩文 Hangul'), viewer: ['words/hwpx', 'words/hwp'], ext: ['hwpx', 'hwp'] },
   { name: t('Ebooks & comics', '电子书和漫画'), viewer: ['words/books', 'archives/archive', 'words/palmdoc'], ext: ['epub', 'mobi', 'azw3', 'fb2', 'fbz', 'cbz', 'cbr', 'cb7', 'pdb'] },
   { name: t('Email', '邮件'), viewer: 'words/email', ext: ['eml', 'msg', 'mbox', 'mht', 'mhtml'] },
+  { name: t('XBRL financial reports (XBRL, Inline XBRL: SEC, ESEF/EU, Companies House)', 'XBRL 财报（XBRL、Inline XBRL：SEC、欧盟 ESEF、英国 Companies House）'), viewer: 'words/xbrl', ext: ['xbrl'] },
   { name: t('Bank statements (MT940, camt.053, OFX/QFX/QBO, BAI2)', '银行流水（MT940、camt.053、OFX/QFX/QBO、BAI2）'), viewer: 'words/bank', ext: ['sta', '940', 'mt940', 'ofx', 'qfx', 'qbo', 'bai', 'bai2'] },
   { name: t('E-invoices (China 数电票, UBL/Peppol, ZUGFeRD/Factur-X)', '电子发票（数电票、UBL/Peppol、ZUGFeRD/Factur-X）'), viewer: ['words/invoice', 'words/code'], ext: ['xml'] },
 ];

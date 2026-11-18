@@ -10,6 +10,7 @@ export const VIEWER_LABELS: Record<string, { en: string; zh: string; ext: string
   'videos/video': { en: 'Videos', zh: '视频', ext: '.mp4 .webm .mov .mkv …' },
   'words/text': { en: 'Text & logs', zh: '文本和日志', ext: '.txt .log .md .srt …' },
   'words/code': { en: 'Code & settings', zh: '代码和配置', ext: '.py .js .json .xml .yaml .ini .reg …' },
+  'words/xbrl': { en: 'XBRL financial reports', zh: 'XBRL 财报', ext: '.xbrl .xml .htm (iXBRL)' },
   'words/bank': { en: 'Bank statements', zh: '银行流水', ext: '.sta .940 .ofx .qfx .qbo .bai camt.xml' },
   'words/invoice': { en: 'E-invoices (XML)', zh: '电子发票（XML）', ext: '.xml (数电票, UBL, CII)' },
   'words/locked': { en: 'Password-protected Office files', zh: '带密码的 Office 文件', ext: '.xlsx .docx .pptx (locked)' },
