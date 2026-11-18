@@ -9,18 +9,24 @@ import { VIEWER_LABELS } from './labels';
 
 const s = strings({
   offline: { en: 'Offline', zh: '离线' },
-  count: { en: '{n} of {t} ready', zh: '{n}/{t} 可用' },
-  title: { en: 'Works without internet', zh: '无网络也能用' },
-  explain: {
-    en: '✓ opens with no connection in this browser. ◐ the common types do; some need the internet once. ○ needs the internet the first time.',
-    zh: '✓ 在这个浏览器里无需联网即可打开。◐ 常见类型可以，部分需要联网一次。○ 第一次打开时需要联网。',
-  },
-  makeAll: { en: 'Make everything available offline · {size}', zh: '全部设为离线可用 · {size}' },
+  title: { en: 'Use offline', zh: '离线使用' },
+  lead: { en: 'Files are never uploaded. Download once, use offline.', zh: '文件从不上传。下载一次，离线可用。' },
+  makeAll: { en: 'Download · {size}', zh: '下载 · {size}' },
   working: { en: 'Downloading…', zh: '正在下载…' },
-  allReady: { en: 'Everything is available offline.', zh: '全部都可以离线使用。' },
-  failed: { en: 'Not finished: connect to the internet and try again.', zh: '未完成：请联网后再试。' },
+  allReady: { en: 'Ready to use offline.', zh: '已可离线使用。' },
+  failed: { en: 'Not finished. Connect and try again.', zh: '未完成，请联网后重试。' },
+  legend: { en: '✓ offline   ◐ mostly   ○ needs internet', zh: '✓ 可离线   ◐ 大部分   ○ 需联网' },
+  safari: { en: 'Safari: add to Home Screen to keep it.', zh: 'Safari：添加到主屏幕才能长期保留。' },
   close: { en: 'Close', zh: '关闭' },
 });
+
+/** Safari (and every iPhone/iPad browser) deletes a site's stored data after ~7 days unused, unless installed. */
+function safariMayForget(): boolean {
+  const ua = navigator.userAgent;
+  const installed = matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+  const apple = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) || (/Safari\//.test(ua) && /Macintosh/.test(ua) && !/Chrome|Chromium|Edg|Firefox|OPR/.test(ua));
+  return apple && !installed;
+}
 
 interface Status {
   core: boolean;
@@ -56,7 +62,7 @@ export function offlineLine(): HTMLElement {
         'button',
         { type: 'button', class: 'offline-line', onclick: () => openPanel(status, ids, render) },
         h('span', { class: `offline-dot${full ? ' full' : ready ? ' some' : ''}`, 'aria-hidden': 'true' }),
-        `${s('offline')} · ${s('count').replace('{n}', String(ready)).replace('{t}', String(ids.length))}`,
+        `${s('offline')} · ${ready}/${ids.length}`,
       ),
     );
   };
@@ -100,6 +106,8 @@ function openPanel(status: Status, ids: string[], refresh: () => Promise<void>) 
           onclick: async () => {
             button!.setAttribute('disabled', '');
             button!.textContent = s('working');
+            // The visitor asked to keep it: ask the browser not to clear it when space runs low.
+            void navigator.storage?.persist?.().catch(() => false);
             const res = await ask<{ done: boolean }>('cache-all');
             dialog.close();
             await refresh();
@@ -115,9 +123,11 @@ function openPanel(status: Status, ids: string[], refresh: () => Promise<void>) 
       'div',
       { class: 'offline-inner' },
       h('div', { class: 'offline-head' }, h('h2', {}, s('title')), h('button', { type: 'button', class: 'offline-close', 'aria-label': s('close'), onclick: () => dialog.close() }, '×')),
-      h('p', { class: 'offline-note' }, s('explain')),
+      h('p', { class: 'offline-lead' }, s('lead')),
       note,
       button,
+      safariMayForget() ? h('p', { class: 'offline-note' }, s('safari')) : null,
+      h('p', { class: 'offline-legend' }, s('legend')),
       list,
     ),
   ) as HTMLDialogElement;

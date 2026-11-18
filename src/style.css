@@ -810,3 +810,16 @@ select {
 .offline-list .partly .offline-mark {
   color: var(--accent);
 }
+
+.offline-lead {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.offline-legend {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: pre-wrap;
+}
