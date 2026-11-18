@@ -35,7 +35,9 @@ const IMAGES = [
   { name: t('Photos & pictures', '照片和图片'), viewer: 'images/photo', ext: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'bmp', 'ico', 'svg', 'svgz'] },
   { name: t('iPhone photos (HEIC)', 'iPhone 照片（HEIC）'), viewer: 'images/photo', ext: ['heic', 'heif'] },
   { name: t('TIFF & Photoshop', 'TIFF 和 Photoshop'), viewer: 'images/photo', ext: ['tiff', 'tif', 'psd'] },
-  { name: t('Camera RAW (preview)', '相机 RAW（预览）'), viewer: 'images/photo', ext: ['dng', 'cr2', 'cr3', 'nef', 'arw', 'raf', 'orf', 'rw2', 'pef', 'srw'] },
+  { name: t('Phone photos: iPhone, Samsung, Huawei, Pixel, Xiaomi (incl. motion photos, ProRAW/DNG)', '手机照片：iPhone、三星、华为、Pixel、小米（含动态照片、ProRAW/DNG）'), viewer: 'images/photo', ext: ['jpg', 'heic', 'heif', 'dng', 'avif'] },
+  { name: t('Camera RAW (preview): Canon, Nikon, Sony, Fujifilm, Olympus/OM, Panasonic, Leica, Pentax, Hasselblad, Phase One, Sigma, Kodak, GoPro…', '相机 RAW（预览）：佳能、尼康、索尼、富士、奥林巴斯/OM、松下、徕卡、宾得、哈苏、飞思、适马、柯达、GoPro…'), viewer: 'images/photo', ext: ['cr2', 'cr3', 'crw', 'nef', 'nrw', 'arw', 'arq', 'srf', 'sr2', 'raf', 'orf', 'ori', 'rw2', 'raw', 'rwl', 'pef', 'srw', 'x3f', '3fr', 'fff', 'iiq', 'cap', 'eip', 'erf', 'kdc', 'dcr', 'dcs', 'mos', 'mef', 'mrw', 'gpr'] },
+  { name: t('Animations: GIF, APNG, animated WebP, Lottie (.json/.lottie), Telegram stickers (.tgs), Flash (.swf)', '动画：GIF、APNG、动态 WebP、Lottie（.json/.lottie）、Telegram 贴纸（.tgs）、Flash（.swf）'), viewer: ['images/photo', 'images/anim', 'archives/gzip'], ext: ['gif', 'apng', 'webp', 'lottie', 'tgs', 'swf'] },
   { name: t('HDR & textures', 'HDR 和贴图'), viewer: 'images/photo', ext: ['exr', 'hdr', 'tga'] },
   { name: t('Medical scans (DICOM)', '医学影像（DICOM）'), viewer: 'images/photo', ext: ['dcm'] },
 ];
@@ -53,6 +55,7 @@ const SOUNDS = [
 
 const VIDEOS = [
   { name: t('Videos', '视频'), viewer: 'videos/video', ext: ['mp4', 'm4v', 'webm', 'mov', 'mkv', 'ogv'] },
+  { name: t('Phone, action-camera and drone videos (iPhone, Android, GoPro, Insta360, DJI)', '手机、运动相机和无人机视频（iPhone、安卓、GoPro、Insta360、大疆）'), viewer: 'videos/video', ext: ['mov', 'mp4', 'lrv', 'insv'] },
   // MPEG-TS '.ts' video is recognised by content; the extension itself belongs to TypeScript here.
   { name: t('FLV & MPEG-TS (H.264)', 'FLV 和 MPEG-TS（H.264）'), viewer: 'videos/video', ext: ['flv', 'm2ts'] },
   { name: t('AVI from cameras, CCTV & dashcams (MJPEG, H.264)', '相机、监控和行车记录仪的 AVI（MJPEG、H.264）'), viewer: 'videos/video', ext: ['avi'] },

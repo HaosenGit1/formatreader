@@ -29,7 +29,7 @@ export interface Decoded {
 /** Formats every current browser shows directly in <img>. */
 export const NATIVE = new Set(['jpg', 'png', 'gif', 'webp', 'avif', 'bmp', 'ico', 'svg', 'apng']);
 /** Camera RAW formats (TIFF- or ISO-based) whose embedded JPEG preview is shown. */
-export const RAW = new Set(['cr2', 'cr3', 'nef', 'nrw', 'arw', 'srf', 'sr2', 'dng', 'raf', 'orf', 'rw2', 'pef', 'srw', 'x3f', '3fr', 'iiq', 'erf', 'kdc', 'mrw', 'rwl']);
+export const RAW = new Set(['cr2', 'cr3', 'crw', 'nef', 'nrw', 'arw', 'arq', 'srf', 'sr2', 'dng', 'gpr', 'raf', 'orf', 'ori', 'rw2', 'raw', 'rwl', 'pef', 'srw', 'x3f', '3fr', 'fff', 'iiq', 'cap', 'eip', 'erf', 'kdc', 'dcr', 'dcs', 'mos', 'mef', 'mrw']);
 
 const LABELS: Record<string, string> = {
   jpg: 'JPEG', png: 'PNG', gif: 'GIF', webp: 'WebP', avif: 'AVIF', bmp: 'BMP', ico: 'Icon', svg: 'SVG', svgz: 'SVG',

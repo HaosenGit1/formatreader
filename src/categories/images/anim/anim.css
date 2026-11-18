@@ -1,0 +1,65 @@
+/* Animations (Lottie, Flash) */
+.view-anim {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--surface-2);
+}
+
+.an-stage {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+}
+
+.an-stage > svg {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.an-flash {
+  width: 100%;
+  height: 100%;
+}
+
+.an-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+
+.an-play {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: inherit;
+  cursor: pointer;
+}
+
+.an-slider {
+  flex: 1;
+  min-width: 0;
+}
+
+.an-frame {
+  flex: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.an-note {
+  margin: 0;
+  padding: 8px 12px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}

@@ -12,6 +12,8 @@ import { decodeImage, type Picture } from './decode';
 import { photoDetails } from './details';
 
 const s = strings({
+  motion: { en: '▶ Motion', zh: '▶ 动态照片' },
+  motionTitle: { en: 'This is a motion photo: play the short video saved with it', zh: '这是动态照片：播放随照片保存的短视频' },
   zoomIn: { en: 'Zoom in (+)', zh: '放大 (+)' },
   zoomOut: { en: 'Zoom out (−)', zh: '缩小 (−)' },
   actual: { en: 'Actual size (1)', zh: '原始大小 (1)' },
@@ -127,11 +129,38 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
     detailsBtn,
   ];
 
+  // Motion photos (Samsung, Pixel, Huawei, Xiaomi…): a short video hidden after the picture.
+  const fmt = ctx.format?.id ?? ext;
+  let motionUrl = '';
+  let motionVideo: HTMLVideoElement | null = null;
+  if (fmt === 'jpg' || fmt === 'heic') {
+    void import('./motion').then(async ({ findMotionVideo }) => {
+      const video = await findMotionVideo(file);
+      if (!video) return;
+      motionUrl = URL.createObjectURL(video);
+      const btn = h('button', { type: 'button', class: 'btn', 'aria-pressed': 'false', title: s('motionTitle') }, s('motion')) as HTMLButtonElement;
+      btn.addEventListener('click', () => {
+        if (motionVideo) {
+          motionVideo.remove();
+          motionVideo = null;
+          btn.setAttribute('aria-pressed', 'false');
+          return;
+        }
+        motionVideo = h('video', { class: 'ph-motion', src: motionUrl, controls: true, autoplay: true, loop: true, playsinline: true }) as HTMLVideoElement;
+        stage.element.append(motionVideo);
+        btn.setAttribute('aria-pressed', 'true');
+      });
+      tools.splice(tools.length - 1, 0, btn);
+      ctx.refreshChrome();
+    });
+  }
+
   return {
     meta: () => [decoded.label, `${pic.width} × ${pic.height}`, ...(decoded.pages > 1 ? [`${decoded.pages} ${s('images')}`] : [])],
     tools: () => tools,
     notices: () => (decoded.note && decoded.note !== 'heicDepth' ? [h('div', { class: 'notice subtle' }, s(decoded.note))] : []),
     destroy: () => {
+      if (motionUrl) URL.revokeObjectURL(motionUrl);
       stage.destroy();
       decoded.release?.();
     },

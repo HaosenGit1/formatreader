@@ -154,7 +154,8 @@ self.addEventListener('message', (event) => {
       }
       if (data === 'cache-all') {
         await writeState(cache, { ...(await readState(cache)), all: true });
-        const ok = await store(cache, [...KNOWN]);
+        // The Flash player (vendor/ruffle-*, ~29 MB) is online-only: not part of "store everything".
+        const ok = await store(cache, [...KNOWN].filter((f) => !/(^|\/)vendor\/ruffle-/.test(f)));
         port?.postMessage({ done: ok });
         return;
       }

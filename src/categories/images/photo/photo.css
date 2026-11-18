@@ -104,3 +104,14 @@
     border-top: 1px solid var(--line);
   }
 }
+
+/* Motion photo: its video over the picture */
+.ph-motion {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+  z-index: 2;
+}

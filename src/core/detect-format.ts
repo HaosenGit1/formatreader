@@ -127,6 +127,7 @@ function fromMagic(h: Uint8Array, ext: string): FormatInfo | null {
   if (startsWith(h, [0xff, 0xd8, 0xff])) return F('jpg', 'JPEG image', 'images');
   if (startsWith(h, [0x89, 0x50, 0x4e, 0x47])) return F('png', 'PNG image', 'images');
   if (ascii(h, 0, 4) === 'GIF8') return F('gif', 'GIF image', 'images');
+  if (/^[FCZ]WS$/.test(ascii(h, 0, 3)) && h[3] > 0 && h[3] < 60) return F('swf', 'Flash animation (SWF)', 'images');
   if (ascii(h, 0, 4) === 'RIFF' && ascii(h, 8, 4) === 'WEBP') return F('webp', 'WebP image', 'images');
   if (ascii(h, 0, 4) === '8BPS') return F('psd', 'Photoshop document', 'images');
   if (startsWith(h, [0x49, 0x49, 0x2a, 0x00]) || startsWith(h, [0x4d, 0x4d, 0x00, 0x2a])) {
@@ -207,6 +208,7 @@ function fromZip(names: string[], head: Uint8Array, ext: string): FormatInfo {
   const any = (re: RegExp) => names.some((n) => re.test(n));
   const mime = ascii(head, 30, 120); // ODF/EPUB store their mimetype uncompressed as the first entry
 
+  if (has('manifest.json') && any(/^animations\/[^/]+\.json$/)) return F('lottie', 'Lottie animation', 'images');
   if (mime.includes('application/epub+zip') || (has('META-INF/container.xml') && ext === 'epub')) {
     return F('epub', 'EPUB ebook', 'words');
   }

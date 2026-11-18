@@ -11,3 +11,4 @@ All made for FormatReader (no third-party content):
 - `sky.exr`, `sky.hdr`, `pattern.tga`, `ct-phantom.dcm`, `ct-phantom-rle.dcm`: written by
   `scripts/make-image-samples.py` (HDR sky with a 40× "sun", a TGA test pattern, a synthetic CT
   chest phantom in Hounsfield units, uncompressed and RLE).
+- `motion-photo.jpg`: `wind-farm.jpg` with `../videos/turbine.mp4` appended, the way Samsung/Pixel/Huawei motion photos store their video.

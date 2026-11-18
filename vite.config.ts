@@ -94,7 +94,9 @@ function offlinePlugin(): Plugin {
       for (const v of Object.values(viewers))
         for (const list of [v.base, v.all]) {
           const code = list.filter((f) => f.endsWith('.js')).map((f) => readFileSync(join(outDir, f), 'utf8')).join('\n');
-          for (const f of files) if (f.startsWith('vendor/') && code.includes(f.split('/')[1].replace(/-[\d.]+$/, ''))) list.push(f);
+          // The Flash player (Ruffle, ~29 MB for its two engine builds) stays online-only: storing it for
+          // offline would almost double "store everything" for a format few people need.
+          for (const f of files) if (f.startsWith('vendor/') && !f.startsWith('vendor/ruffle-') && code.includes(f.split('/')[1].replace(/-[\d.]+$/, ''))) list.push(f);
         }
       const sizeOf = (f: string) => {
         const b = readFileSync(join(outDir, f));
