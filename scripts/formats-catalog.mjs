@@ -46,6 +46,14 @@ const DRAWINGS = [
   { name: t('Diagrams', '图表'), viewer: ['drawings/preview', 'drawings/mindmap'], ext: ['vsdx', 'odg', 'xmind'] },
 ];
 
+const SOUNDS = [
+  { name: t('Music & sound', '音乐和音频'), viewer: 'sounds/audio', ext: ['mp3', 'm4a', 'aac', 'wav', 'flac', 'ogg', 'opus', 'weba', 'aiff'] },
+];
+
+const VIDEOS = [
+  { name: t('Videos', '视频'), viewer: 'videos/video', ext: ['mp4', 'm4v', 'webm', 'mov', 'mkv', 'ogv'] },
+];
+
 const DATA = [{ name: t('COMTRADE fault records', 'COMTRADE 故障录波'), viewer: 'data/comtrade', ext: ['cfg', 'dat', 'cff'] }];
 
 const ARCHIVES = [
@@ -55,8 +63,7 @@ const ARCHIVES = [
 
 const COMING = [
   { name: t('More images', '更多图片'), ext: ['jxl', 'jp2', 'dds', 'ktx2'] },
-  { name: t('Sounds', '音频'), ext: ['mp3', 'wav', 'flac', 'm4a', 'aac', 'ogg', 'opus', 'wma'] },
-  { name: t('Videos', '视频'), ext: ['mp4', 'mov', 'webm', 'mkv', 'avi', 'wmv'] },
+  { name: t('More audio & video (details only for now)', '更多音视频（暂只显示信息）'), ext: ['wma', 'ape', 'amr', 'mid', 'avi', 'wmv', 'flv', 'rmvb'] },
   { name: t('More drawings', '更多图纸'), ext: ['vsd', 'kmz', 'skp'] },
   { name: t('System logs', '系统日志'), ext: ['evtx', 'plist', 'journal', 'pcap'] },
   { name: t('More documents & data', '更多文档和数据'), ext: ['chm', 'djvu', 'parquet', 'h5', 'mat', 'pst'] },
@@ -103,6 +110,8 @@ export function formatsCatalog(root = process.cwd()) {
     { id: 'tables', name: t('Tables & databases', '表格和数据库'), groups: TABLES },
     { id: 'images', name: t('Images', '图片'), groups: IMAGES },
     { id: 'drawings', name: t('Drawings & 3D', '图纸和 3D'), groups: DRAWINGS },
+    { id: 'sounds', name: t('Sounds', '音频'), groups: SOUNDS },
+    { id: 'videos', name: t('Videos', '视频'), groups: VIDEOS },
     { id: 'code', name: t('Code & settings', '代码和配置'), groups: codeGroups(root) },
     { id: 'data', name: t('Engineering data', '工程数据'), groups: DATA },
     { id: 'archives', name: t('Archives', '压缩包'), groups: ARCHIVES },

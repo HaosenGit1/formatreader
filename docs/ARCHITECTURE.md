@@ -183,3 +183,13 @@ one file (~8 MB). Download it anywhere, copy it to a computer with no internet
 - No offline worker or panel; the footer says "Portable · works without internet".
 - Deploy uploads it as formatreader.com/FormatReader.html (saved, not displayed);
   the Offline panel links to it. It is a snapshot: save it again for updates.
+
+### CAD engines and the security policy
+
+STEP/IGES/BREP (occt-import-js) and IFC (web-ifc) are Emscripten builds whose glue
+code generates functions at run time, which the page's CSP (`index.html` meta tag)
+forbids. They therefore run in `drawings/model/cad-worker.ts`: a worker loaded from
+its own file is not covered by the page's meta CSP. **If a Content-Security-Policy
+response header is ever added on CloudFront, it must allow `'unsafe-eval'` for that
+worker script, or STEP/IFC files stop opening.** The portable single file cannot start
+such a worker, so its CSP adds `'unsafe-eval'` (inline scripts still need a hash).

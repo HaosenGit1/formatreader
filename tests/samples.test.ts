@@ -32,6 +32,8 @@ const FOLDER_VIEWER: Record<string, string> = {
   data: 'data/comtrade',
   images: 'images/photo',
   drawings: 'drawings/model',
+  sounds: 'sounds/audio',
+  videos: 'videos/video',
 };
 
 /** Some folders hold several document types, each with its own viewer. */
@@ -54,7 +56,7 @@ const EXPECT: Record<string, string> = {
   'double-encoded.txt': '这是一段被错误编码后又保存了的中文',
 };
 
-const BINARY_EXT = new Set(['epub', 'cbz', 'pptx', 'xlsx', 'xls', 'ods', 'docx', 'mdb', 'accdb', 'sqlite', 'rtf', 'odt', 'odp', 'eml', 'mbox', 'msg', 'mhtml', 'xps', 'ofd', 'hwpx', 'pages', 'key', 'pdb', 'gz', 'doc', 'ppt', 'hwp', 'zip', '7z', 'tar', 'rar', 'cb7', 'cfg', 'cff', 'pdf', 'jpg', 'png', 'gif', 'webp', 'bmp', 'ico', 'heic', 'tiff', 'psd', 'dng', 'svgz', 'svg', 'exr', 'hdr', 'tga', 'dcm', 'stl', 'obj', 'ply', 'glb', '3mf', 'dxf', 'dwg', 'odg', 'vsdx', 'xmind', 'step', 'ifc']);
+const BINARY_EXT = new Set(['epub', 'cbz', 'pptx', 'xlsx', 'xls', 'ods', 'docx', 'mdb', 'accdb', 'sqlite', 'rtf', 'odt', 'odp', 'eml', 'mbox', 'msg', 'mhtml', 'xps', 'ofd', 'hwpx', 'pages', 'key', 'pdb', 'gz', 'doc', 'ppt', 'hwp', 'zip', '7z', 'tar', 'rar', 'cb7', 'cfg', 'cff', 'pdf', 'jpg', 'png', 'gif', 'webp', 'bmp', 'ico', 'heic', 'tiff', 'psd', 'dng', 'svgz', 'svg', 'exr', 'hdr', 'tga', 'dcm', 'stl', 'obj', 'ply', 'glb', '3mf', 'dxf', 'dwg', 'odg', 'vsdx', 'xmind', 'step', 'ifc', 'wav', 'm4a', 'flac', 'aiff', 'weba', 'mp4', 'webm']);
 // locked.zip is password-protected: still routed to the archive viewer.
 
 for (const folder of Object.keys(FOLDER_VIEWER)) {

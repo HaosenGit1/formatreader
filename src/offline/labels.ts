@@ -5,6 +5,8 @@ export const VIEWER_LABELS: Record<string, { en: string; zh: string; ext: string
   'drawings/model': { en: '3D models & CAD', zh: '3D 模型和 CAD', ext: '.stl .obj .glb .3mf .step .iges .ifc …' },
   'drawings/preview': { en: 'DWG, ODG & Visio (preview)', zh: 'DWG、ODG 和 Visio（预览）', ext: '.dwg .odg .vsdx' },
   'drawings/mindmap': { en: 'Mind maps', zh: '思维导图', ext: '.xmind' },
+  'sounds/audio': { en: 'Music & sound', zh: '音乐和音频', ext: '.mp3 .m4a .wav .flac .ogg .opus …' },
+  'videos/video': { en: 'Videos', zh: '视频', ext: '.mp4 .webm .mov .mkv …' },
   'words/text': { en: 'Text & logs', zh: '文本和日志', ext: '.txt .log .md .srt …' },
   'words/code': { en: 'Code & settings', zh: '代码和配置', ext: '.py .js .json .xml .yaml .ini .reg …' },
   'words/sheets': { en: 'Spreadsheets', zh: '表格', ext: '.csv .xlsx .xls .ods .numbers …' },
