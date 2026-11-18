@@ -1,5 +1,6 @@
 import './style.css';
 import { allViewers } from './categories';
+import { startAnalytics } from './core/analytics';
 import { startApp } from './core/shell';
 import { registerOffline } from './offline/register';
 
@@ -7,3 +8,4 @@ import { registerOffline } from './offline/register';
 if (import.meta.env.MODE === 'portable' && location.protocol === 'file:') (globalThis as { __formatreaderSrcdoc?: boolean }).__formatreaderSrcdoc = true;
 startApp(allViewers);
 registerOffline();
+startAnalytics('FormatReader');

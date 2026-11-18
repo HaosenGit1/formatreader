@@ -7,6 +7,7 @@
  * whatever toolbar controls the viewer offers. If a viewer fails, only that
  * file shows an error card; the shell and all other viewers keep working.
  */
+import { trackOpen } from './analytics';
 import { withDetectedType } from './mime';
 import { FolderSource } from './folder-source';
 import { offlineLine } from '../offline/panel';
@@ -395,6 +396,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
       return;
     }
     current = { name, size, entry, view, format, file: shownFile ?? undefined };
+    trackOpen(entry.id, name); // viewer id and extension only, never the name
     shownFile = null;
     refreshChrome();
     cover.remove();

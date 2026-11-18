@@ -1,6 +1,7 @@
 /** formats.html: language (same rule as the app) and the extension search. */
 import './style.css';
 import './formats-page.css';
+import { startAnalytics } from './core/analytics';
 import { lang } from './core/i18n';
 import { registerOffline } from './offline/register';
 
@@ -36,3 +37,5 @@ search.addEventListener('input', () => {
 });
 
 registerOffline();
+
+startAnalytics('Formats — FormatReader');

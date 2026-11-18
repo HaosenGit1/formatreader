@@ -31,6 +31,8 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+        env:
+          VITE_GA_ID: ${{ vars.VITE_GA_ID }} # anonymous visit statistics (website only)
       - run: npm run build:portable
       - uses: aws-actions/configure-aws-credentials@v4
         with:

@@ -2,9 +2,11 @@ import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 // @ts-expect-error plain JS module shared with the tests
 import { formatsHtml } from './scripts/formats-catalog.mjs';
+// @ts-expect-error plain JS module shared with the tests
+import { withAnalyticsCsp } from './scripts/analytics-csp.mjs';
 
 /** Viewer id → its module file, read from src/categories/<category>/index.ts. */
 function viewerModules(): Map<string, string> {
@@ -125,6 +127,20 @@ function formatsPagePlugin(): Plugin {
 }
 
 /**
+ * Website build with VITE_GA_ID set: lets the pages reach Google Analytics
+ * (see scripts/analytics-csp.mjs). Not used in development or the portable file.
+ */
+function analyticsCspPlugin(gaId: string | undefined): Plugin {
+  return {
+    name: 'formatreader-analytics-csp',
+    apply: 'build',
+    transformIndexHtml(html) {
+      return gaId && /^G-[A-Z0-9]{4,20}$/.test(gaId) ? withAnalyticsCsp(html) : html;
+    },
+  };
+}
+
+/**
  * Portable build (`npm run build:portable`): the whole app in ONE file,
  * dist-portable/FormatReader.html, for computers without internet. Carry it on
  * a USB stick and open it in any browser (double-click, or drag it in).
@@ -201,7 +217,7 @@ export default defineConfig(({ mode }) =>
       }
     : {
         base: './',
-        plugins: [formatsPagePlugin(), offlinePlugin()],
+        plugins: [formatsPagePlugin(), analyticsCspPlugin(loadEnv(mode, process.cwd(), 'VITE_').VITE_GA_ID), offlinePlugin()],
         build: {
           target: 'es2022',
           sourcemap: false,

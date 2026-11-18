@@ -2,6 +2,7 @@
 
 Drop any file into the browser — FormatReader detects the format and shows it.
 Everything runs locally: files are never uploaded, and nothing is downloaded or saved.
+The website counts visits anonymously with Google Analytics: never file names or contents (see `src/core/analytics.ts`).
 
 **Categories:** Words · Images · Drawings (now) · Sounds · Videos (later).
 Works offline, and as one portable file (`FormatReader.html`) for computers without internet.
