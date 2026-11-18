@@ -1,8 +1,7 @@
 {
   "name": "formatreader",
-  "private": true,
   "version": "0.1.0",
-  "description": "Drop any file into your browser — it detects the format and shows it. Nothing is uploaded.",
+  "description": "Drop any file into your browser \u2014 it detects the format and shows it. Nothing is uploaded.",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -58,5 +57,11 @@
   "overrides": {
     "echarts": "6.1.0",
     "uuid": "11.1.1"
-  }
+  },
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HaosenGit1/formatreader"
+  },
+  "homepage": "https://formatreader.com"
 }

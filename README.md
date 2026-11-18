@@ -111,3 +111,11 @@ samples/                  test files, one folder per viewer
 Heavy parts load only when needed: the statistical encoding detector (for non-Unicode files),
 the syntax highlighter (one language at a time), and the Markdown renderer.
 The first page load is about 17 KB gzipped; `npm run build` fails if it passes 60 KB.
+
+## Licence
+
+FormatReader is free software: you can redistribute it and/or modify it under the terms of the
+**GNU General Public License, version 3 or (at your option) any later version** — see [LICENSE](LICENSE).
+Copyright © 2026 the FormatReader authors.
+
+The bundled open-source engines keep their own licences (table above); all are compatible with the GPL.

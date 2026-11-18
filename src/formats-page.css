@@ -119,3 +119,14 @@
 .fmt-cat {
   scroll-margin-top: 80px;
 }
+
+.fmt-foot {
+  margin-top: 28px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.fmt-foot a {
+  color: inherit;
+}

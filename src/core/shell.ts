@@ -36,7 +36,10 @@ const s = strings({
   back: { en: 'Back', zh: '返回' },
   formats: { en: 'Formats', zh: '支持的格式' },
   portable: { en: 'Portable · works without internet', zh: '便携版 · 无需联网' },
-  portableNote: { en: 'This single file is the whole app. Copy it anywhere and open it in a browser.', zh: '这一个文件就是完整的应用。复制到任何地方，用浏览器打开即可。' },
+  portableNote: {
+    en: 'This single file is the whole app. Copy it anywhere and open it in a browser. Free software (GPL-3.0); source: github.com/HaosenGit1/formatreader',
+    zh: '这一个文件就是完整的应用。复制到任何地方，用浏览器打开即可。自由软件（GPL-3.0），源代码：github.com/HaosenGit1/formatreader',
+  },
 });
 
 interface Current {
