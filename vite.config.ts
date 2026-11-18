@@ -198,7 +198,7 @@ export default defineConfig(({ mode }) =>
         resolve: {
           alias: [
             // No workers in the single file: stand-ins keep the worker bundles (and a second copy of each engine) out.
-            { find: /^\.\/(dwg|cad)-worker-host$/, replacement: resolve('src/offline/worker-host-stub.ts') },
+            { find: /^\.\/(dwg|cad|drawing|sheet)-worker-host$/, replacement: resolve('src/offline/worker-host-stub.ts') },
           ],
         },
         base: './',

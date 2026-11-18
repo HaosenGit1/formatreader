@@ -29,6 +29,13 @@ export interface OpenContext {
   /** Ask the shell to redraw the toolbar and notices (e.g. after the viewer's state changed). */
   refreshChrome(): void;
   /**
+   * While opening: name the current step and, when it can be measured, how far it is (0…1).
+   * Shown on the loading screen with a timer. Ignored once the file is shown.
+   */
+  progress?(step: string, fraction?: number): void;
+  /** Aborted when the user presses Stop (or leaves): end background work. */
+  signal?: AbortSignal;
+  /**
    * Open another file in FormatReader (e.g. an email attachment or a file
    * inside an archive). The toolbar then shows the way back ("Opened from").
    * `replace`: show this file *instead of* the current one, with no step

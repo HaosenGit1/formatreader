@@ -12,6 +12,8 @@ import { withDetectedType } from './mime';
 import { FolderSource } from './folder-source';
 import { offlineLine } from '../offline/panel';
 import { detectFormat, extOf } from './detect-format';
+import { withReadProgress } from './progress';
+import { loadingInfo } from './loading-info';
 import { formatBytes, h } from './dom';
 import { lang, onLangChange, setLang, strings } from './i18n';
 import { infoEntry } from './info-entry';
@@ -31,8 +33,12 @@ const s = strings({
   larger: { en: 'Larger text', zh: '放大文字' },
   pasted: { en: 'Pasted text', zh: '粘贴的文字' },
   failed: { en: 'This file could not be opened', zh: '无法打开这个文件' },
-  bigLoading: { en: 'Large file ({size}): this can take a moment.', zh: '文件较大（{size}）：需要一点时间。' },
-  stillWorking: { en: 'Still working…', zh: '仍在处理…' },
+  stepLoad: { en: 'Loading the reader…', zh: '正在加载阅读器…' },
+  stepOpen: { en: 'Opening…', zh: '正在打开…' },
+  stepRead: { en: 'Reading the file…', zh: '正在读取文件…' },
+  slow: { en: 'This is taking longer than usual. Large files can take a while.', zh: '比平时慢一些。大文件需要更长时间。' },
+  keepWaiting: { en: 'Keep waiting', zh: '继续等待' },
+  stop: { en: 'Stop', zh: '停止' },
   heavyTitle: { en: 'This file is very large', zh: '这个文件非常大' },
   heavyText: { en: '“{name}” is {size}. Files of this kind above about {limit} usually don’t fit in a browser’s memory{phone}: the page may stop responding or close.', zh: '“{name}”有 {size}。这类文件超过约 {limit} 时，通常超出浏览器的内存{phone}：页面可能会卡住或关闭。' },
   heavyPhone: { en: ' on a phone', zh: '（手机上）' },
@@ -339,21 +345,12 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     });
   }
 
-  /** Under the loading animation: say a large file takes a moment, then that it is still working. */
-  function bigHint(cover: HTMLElement, size: number) {
-    const note = h('p', { class: 'loading-note' }, s('bigLoading').replace('{size}', formatBytes(size)));
-    cover.append(note);
-    setTimeout(() => cover.isConnected && note.append(' ', s('stillWorking')), 20000);
-  }
-
   async function show(entry: ViewerEntry, name: string, size: number, format: OpenContext['format'], run: (mod: ViewerModule, ctx: OpenContext) => Promise<OpenedView>, my: number) {
     // Lay out the page first; the viewer draws into `mount` under the loading cover.
     const mount = h('div', { class: 'viewer-mount' });
     const page = h('main', { class: `doc${entry.layout === 'fill' ? ' doc-fill' : ''}` }, h('div', { class: 'toolbar' }), h('div', { class: 'about-slot' }), h('div', { class: 'notices', hidden: true }), mount);
     const cover = h('div', { class: 'loading-cover' }, loadingView());
     app.replaceChildren(header(), page, cover);
-
-    const ctx: OpenContext = { mount, format, fontScale: () => fontScale, refreshChrome, openFile: (f, o) => openInside(f, o?.replace) };
 
     // Beyond what this kind of file usually fits in a browser: warn first, the user may still try.
     const phone = isPhone();
@@ -366,13 +363,22 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
       if (!go) return goHome();
       app.append(cover);
     }
-    if (size > 150 * 1024 * 1024) bigHint(cover, size);
+
+    const stopper = new AbortController();
+    const loading = loadingInfo(cover, name, size, { slow: s('slow'), keepWaiting: s('keepWaiting'), stop: s('stop') }, () => {
+      // Stop: end background work and go back to the front page.
+      stopper.abort();
+      goHome();
+    });
+    const ctx: OpenContext = { mount, format, fontScale: () => fontScale, refreshChrome, openFile: (f, o) => openInside(f, o?.replace), progress: loading.set, signal: stopper.signal };
 
     let view: OpenedView;
     // Remember what is being opened: if the tab runs out of memory and closes, the next visit says so.
     markOpening(name, size);
     try {
+      loading.set(s('stepLoad'));
       const mod = await entry.load();
+      loading.set(s('stepOpen'));
       view = await run(mod, ctx);
     } catch (err) {
       console.error(`Viewer ${entry.id} failed`, err);
@@ -390,6 +396,11 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
       );
     } finally {
       clearOpening();
+      loading.done();
+    }
+    if (stopper.signal.aborted) {
+      view.destroy?.();
+      return;
     }
     if (my !== token) {
       view.destroy?.();
@@ -476,7 +487,8 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     const entry = pickViewer(viewers, { format, name: file.name, ext: extOf(file.name), head }) ?? infoEntry;
     shownFile = file;
     warm(entry); // its libraries download while the page is being laid out and the file read
-    await show(entry, file.name, file.size, format, (mod, ctx) => mod.open(file, ctx), my);
+    // Reading a big file reports a real percentage on the loading screen.
+    await show(entry, file.name, file.size, format, (mod, ctx) => mod.open(withReadProgress(file, (f) => ctx.progress?.(s('stepRead'), f)), ctx), my);
   }
 
   async function openPasted(text: string) {

@@ -8,3 +8,5 @@ const unavailable = (): never => {
 };
 export const startDwgWorker = unavailable;
 export const startCadWorker = unavailable;
+export const startDrawingWorker = unavailable;
+export const startSheetWorker = unavailable;

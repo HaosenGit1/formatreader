@@ -2,8 +2,13 @@ import { infoView, messageView } from '../../../core/info-view';
 import { strings } from '../../../core/i18n';
 import type { OpenedView } from '../../../core/viewer';
 import { TextSource } from './text-source';
+import { nextPaint, readWithProgress, type Progress } from '../../../core/progress';
 
-const s = strings({ empty: { en: 'This file is empty.', zh: '这个文件是空的。' } });
+const s = strings({
+  empty: { en: 'This file is empty.', zh: '这个文件是空的。' },
+  reading: { en: 'Reading the file…', zh: '正在读取文件…' },
+  detecting: { en: 'Recognising the text encoding…', zh: '正在识别文字编码…' },
+});
 
 /**
  * Browsers can't hold more than about 500 million characters as one text, and big texts use
@@ -30,10 +35,15 @@ function wholeLines(b: Uint8Array, fromEnd: boolean): Uint8Array {
  * Reads a file as text. When it is empty or turns out to be binary, returns
  * a ready view explaining that instead (so every text viewer behaves alike).
  */
-export async function readText(file: File, mount: HTMLElement, reopen?: () => void): Promise<TextSource | OpenedView> {
+export async function readText(file: File, mount: HTMLElement, reopen?: () => void, progress?: Progress): Promise<TextSource | OpenedView> {
   const limit = textLimit();
   const part = file.size > limit ? (partChoice.get(file) ?? 'start') : null;
-  const raw = part ? await file.slice(part === 'end' ? file.size - limit : 0, part === 'end' ? file.size : limit).arrayBuffer() : await file.arrayBuffer();
+  const blob = part ? file.slice(part === 'end' ? file.size - limit : 0, part === 'end' ? file.size : limit) : file;
+  const raw = progress && blob.size > 8 * 1024 * 1024 ? await readWithProgress(blob, (f) => progress(s('reading'), f)) : await blob.arrayBuffer();
+  if (progress && raw.byteLength > 8 * 1024 * 1024) {
+    progress(s('detecting'));
+    await nextPaint();
+  }
   const bytes = part ? wholeLines(new Uint8Array(raw), part === 'end') : new Uint8Array(raw);
   if (bytes.length === 0) {
     mount.replaceChildren(messageView(file.name, s('empty')));

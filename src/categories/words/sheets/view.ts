@@ -9,6 +9,8 @@ import type { OpenContext, OpenedView } from '../../../core/viewer';
 import { renderGrid, type GridCell } from '../shared/grid';
 import { isSource, readText } from '../shared/read';
 import { DELIMITED_EXT } from './formats';
+import { CHUNK_ROWS, type RowChunk, type SheetInfo, type SheetReport } from './sheet-job';
+import { runWorker } from '../../../core/progress';
 import { parseDelimited, sniffDelimiter } from './delimited';
 
 const s = strings({
@@ -18,6 +20,8 @@ const s = strings({
   hidden: { en: 'hidden', zh: '隐藏' },
   empty: { en: 'This sheet is empty.', zh: '这个工作表是空的。' },
   password: { en: 'This spreadsheet is password-protected and cannot be opened.', zh: '这个表格设置了密码，无法打开。' },
+  stepParse: { en: 'Reading the workbook…', zh: '正在读取工作簿…' },
+  stepRows: { en: 'Preparing rows…', zh: '正在准备数据行…' },
   partial: { en: 'Charts and pictures inside the sheet are not shown yet. Formulas show their saved results (hover a cell to see the formula).', zh: '表格中的图表和图片暂不显示。公式显示保存时的结果（鼠标悬停可查看公式）。' },
   comma: { en: 'Comma', zh: '逗号' },
   tab: { en: 'Tab', zh: '制表符' },
@@ -30,7 +34,7 @@ const extOf = (name: string) => /\.([a-z0-9]{1,8})$/i.exec(name)?.[1]?.toLowerCa
 // ---------------------------------------------------------------------------
 
 async function openDelimited(file: File, ctx: OpenContext): Promise<OpenedView> {
-  const src = await readText(file, ctx.mount, () => ctx.openFile(file, { replace: true }));
+  const src = await readText(file, ctx.mount, () => ctx.openFile(file, { replace: true }), ctx.progress);
   if (!isSource(src)) return src;
   const ext = extOf(file.name);
   let delimiter = ',';
@@ -79,82 +83,70 @@ async function openDelimited(file: File, ctx: OpenContext): Promise<OpenedView> 
 // ---------------------------------------------------------------------------
 
 /** Formats that may store text in legacy code pages (need SheetJS's code-page tables). */
-const NEEDS_CODEPAGES = new Set(['xls', 'et', 'xlw', 'dbf', 'wk1', 'wk3', 'wk4', 'wks', 'wq1', 'qpw', 'dif', 'slk', 'sylk', 'prn', 'xlt']);
 
-type XLSXModule = typeof import('xlsx');
-type WorkSheet = import('xlsx').WorkSheet;
-
-/** Last row/column that actually has content (sheets often claim huge empty ranges). */
-function usedSize(XLSX: XLSXModule, ws: WorkSheet): { rows: number; cols: number } {
-  let rows = 0;
-  let cols = 0;
-  for (const key of Object.keys(ws)) {
-    if (key[0] === '!') continue;
-    const cell = ws[key];
-    if (cell == null || (cell.v === undefined && !cell.f)) continue;
-    const { r, c } = XLSX.utils.decode_cell(key);
-    if (r + 1 > rows) rows = r + 1;
-    if (c + 1 > cols) cols = c + 1;
-  }
-  for (const m of (ws['!merges'] ?? []) as Array<{ e: { r: number; c: number } }>) {
-    rows = Math.max(rows, m.e.r + 1);
-    cols = Math.max(cols, m.e.c + 1);
-  }
-  return { rows, cols };
-}
 
 async function openWorkbook(file: File, ctx: OpenContext): Promise<OpenedView> {
   const ext = extOf(file.name);
-  // Load the engine (and code pages if needed) while the file is being read.
-  const [XLSX, cptable, data] = await Promise.all([
-    import('xlsx'),
-    NEEDS_CODEPAGES.has(ext) ? import('xlsx/dist/cpexcel.full.mjs') : Promise.resolve(null),
-    file.arrayBuffer(),
-  ]);
-  if (cptable) XLSX.set_cptable(cptable);
-
-  let wb: import('xlsx').WorkBook;
+  const data = await file.arrayBuffer();
+  // Read in the background (website) or on the page (portable file), rows arriving in chunks.
+  let infos: SheetInfo[] = [];
+  const chunks: RowChunk[][] = [];
+  const onInfo = (x: SheetInfo[]) => {
+    infos = x;
+    x.forEach((_, i) => (chunks[i] = []));
+  };
+  const onChunk = (c: RowChunk) => (chunks[c.sheet][c.index] = c);
+  const report: SheetReport = (step, fraction) => ctx.progress?.(s(step === 'parse' ? 'stepParse' : 'stepRows'), fraction);
   try {
-    wb = XLSX.read(data, { type: 'array', cellDates: true, cellFormula: true, cellStyles: false, dense: false });
+    if (import.meta.env.MODE === 'portable') {
+      const { readSheets } = await import('./sheet-job');
+      await readSheets(data, ext, report, onInfo, onChunk);
+    } else {
+      const { startSheetWorker } = await import('./sheet-worker-host');
+      await runWorker(startSheetWorker(), { data, ext }, [data], (step, f) => report(step as 'parse' | 'rows', f), ctx.signal, (m) => {
+        const msg = m as { sheets?: SheetInfo[]; chunk?: RowChunk };
+        if (msg.sheets) onInfo(msg.sheets);
+        if (msg.chunk) onChunk(msg.chunk);
+      });
+    }
   } catch (e) {
-    const msg = String((e as Error)?.message ?? e);
-    if (/password|encrypt/i.test(msg)) throw new Error(s('password'));
+    if ((e as Error)?.message === 'PASSWORD') throw new Error(s('password'));
     throw e;
   }
 
-  const names = wb.SheetNames;
-  const hiddenFlags = (wb.Workbook?.Sheets ?? []).map((sh) => !!sh.Hidden);
+  const names = infos.map((x) => x.name);
+  const hiddenFlags = infos.map((x) => x.hidden);
   let active = Math.max(0, hiddenFlags.findIndex((hdn) => !hdn));
   const tabs = h('div', { class: 'sheet-tabs', role: 'tablist' });
   const body = h('div', { class: 'sheet-body' });
   ctx.mount.replaceChildren(h('div', { class: 'view view-sheet' }, body, names.length > 1 ? tabs : null));
   let size = { rows: 0, cols: 0 };
 
-  const cellOf = (ws: WorkSheet, r: number, c: number): GridCell | null => {
-    const cell = ws[XLSX.utils.encode_cell({ r, c })];
-    if (!cell) return null;
-    let text: string;
-    if (cell.w !== undefined) text = cell.w;
-    else if (cell.v instanceof Date) text = cell.v.toLocaleString();
-    else text = cell.v == null ? '' : String(cell.v);
-    return { text, numeric: cell.t === 'n' || cell.t === 'd', title: cell.f ? `=${cell.f}` : undefined };
+  const cellOf = (si: number, r: number, c: number): GridCell | null => {
+    const chunk = chunks[si]?.[Math.floor(r / CHUNK_ROWS)];
+    if (!chunk) return null;
+    const i = (r % CHUNK_ROWS) * infos[si].cols + c;
+    const text = chunk.text[i];
+    const f = chunk.formulas[i];
+    if (!text && !f) return null;
+    return { text, numeric: chunk.flags[i] === 1, title: f };
   };
 
   const drawSheet = () => {
-    const ws = wb.Sheets[names[active]];
-    size = ws ? usedSize(XLSX, ws) : { rows: 0, cols: 0 };
-    if (!ws || size.rows === 0) {
+    const info = infos[active];
+    size = info ? { rows: info.rows, cols: info.cols } : { rows: 0, cols: 0 };
+    if (!info || size.rows === 0) {
       body.replaceChildren(h('div', { class: 'sheet-empty' }, s('empty')));
     } else {
-      const widths = ((ws['!cols'] ?? []) as Array<{ wch?: number; width?: number } | undefined>).map((col) => col?.wch ?? col?.width);
+      const si = active;
       body.replaceChildren(
         renderGrid({
           rows: size.rows,
           cols: size.cols,
           header: 'letters',
-          cell: (r, c) => cellOf(ws, r, c),
-          merges: ws['!merges'] as GridCellMerge[] | undefined,
-          widths,
+          cell: (r, c) => cellOf(si, r, c),
+          merges: info.merges as GridCellMerge[] | undefined,
+          widths: info.widths,
         }),
       );
     }
@@ -197,7 +189,7 @@ async function openWorkbook(file: File, ctx: OpenContext): Promise<OpenedView> {
 type GridCellMerge = { s: { r: number; c: number }; e: { r: number; c: number } };
 
 /** Start downloading the spreadsheet engine early (e.g. while a file is dragged). */
-export const preload = () => import('xlsx');
+export const preload = () => (import.meta.env.MODE === 'portable' ? import('xlsx') : Promise.resolve());
 
 export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   const ext = extOf(file.name);

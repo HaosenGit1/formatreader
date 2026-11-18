@@ -160,8 +160,9 @@ export function plainMtext(raw: string): string {
     .replace(/%%[pP]/g, '±');
 }
 
-export function buildDxf(dxf: Dxf): Built {
+export function buildDxf(dxf: Dxf, report?: (fraction: number) => void): Built {
   const prims: Prim[] = [];
+  const topLevel = Math.max(1, (dxf as { entities?: unknown[] }).entities?.length ?? 1);
   const skipped = new Map<string, number>();
   const layers = new Map<string, { color: number; visible: boolean }>();
   for (const [name, l] of Object.entries(dxf.tables?.layer?.layers ?? {})) {
@@ -190,6 +191,7 @@ export function buildDxf(dxf: Dxf): Built {
   const walk = (entities: Entity[], m: M, insertLayer: string | null, blockColor: number, depth: number) => {
     for (const e of entities) {
       entityCount++;
+      if (report && depth === 0 && entityCount % 100000 === 0) report(Math.min(1, entityCount / topLevel));
       // Entities on layer "0" inside a block take the layer of the block reference.
       const layer = insertLayer && (!e.layer || e.layer === '0') ? insertLayer : (e.layer ?? '0');
       const color = colorOf(e, layer, blockColor);

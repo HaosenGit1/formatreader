@@ -67,7 +67,7 @@ async function makeView(src: TextSource, name: string, ctx: OpenContext): Promis
 }
 
 export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
-  const src = await readText(file, ctx.mount, () => ctx.openFile(file, { replace: true }));
+  const src = await readText(file, ctx.mount, () => ctx.openFile(file, { replace: true }), ctx.progress);
   return isSource(src) ? makeView(src, file.name, ctx) : src;
 }
 

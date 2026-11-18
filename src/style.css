@@ -965,16 +965,62 @@ html.fr-immersive .site-header {
 }
 
 /* Large files: a note under the loading animation, the warning card, the note after a crash. */
-.loading-note {
+.loading-info {
   position: absolute;
   left: 50%;
-  bottom: 18%;
-  width: min(520px, calc(100vw - 32px));
-  margin: 0;
+  top: calc(50% + 70px);
+  width: min(440px, calc(100vw - 32px));
   transform: translateX(-50%);
-  color: var(--muted);
-  font-size: 14px;
   text-align: center;
+}
+
+.loading-step {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.loading-bar {
+  height: 6px;
+  margin: 0 auto 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.loading-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent, #3b6cf6);
+  transition: width 0.2s;
+}
+
+.loading-file {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.loading-watch {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--warn-soft);
+  font-size: 14px;
+}
+
+.loading-watch p {
+  flex-basis: 100%;
+  margin: 0 0 4px;
 }
 
 .heavy-card {

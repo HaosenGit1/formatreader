@@ -24,7 +24,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   // The language is usually known from the name: fetch its grammar while the file is read.
   const guess = codeKind(file.name, '');
   if (guess) void preloadHighlighter(guess.language);
-  const src = await readText(file, ctx.mount, () => ctx.openFile(file, { replace: true }));
+  const src = await readText(file, ctx.mount, () => ctx.openFile(file, { replace: true }), ctx.progress);
   if (!isSource(src)) return src;
 
   let jsonError: string | null = null;

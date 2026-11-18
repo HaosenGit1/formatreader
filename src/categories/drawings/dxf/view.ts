@@ -9,11 +9,17 @@ import { strings } from '../../../core/i18n';
 import type { OpenContext, OpenedView } from '../../../core/viewer';
 import { ACAD_VERSIONS } from '../shared/acad';
 import { dwgPreview } from '../shared/dwg-preview';
-import { buildDxf, dxfEncoding, type Built, type Prim } from './build';
+import { type Built, type Prim } from './build';
+import type { Packed, Report } from './drawing-job';
+import { runWorker } from '../../../core/progress';
 
 const s = strings({
   fit: { en: 'Fit', zh: '适应窗口' },
   layers: { en: 'Layers', zh: '图层' },
+  step_parse: { en: 'Reading the drawing…', zh: '正在读取图纸…' },
+  step_build: { en: 'Building the drawing…', zh: '正在生成图形…' },
+  step_dwg: { en: 'Reading the DWG file…', zh: '正在读取 DWG 文件…' },
+  step_pack: { en: 'Almost done…', zh: '马上就好…' },
   dark: { en: 'Dark', zh: '深色' },
   entities: { en: 'objects', zh: '个对象' },
   layerCount: { en: 'layers', zh: '个图层' },
@@ -32,24 +38,17 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   const bytes = new Uint8Array(await file.arrayBuffer());
   const head = new TextDecoder('latin1').decode(bytes.subarray(0, 65536));
   const isDwg = ctx.format?.id === 'dwg';
-  let version: string | undefined;
-  let parsed: unknown;
-  if (isDwg) {
-    version = head.slice(0, 6);
-    try {
-      const { readDwgAsDxf } = await import('./dwg');
-      parsed = await readDwgAsDxf(bytes.slice());
-    } catch (err) {
-      return dwgFallback(bytes, version, String((err as Error)?.message ?? err), ctx);
-    }
-  } else {
-    if (head.startsWith('AutoCAD Binary DXF')) throw new Error(s('binary'));
-    const text = new TextDecoder(dxfEncoding(head)).decode(bytes);
-    version = /\$ACADVER\s*\r?\n\s*1\s*\r?\n\s*(AC\d{4})/.exec(head)?.[1];
-    const { default: DxfParser } = await import('dxf-parser');
-    parsed = new DxfParser().parseSync(text);
+  const version = isDwg ? head.slice(0, 6) : /\$ACADVER\s*\r?\n\s*1\s*\r?\n\s*(AC\d{4})/.exec(head)?.[1];
+  if (!isDwg && head.startsWith('AutoCAD Binary DXF')) throw new Error(s('binary'));
+  const report: Report = (step, fraction) => ctx.progress?.(s(`step_${step}`), fraction);
+  let built: Built;
+  try {
+    built = await buildDrawing(isDwg ? bytes.slice() : bytes, isDwg, report, ctx.signal);
+  } catch (err) {
+    if ((err as Error)?.name === 'AbortError') throw err;
+    if (isDwg) return dwgFallback(bytes, version ?? '', String((err as Error)?.message ?? err), ctx);
+    throw err;
   }
-  const built: Built = buildDxf(parsed as never);
   // A DWG with no drawing data (only a saved preview): show the preview.
   if (isDwg && !built.bounds) return dwgFallback(bytes, version ?? '', 'no drawing data', ctx);
 
@@ -229,6 +228,17 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
 }
 
 /** A DWG LibreDWG can't read: show the preview AutoCAD saved in it, with the reason. */
+/** Parse and build in the background worker (website) or on the page (portable file). */
+async function buildDrawing(bytes: Uint8Array, dwg: boolean, report: Report, signal?: AbortSignal): Promise<Built> {
+  if (import.meta.env.MODE === 'portable') {
+    const job = await import('./drawing-job');
+    return (dwg ? job.buildDwgBytes : job.buildDxfBytes)(bytes, report);
+  }
+  const [{ startDrawingWorker }, { unpack }] = await Promise.all([import('./drawing-worker-host'), import('./drawing-job')]);
+  const packed = await runWorker<Packed>(startDrawingWorker(), { bytes, dwg }, [bytes.buffer], (step, f) => report(step as Parameters<Report>[0], f), signal);
+  return unpack(packed);
+}
+
 function dwgFallback(bytes: Uint8Array, version: string, why: string, ctx: OpenContext): OpenedView {
   const preview = dwgPreview(bytes);
   const url = preview ? URL.createObjectURL(preview.blob) : '';
