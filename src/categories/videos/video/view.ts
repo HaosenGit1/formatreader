@@ -6,7 +6,7 @@
  */
 import './video.css';
 import { h } from '../../../core/dom';
-import { strings } from '../../../core/i18n';
+import { lang, strings } from '../../../core/i18n';
 import type { OpenContext, OpenedView } from '../../../core/viewer';
 
 const s = strings({
@@ -21,6 +21,8 @@ const s = strings({
     zh: '所有网页浏览器都无法播放 {format} 视频{codec}。可以用 VLC 等播放器。',
   },
   audioOnly: { en: 'This file has sound only, no picture.', zh: '这个文件只有声音，没有画面。' },
+  appOnly: { en: 'This is the encrypted download format of the {app} app: no browser or other player can open it. Play it in the {app} app, or use the app’s export / convert function to save it as MP4.', zh: '这是{app}客户端的加密下载格式，浏览器和其他播放器都打不开。请在{app}客户端里播放，或用客户端的“导出/转码”功能另存为 MP4。' },
+  companion: { en: 'Playing with its sound from {name} (saved separately, as B站 does).', zh: '同时播放单独保存的声音 {name}（B站缓存就是这样分开保存的）。' },
 });
 
 const time = (t: number) => {
@@ -109,7 +111,15 @@ async function openAvi(file: File, ctx: OpenContext): Promise<OpenedView | strin
   };
 }
 
+/** Encrypted downloads of video apps (爱奇艺, 优酷, 腾讯视频, 迅雷): explain instead of failing. */
+const APP_FORMATS: Record<string, [string, string]> = { qsv: ['iQiyi', '爱奇艺'], kux: ['Youku', '优酷'], qlv: ['Tencent Video', '腾讯视频'], xv: ['Xunlei', '迅雷'] };
+
 export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
+  const app = APP_FORMATS[ctx.format?.id ?? ''];
+  if (app) {
+    ctx.mount.replaceChildren(h('div', { class: 'view view-video' }, h('div', { class: 'vd-message' }, s('appOnly').replace(/\{app\}/g, lang() === 'zh' ? app[1] : app[0]))));
+    return { meta: () => [ctx.format!.name] };
+  }
   let aviCodec: string | undefined;
   if (ctx.format?.id === 'avi') {
     const avi = await openAvi(file, ctx);
@@ -151,6 +161,26 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
     message.classList.add('subtle');
   }
 
+  // Picture and sound saved apart (B站 caches: video.m4s + audio.m4s): play the sound alongside.
+  const companion = (file as File & { companionAudio?: File }).companionAudio;
+  let companionUrl = '';
+  if (companion && playable) {
+    companionUrl = URL.createObjectURL(companion);
+    const audio = new Audio(companionUrl);
+    const sync = () => {
+      if (Math.abs(audio.currentTime - video.currentTime) > 0.25) audio.currentTime = video.currentTime;
+    };
+    video.addEventListener('play', () => (sync(), void audio.play().catch(() => {})));
+    video.addEventListener('pause', () => audio.pause());
+    video.addEventListener('seeked', sync);
+    video.addEventListener('ratechange', () => (audio.playbackRate = video.playbackRate));
+    video.addEventListener('volumechange', () => ((audio.volume = video.volume), (audio.muted = video.muted)));
+    video.addEventListener('timeupdate', sync);
+    message.hidden = false;
+    message.classList.add('subtle');
+    message.textContent = s('companion').replace('{name}', companion.name);
+  }
+
   const speeds = [0.5, 1, 1.25, 1.5, 2];
   const speedGroup = h(
     'div',
@@ -181,6 +211,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
       video.removeAttribute('src');
       video.load();
       URL.revokeObjectURL(url);
+      if (companionUrl) URL.revokeObjectURL(companionUrl);
     },
   };
 }

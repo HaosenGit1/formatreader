@@ -13,6 +13,12 @@ import { photoDetails } from './details';
 
 const s = strings({
   motion: { en: '▶ Motion', zh: '▶ 动态照片' },
+  play: { en: 'Play', zh: '播放' },
+  pause: { en: 'Pause', zh: '暂停' },
+  prevFrame: { en: 'Previous frame', zh: '上一帧' },
+  nextFrame: { en: 'Next frame', zh: '下一帧' },
+  frames: { en: 'frames', zh: '帧' },
+  speed: { en: 'Speed', zh: '速度' },
   motionTitle: { en: 'This is a motion photo: play the short video saved with it', zh: '这是动态照片：播放随照片保存的短视频' },
   zoomIn: { en: 'Zoom in (+)', zh: '放大 (+)' },
   zoomOut: { en: 'Zoom out (−)', zh: '缩小 (−)' },
@@ -129,6 +135,48 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
     detailsBtn,
   ];
 
+  // Animated GIF / APNG / WebP / AVIF: play, pause, step through frames, speed.
+  let anim: import('./animated').AnimatedPlayer | null = null;
+  const fmtId = ctx.format?.id ?? ext;
+  if (['gif', 'png', 'webp', 'avif'].includes(fmtId)) {
+    void import('./animated').then(async ({ animatedPlayer }) => {
+      const player = await animatedPlayer(file, fmtId).catch(() => null);
+      if (!player) return;
+      anim = player;
+      player.canvas.classList.add('ph-picture');
+      stage.replace(player.canvas, player.canvas.width, player.canvas.height);
+      const label = h('span', { class: 'ph-page' }, `1 / ${player.frameCount}`);
+      const playBtn = h('button', { type: 'button', title: s('pause'), 'aria-label': s('pause') }, '❚❚') as HTMLButtonElement;
+      const sync = () => {
+        playBtn.textContent = player.playing() ? '❚❚' : '▶';
+        playBtn.title = player.playing() ? s('pause') : s('play');
+      };
+      playBtn.addEventListener('click', () => {
+        player.playing() ? player.pause() : player.play();
+        sync();
+      });
+      player.onFrame((i) => (label.textContent = `${i + 1} / ${player.frameCount}`));
+      const step = (d: number) => async () => {
+        await player.step(d);
+        sync();
+      };
+      const controls = h(
+        'div',
+        { class: 'seg', role: 'group', 'aria-label': s('frames') },
+        h('button', { type: 'button', title: s('prevFrame'), 'aria-label': s('prevFrame'), onclick: step(-1) }, '⏮'),
+        playBtn,
+        h('button', { type: 'button', title: s('nextFrame'), 'aria-label': s('nextFrame'), onclick: step(1) }, '⏭'),
+        label,
+      );
+      const speeds = [0.25, 0.5, 1, 2];
+      const speedGroup = h('div', { class: 'seg', role: 'group', 'aria-label': s('speed') }, ...speeds.map((v) => h('button', { type: 'button', class: v === 1 ? 'active' : '', onclick: (e: Event) => { player.setSpeed(v); for (const b of speedGroup.children) b.classList.toggle('active', b === e.currentTarget); } }, `${v}×`)));
+      tools.unshift(controls, speedGroup);
+      animMeta = `${player.frameCount} ${s('frames')}`;
+      ctx.refreshChrome();
+    });
+  }
+  let animMeta = '';
+
   // Motion photos (Samsung, Pixel, Huawei, Xiaomi…): a short video hidden after the picture.
   const fmt = ctx.format?.id ?? ext;
   let motionUrl = '';
@@ -156,10 +204,11 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   }
 
   return {
-    meta: () => [decoded.label, `${pic.width} × ${pic.height}`, ...(decoded.pages > 1 ? [`${decoded.pages} ${s('images')}`] : [])],
+    meta: () => [decoded.label, `${pic.width} × ${pic.height}`, ...(decoded.pages > 1 ? [`${decoded.pages} ${s('images')}`] : []), ...(animMeta ? [animMeta] : [])],
     tools: () => tools,
     notices: () => (decoded.note && decoded.note !== 'heicDepth' ? [h('div', { class: 'notice subtle' }, s(decoded.note))] : []),
     destroy: () => {
+      (anim as import('./animated').AnimatedPlayer | null)?.destroy();
       if (motionUrl) URL.revokeObjectURL(motionUrl);
       stage.destroy();
       decoded.release?.();

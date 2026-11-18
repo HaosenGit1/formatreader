@@ -40,7 +40,7 @@ const FOLDER_VIEWER: Record<string, string> = {
 };
 
 /** Some folders hold several document types, each with its own viewer. */
-const EXT_VIEWER: Record<string, string> = { tgs: 'archives/gzip', rtf: 'words/rtf', odt: 'words/odf', odp: 'words/odf', xps: 'words/fixed', ofd: 'words/fixed', hwpx: 'words/hwpx', pages: 'words/iwork', key: 'words/iwork', pdb: 'words/palmdoc', hwp: 'words/hwp', zip: 'archives/archive', '7z': 'archives/archive', tar: 'archives/archive', rar: 'archives/archive', cb7: 'archives/archive', pdf: 'words/pdf', dxf: 'drawings/dxf', dwg: 'drawings/dxf', odg: 'drawings/preview', vsdx: 'drawings/preview', xmind: 'drawings/mindmap' };
+const EXT_VIEWER: Record<string, string> = { tgs: 'archives/gzip', gif: 'images/photo', png: 'images/photo', webp: 'images/photo', rtf: 'words/rtf', odt: 'words/odf', odp: 'words/odf', xps: 'words/fixed', ofd: 'words/fixed', hwpx: 'words/hwpx', pages: 'words/iwork', key: 'words/iwork', pdb: 'words/palmdoc', hwp: 'words/hwp', zip: 'archives/archive', '7z': 'archives/archive', tar: 'archives/archive', rar: 'archives/archive', cb7: 'archives/archive', pdf: 'words/pdf', dxf: 'drawings/dxf', dwg: 'drawings/dxf', odg: 'drawings/preview', vsdx: 'drawings/preview', xmind: 'drawings/mindmap' };
 
 /** Expected decoded snippet per text sample: proves the right encoding was chosen. */
 const EXPECT: Record<string, string> = {

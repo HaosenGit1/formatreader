@@ -14,6 +14,10 @@ import type { OpenContext, OpenedView } from './viewer';
 
 const s = strings({
   hint: { en: 'Click a file to open it here. Nothing is uploaded.', zh: '点击文件即可在这里打开。不会上传任何内容。' },
+  missing: { en: 'A piece of this playlist is not in the folder:', zh: '播放列表中的这个片段不在文件夹里：' },
+  encryptedStream: { en: 'This playlist is encrypted (DRM / AES key): it can only be played by the app that downloaded it.', zh: '这个播放列表是加密的（DRM / AES 密钥），只能在下载它的 App 里播放。' },
+  emptyPlaylist: { en: 'This playlist lists no video pieces.', zh: '这个播放列表里没有视频片段。' },
+  onlinePlaylist: { en: 'This playlist points to video pieces on the internet. FormatReader only plays pieces saved in this folder (it never downloads anything).', zh: '这个播放列表指向网上的视频片段。FormatReader 只播放保存在这个文件夹里的片段（不会下载任何内容）。' },
   folder: { en: 'Folder', zh: '文件夹' },
   items: { en: 'items', zh: '项' },
   empty: { en: 'This folder is empty.', zh: '这个文件夹是空的。' },
@@ -44,6 +48,44 @@ const fileOf = (e: FileSystemFileEntry) => new Promise<File>((resolve, reject) =
 /** Remembered per folder while the visitor goes in and out (which subfolders were open). */
 const openState = new Map<string, Set<string>>();
 
+/** A file inside a folder, relative to it ("seg/001.ts"). */
+function fileAt(dir: FileSystemDirectoryEntry, path: string): Promise<File> {
+  return new Promise((resolve, reject) => dir.getFile(path, {}, (e) => (e as FileSystemFileEntry).file(resolve, reject), () => reject(new Error(`${s('missing')} ${path}`))));
+}
+
+/**
+ * What to open when a file in a folder is clicked. Usually the file itself, but:
+ *  - a .m3u8 playlist (downloaded live streams, app caches): its pieces joined in order
+ *    (.ts pieces, or fMP4 pieces after their init file) and played as one video;
+ *  - B站 (bilibili) caches keep picture and sound apart (video.m4s + audio.m4s): the sound
+ *    is attached so the video plays with it.
+ */
+export async function openEntry(fe: FileSystemFileEntry, siblings: FileSystemEntry[], dir: FileSystemDirectoryEntry): Promise<File> {
+  const file = await fileOf(fe);
+  if (/\.m3u8?$/i.test(fe.name)) {
+    const text = await file.text();
+    if (/#EXT-X-KEY:.*METHOD=(AES|SAMPLE)/i.test(text) && !/METHOD=NONE/i.test(text)) throw new Error(s('encryptedStream'));
+    const lines = text.split(/\r?\n/).map((l) => l.trim());
+    const init = /#EXT-X-MAP:.*URI="([^"]+)"/i.exec(text)?.[1];
+    const pieces = lines.filter((l) => l && !l.startsWith('#'));
+    if (!pieces.length) throw new Error(s('emptyPlaylist'));
+    if (pieces.some((p) => /^[a-z]+:\/\//i.test(p))) throw new Error(s('onlinePlaylist'));
+    const parts = await Promise.all([...(init ? [init] : []), ...pieces].map((p) => fileAt(dir, decodeURIComponent(p.split('?')[0]))));
+    const mp4 = !!init || /\.(m4s|mp4|m4v)$/i.test(pieces[0]);
+    return new File(parts, fe.name.replace(/\.m3u8?$/i, mp4 ? '.mp4' : '.ts'), { type: mp4 ? 'video/mp4' : 'video/mp2t' });
+  }
+  if (/\.m4s$/i.test(fe.name) && /video/i.test(fe.name)) {
+    const audio = siblings.find((e) => e.isFile && /\.m4s$/i.test(e.name) && /audio/i.test(e.name));
+    if (audio) Object.defineProperty(file, 'companionAudio', { value: await fileOf(audio as FileSystemFileEntry) });
+  }
+  return file;
+}
+
+function alertBox(ctx: OpenContext, message: string) {
+  const note = ctx.mount.querySelector('.fv-hint');
+  if (note) note.textContent = message;
+}
+
 export async function openFolder(source: FolderSource, ctx: OpenContext): Promise<OpenedView> {
   const opened = openState.get(source.entry.fullPath) ?? new Set<string>();
   openState.set(source.entry.fullPath, opened);
@@ -55,7 +97,7 @@ export async function openFolder(source: FolderSource, ctx: OpenContext): Promis
     return { meta: () => [s('folder')] };
   }
 
-  const list = async (entries: FileSystemEntry[], depth: number): Promise<HTMLElement> => {
+  const list = async (entries: FileSystemEntry[], depth: number, dirOf: FileSystemDirectoryEntry = source.entry): Promise<HTMLElement> => {
     const ul = h('ul', { class: 'fv-list' });
     for (const e of entries) {
       if (e.isDirectory) {
@@ -69,7 +111,7 @@ export async function openFolder(source: FolderSource, ctx: OpenContext): Promis
           filled = true;
           const kids = await readAll(dir).catch(() => []);
           count.textContent = String(kids.length);
-          details.append(kids.length ? await list(kids, depth + 1) : h('p', { class: 'fv-empty' }, s('empty')));
+          details.append(kids.length ? await list(kids, depth + 1, dir) : h('p', { class: 'fv-empty' }, s('empty')));
         };
         details.addEventListener('toggle', () => {
           if (details.open) {
@@ -84,7 +126,7 @@ export async function openFolder(source: FolderSource, ctx: OpenContext): Promis
         const size = h('span', { class: 'fv-size' });
         void fileOf(fe).then((f) => (size.textContent = formatBytes(f.size))).catch(() => {});
         ul.append(
-          h('li', {}, h('button', { type: 'button', class: 'fv-file', onclick: () => void fileOf(fe).then((f) => ctx.openFile(f)) }, h('span', { class: 'fv-name' }, fe.name), size)),
+          h('li', {}, h('button', { type: 'button', class: 'fv-file', onclick: () => void openEntry(fe, entries, dirOf).then((f) => ctx.openFile(f)).catch((err) => alertBox(ctx, String((err as Error)?.message ?? err))) }, h('span', { class: 'fv-name' }, fe.name), size)),
         );
       }
     }

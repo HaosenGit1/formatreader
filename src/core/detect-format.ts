@@ -29,6 +29,11 @@ const F = (id: string, name: string, category: Category, text = false): FormatIn
 
 /** Formats recognised purely by extension when the bytes don't say more. */
 const BY_EXTENSION: Record<string, FormatInfo> = {
+  // Encrypted downloads of Chinese video apps: only their own clients can play them.
+  qsv: F('qsv', 'iQiyi video (QSV)', 'videos'),
+  kux: F('kux', 'Youku video (KUX)', 'videos'),
+  qlv: F('qlv', 'Tencent Video (QLV)', 'videos'),
+  xv: F('xv', 'Xunlei video (XV)', 'videos'),
   doc: F('doc', 'Word 97–2003 document', 'words'),
   xls: F('xls', 'Excel 97–2003 workbook', 'words'),
   ppt: F('ppt', 'PowerPoint 97–2003 presentation', 'words'),

@@ -55,6 +55,8 @@ const SOUNDS = [
 
 const VIDEOS = [
   { name: t('Videos', '视频'), viewer: 'videos/video', ext: ['mp4', 'm4v', 'webm', 'mov', 'mkv', 'ogv'] },
+  { name: t('Short-video apps: TikTok/抖音, Instagram, 快手, YouTube, 小红书, 视频号, B站 (incl. B站 cache video.m4s + audio.m4s, .m3u8 + pieces in a dropped folder)', '短视频平台：抖音/TikTok、Instagram、快手、YouTube、小红书、视频号、B站（含 B站缓存 video.m4s + audio.m4s、拖入文件夹的 .m3u8 + 分段）'), viewer: ['videos/video', 'words/text', 'words/code'], ext: ['mp4', 'webm', 'mov', 'm4s', 'f4v', 'blv', 'm3u8'] },
+  { name: t('Encrypted video-app downloads (explained): 爱奇艺 .qsv, 优酷 .kux, 腾讯视频 .qlv, 迅雷 .xv', '视频 App 的加密下载（给出说明）：爱奇艺 .qsv、优酷 .kux、腾讯视频 .qlv、迅雷 .xv'), viewer: 'videos/video', ext: ['qsv', 'kux', 'qlv', 'xv'] },
   { name: t('Phone, action-camera and drone videos (iPhone, Android, GoPro, Insta360, DJI)', '手机、运动相机和无人机视频（iPhone、安卓、GoPro、Insta360、大疆）'), viewer: 'videos/video', ext: ['mov', 'mp4', 'lrv', 'insv'] },
   // MPEG-TS '.ts' video is recognised by content; the extension itself belongs to TypeScript here.
   { name: t('FLV & MPEG-TS (H.264)', 'FLV 和 MPEG-TS（H.264）'), viewer: 'videos/video', ext: ['flv', 'm2ts'] },
