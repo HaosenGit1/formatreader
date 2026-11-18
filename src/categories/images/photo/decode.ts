@@ -18,6 +18,8 @@ export interface Decoded {
   page(index: number): Promise<Picture>;
   /** Shown under the toolbar, e.g. "Camera preview" for RAW files. */
   note?: 'rawPreview' | 'psdComposite' | 'heicDepth';
+  /** Extra rows for the Details panel (e.g. a DICOM scan's modality and study). */
+  details?: Array<[string, string]>;
   /** Quarter turns needed (camera RAW previews don't carry the photo's orientation). */
   turns?: number;
   release?(): void;
@@ -30,7 +32,7 @@ export const RAW = new Set(['cr2', 'cr3', 'nef', 'nrw', 'arw', 'srf', 'sr2', 'dn
 
 const LABELS: Record<string, string> = {
   jpg: 'JPEG', png: 'PNG', gif: 'GIF', webp: 'WebP', avif: 'AVIF', bmp: 'BMP', ico: 'Icon', svg: 'SVG', svgz: 'SVG',
-  heic: 'HEIC', tiff: 'TIFF', psd: 'Photoshop', jxl: 'JPEG XL', jp2: 'JPEG 2000',
+  heic: 'HEIC', tiff: 'TIFF', psd: 'Photoshop', jxl: 'JPEG XL', jp2: 'JPEG 2000', exr: 'OpenEXR', hdr: 'Radiance HDR', tga: 'TGA', dcm: 'DICOM',
 };
 
 function loadImg(blob: Blob): Promise<Picture & { url: string }> {
@@ -165,7 +167,34 @@ async function raw(file: File, ext: string): Promise<Decoded> {
   throw new Error('No preview image was found in this RAW file.');
 }
 
+async function single(label: string, make: () => Promise<Picture>): Promise<Decoded> {
+  const pic = await make();
+  return { label, pages: 1, page: async () => pic };
+}
+
+async function tga(file: File): Promise<Decoded> {
+  const { TGALoader } = await import('three/addons/loaders/TGALoader.js');
+  const t = new TGALoader().parse(await file.arrayBuffer()) as unknown as { data: Uint8Array; width: number; height: number };
+  return single('TGA', async () => canvasFrom(t.data, t.width, t.height));
+}
+
+async function dicom(file: File): Promise<Decoded> {
+  const { decodeDicom } = await import('./dicom');
+  const d = await decodeDicom(new Uint8Array(await file.arrayBuffer()));
+  return { label: 'DICOM', pages: d.pages, page: d.page, details: d.details };
+}
+
 export async function decodeImage(file: File, formatId: string, ext: string): Promise<Decoded> {
+  if (formatId === 'exr' || ext === 'exr') {
+    const { decodeExr } = await import('./hdr');
+    return single('OpenEXR', async () => decodeExr(await file.arrayBuffer()));
+  }
+  if (formatId === 'hdr') {
+    const { decodeHdr } = await import('./hdr');
+    return single('Radiance HDR', async () => decodeHdr(await file.arrayBuffer()));
+  }
+  if (formatId === 'tga' || ext === 'tga') return tga(file);
+  if (formatId === 'dcm' || ext === 'dcm' || ext === 'dicom') return dicom(file);
   if (RAW.has(formatId) || (RAW.has(ext) && (formatId === 'tiff' || formatId === ext || !formatId))) return raw(file, RAW.has(ext) ? ext : formatId);
   if (formatId === 'heic') return heic(file);
   if (formatId === 'tiff') {

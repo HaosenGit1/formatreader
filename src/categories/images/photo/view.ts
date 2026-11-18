@@ -68,7 +68,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   // Details panel (filled in the background: EXIF reading never delays the picture).
   const details = h('aside', { class: 'ph-details', hidden: true });
   const fillDetails = async () => {
-    const rows = await photoDetails(file, pic.width, pic.height, decoded.label);
+    const rows = await photoDetails(file, pic.width, pic.height, decoded.label, decoded.details);
     details.replaceChildren(h('dl', {}, ...rows.flatMap(([k, v]) => [h('dt', {}, k), h('dd', {}, v)])));
   };
   void fillDetails();

@@ -17,8 +17,9 @@ export type Detail = [label: string, value: string];
 
 const fmtExposure = (t?: number) => (t ? (t >= 1 ? `${t} s` : `1/${Math.round(1 / t)} s`) : '');
 
-export async function photoDetails(file: File, width: number, height: number, label: string): Promise<Detail[]> {
-  const out: Detail[] = [[s('size'), `${width} × ${height} px${width * height >= 1e6 ? ` · ${(width * height / 1e6).toFixed(1)} MP` : ''}`], [s('file'), label]];
+export async function photoDetails(file: File, width: number, height: number, label: string, extra: Detail[] = []): Promise<Detail[]> {
+  const out: Detail[] = [[s('size'), `${width} × ${height} px${width * height >= 1e6 ? ` · ${(width * height / 1e6).toFixed(1)} MP` : ''}`], [s('file'), label], ...extra];
+  if (extra.length) return out; // scans (DICOM) carry their own details, not EXIF
   let t: Record<string, unknown> | undefined;
   try {
     const { default: exifr } = await import('exifr/dist/lite.esm.mjs');

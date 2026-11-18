@@ -90,6 +90,8 @@ function isoBrand(brand: string, ext: string): FormatInfo {
 }
 
 function fromMagic(h: Uint8Array, ext: string): FormatInfo | null {
+  // DICOM first: its 128-byte preamble may legally hold another format's header (often TIFF).
+  if (ascii(h, 128, 4) === 'DICM') return F('dcm', 'DICOM medical image', 'images');
   // Documents
   if (ascii(h, 0, 5) === '%PDF-') return F('pdf', 'PDF document', 'words');
   if (ascii(h, 0, 5) === '{\\rtf') return F('rtf', 'Rich Text document', 'words');
@@ -136,8 +138,8 @@ function fromMagic(h: Uint8Array, ext: string): FormatInfo | null {
   if (startsWith(h, [0, 0, 0, 0x0c, 0x6a, 0x50, 0x20, 0x20])) return F('jp2', 'JPEG 2000 image', 'images');
   if (ascii(h, 0, 2) === 'BM' && h.length > 14) return F('bmp', 'Bitmap image', 'images');
   if (startsWith(h, [0, 0, 1, 0]) && (ext === 'ico' || ext === '')) return F('ico', 'Icon', 'images');
-  if (ascii(h, 128, 4) === 'DICM') return F('dcm', 'DICOM medical image', 'images');
   if (startsWith(h, [0x76, 0x2f, 0x31, 0x01])) return F('exr', 'OpenEXR image', 'images');
+  if (ascii(h, 0, 10) === '#?RADIANCE' || ascii(h, 0, 6) === '#?RGBE') return F('hdr', 'Radiance HDR image', 'images');
 
   // ISO-BMFF family (MP4, MOV, HEIC, AVIF, M4A, 3GP, CR3)
   if (ascii(h, 4, 4) === 'ftyp') return isoBrand(ascii(h, 8, 4), ext);

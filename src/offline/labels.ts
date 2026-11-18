@@ -1,6 +1,6 @@
 /** How each viewer is named in the offline list: what people call the files, and their extensions. */
 export const VIEWER_LABELS: Record<string, { en: string; zh: string; ext: string }> = {
-  'images/photo': { en: 'Images', zh: '图片', ext: '.jpg .png .heic .webp .tiff .psd .raw …' },
+  'images/photo': { en: 'Images', zh: '图片', ext: '.jpg .png .heic .webp .tiff .psd .raw .exr .dcm …' },
   'drawings/dxf': { en: 'CAD drawings (DXF)', zh: 'CAD 图纸（DXF）', ext: '.dxf' },
   'drawings/model': { en: '3D models', zh: '3D 模型', ext: '.stl .obj .ply .glb .gltf .3mf .fbx' },
   'drawings/preview': { en: 'DWG, ODG & Visio (preview)', zh: 'DWG、ODG 和 Visio（预览）', ext: '.dwg .odg .vsdx' },

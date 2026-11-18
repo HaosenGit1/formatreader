@@ -34,6 +34,8 @@ const IMAGES = [
   { name: t('iPhone photos (HEIC)', 'iPhone 照片（HEIC）'), viewer: 'images/photo', ext: ['heic', 'heif'] },
   { name: t('TIFF & Photoshop', 'TIFF 和 Photoshop'), viewer: 'images/photo', ext: ['tiff', 'tif', 'psd'] },
   { name: t('Camera RAW (preview)', '相机 RAW（预览）'), viewer: 'images/photo', ext: ['dng', 'cr2', 'cr3', 'nef', 'arw', 'raf', 'orf', 'rw2', 'pef', 'srw'] },
+  { name: t('HDR & textures', 'HDR 和贴图'), viewer: 'images/photo', ext: ['exr', 'hdr', 'tga'] },
+  { name: t('Medical scans (DICOM)', '医学影像（DICOM）'), viewer: 'images/photo', ext: ['dcm'] },
 ];
 
 const DRAWINGS = [
@@ -51,7 +53,7 @@ const ARCHIVES = [
 ];
 
 const COMING = [
-  { name: t('More images', '更多图片'), ext: ['jxl', 'jp2', 'exr', 'dcm', 'tga'] },
+  { name: t('More images', '更多图片'), ext: ['jxl', 'jp2', 'dds', 'ktx2'] },
   { name: t('Sounds', '音频'), ext: ['mp3', 'wav', 'flac', 'm4a', 'aac', 'ogg', 'opus', 'wma'] },
   { name: t('Videos', '视频'), ext: ['mp4', 'mov', 'webm', 'mkv', 'avi', 'wmv'] },
   { name: t('More drawings', '更多图纸'), ext: ['step', 'iges', 'ifc', 'vsd', 'kmz'] },

@@ -2,7 +2,7 @@
   "name": "formatreader",
   "private": true,
   "version": "0.1.0",
-  "description": "Drop any file into your browser \u2014 it detects the format and shows it. Nothing is uploaded.",
+  "description": "Drop any file into your browser — it detects the format and shows it. Nothing is uploaded.",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -20,6 +20,7 @@
     "@kenjiuno/msgreader": "1.29.0",
     "ag-psd": "34.1.0",
     "buffer": "6.0.3",
+    "dicom-parser": "1.8.21",
     "docx-preview": "0.4.1",
     "dompurify": "3.4.18",
     "dxf-parser": "1.1.2",
