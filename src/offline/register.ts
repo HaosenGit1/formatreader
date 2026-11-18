@@ -10,6 +10,21 @@ export function registerOffline(): void {
       const reg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
       await navigator.serviceWorker.ready;
       const worker = reg.active ?? navigator.serviceWorker.controller;
+      // After an update, bring back what this visitor kept offline (only changed files download).
+      // Asked again when a new version takes over, since that version has the new files.
+      const resume = (w: ServiceWorker | null | undefined) => {
+        if (!w) return;
+        const channel = new MessageChannel();
+        channel.port1.onmessage = (e) => {
+          if ((e.data as { restored?: number })?.restored) dispatchEvent(new Event('formatreader:offline-changed'));
+        };
+        w.postMessage('resume', [channel.port2]);
+      };
+      resume(worker);
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        resume(navigator.serviceWorker.controller);
+        dispatchEvent(new Event('formatreader:offline-changed'));
+      });
       const installed = matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
       if (installed) {
         worker?.postMessage('cache-all');

@@ -67,6 +67,7 @@ export function offlineLine(): HTMLElement {
     );
   };
   if (navigator.serviceWorker.controller) void render();
+  addEventListener('formatreader:offline-changed', () => void render());
   navigator.serviceWorker.addEventListener('controllerchange', () => void render(), { once: true });
   // The first visit stores files in the background: refresh the count once that has had time to finish.
   setTimeout(() => void render(), 8000);

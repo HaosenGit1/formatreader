@@ -120,7 +120,20 @@ export default defineConfig({
   build: {
     target: 'es2022',
     sourcemap: false,
-    rollupOptions: { input: { main: resolve('index.html'), formats: resolve('formats.html') } },
+    rollupOptions: {
+      input: { main: resolve('index.html'), formats: resolve('formats.html') },
+      output: {
+        // Small helpers shared by the app and every viewer live in their own file. Otherwise they sit
+        // in the app's entry file, and any change to the front page would rename every viewer file
+        // (each refers to the entry by name) and make returning visitors download everything again.
+        manualChunks(id: string) {
+          if (/[\\/]src[\\/]core[\\/](dom|i18n|viewer|info-view|info-entry|registry|detect-format|zip|mime)\.ts$/.test(id)) return 'core';
+          // Vite's helper for loading viewers (and their styles) on demand.
+          if (id.includes('vite/preload-helper') || id.includes('vite/modulepreload-polyfill')) return 'core';
+          return undefined;
+        },
+      },
+    },
   },
   test: {
     environment: 'node',
