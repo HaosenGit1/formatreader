@@ -114,8 +114,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     if (view.fullscreen) {
       return h('button', { type: 'button', class: 'btn fs-btn', onclick: () => view.fullscreen!() }, expandIcon(), view.fullscreenLabel?.() ?? s('fullscreen'));
     }
-    if (!document.fullscreenEnabled) return null; // e.g. iPhone Safari
-    const on = !!document.fullscreenElement;
+    const on = isFull();
     const label = on ? s('exitFullscreen') : s('fullscreen');
     return h('button', { type: 'button', class: 'btn fs-btn', title: `${label} (F)`, onclick: toggleFullscreen }, on ? shrinkIcon() : expandIcon(), label);
   }
@@ -196,6 +195,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     const c = current;
     current = null;
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    if (immersive) setImmersive(false);
     try {
       c?.view.destroy?.();
     } catch (err) {
@@ -323,20 +323,68 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
 
   // ---------------------------------------------------------- full screen
 
-  function toggleFullscreen() {
-    if (current?.view.fullscreen) return current.view.fullscreen();
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {});
-      return;
+  // Real full screen where the browser allows it. iPhone browsers allow it only for videos,
+  // so there (and anywhere it fails) the page fills the screen itself: "immersive" mode.
+  type FsDoc = Document & { webkitFullscreenElement?: Element; webkitFullscreenEnabled?: boolean; webkitExitFullscreen?: () => void };
+  type FsEl = HTMLElement & { webkitRequestFullscreen?: () => void };
+  const fsDoc = document as FsDoc;
+  const nativeFull = () => !!(document.fullscreenElement ?? fsDoc.webkitFullscreenElement);
+  const canNative = () => !!(document.fullscreenEnabled || fsDoc.webkitFullscreenEnabled);
+  let immersive = false;
+  const isFull = () => nativeFull() || immersive;
+
+  function setImmersive(on: boolean) {
+    if (immersive === on) return;
+    immersive = on;
+    document.documentElement.classList.toggle('fr-immersive', on);
+    const main = app.querySelector<HTMLElement>('main.doc');
+    main?.classList.toggle('doc-immersive', on);
+    main?.querySelector('.immersive-exit')?.remove();
+    if (on) {
+      main?.append(h('button', { type: 'button', class: 'immersive-exit', 'aria-label': s('exitFullscreen'), title: s('exitFullscreen'), onclick: () => history.state?.formatreaderImmersive ? history.back() : setImmersive(false) }, '✕'));
+      // The phone's Back gesture leaves immersive mode instead of the page.
+      history.pushState({ ...(history.state ?? {}), formatreaderImmersive: true }, '');
     }
-    app.querySelector<HTMLElement>('main.doc')?.requestFullscreen?.().catch(() => {});
+    app.querySelector('.fs-btn')?.replaceWith(current ? (fullscreenButton(current.view) ?? '') : '');
+    dispatchEvent(new Event('resize')); // viewers that measure themselves (books, drawings) re-layout
   }
 
+  function toggleFullscreen() {
+    if (current?.view.fullscreen) return current.view.fullscreen();
+    if (immersive) {
+      if (history.state?.formatreaderImmersive) history.back();
+      else setImmersive(false);
+      return;
+    }
+    if (nativeFull()) {
+      (document.exitFullscreen?.() ?? Promise.resolve(fsDoc.webkitExitFullscreen?.())).catch(() => {});
+      return;
+    }
+    const main = app.querySelector<FsEl>('main.doc');
+    if (!main) return;
+    if (canNative() && main.requestFullscreen) main.requestFullscreen().catch(() => setImmersive(true));
+    else if (canNative() && main.webkitRequestFullscreen) main.webkitRequestFullscreen();
+    else return setImmersive(true);
+    // Some browsers refuse without saying so: if nothing happened, fill the screen ourselves.
+    setTimeout(() => {
+      if (!nativeFull() && !immersive) setImmersive(true);
+    }, 400);
+  }
+
+  window.addEventListener('popstate', () => {
+    if (immersive && !history.state?.formatreaderImmersive) setImmersive(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && immersive) toggleFullscreen();
+  });
+
   // Update only the button: re-rendering would move the page out of full screen.
-  document.addEventListener('fullscreenchange', () => {
+  const onFsChange = () => {
     if (!current || current.view.fullscreen) return;
     app.querySelector('.fs-btn')?.replaceWith(fullscreenButton(current.view) ?? '');
-  });
+  };
+  document.addEventListener('fullscreenchange', onFsChange);
+  document.addEventListener('webkitfullscreenchange', onFsChange);
 
   // --------------------------------------------------------- reading size
 
