@@ -942,3 +942,24 @@ html.fr-immersive .site-header {
 .immersive-exit:focus-visible {
   opacity: 1;
 }
+
+/* Portable file: licence notice under the footer line */
+.landing-foot-portable {
+  flex-direction: column;
+  gap: 2px;
+}
+
+.foot-legal {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: normal;
+  text-align: center;
+}
+
+.foot-legal a {
+  color: inherit;
+}
+
+.landing-foot-portable {
+  max-width: calc(100vw - 32px);
+}

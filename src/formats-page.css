@@ -136,3 +136,26 @@
   color: var(--muted);
   font-size: 13px;
 }
+
+.fmt-licence {
+  margin-top: 36px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.fmt-licence h2 {
+  margin: 0 0 6px;
+  color: var(--fg);
+  font-size: 15px;
+}
+
+.fmt-licence p {
+  margin: 0 0 6px;
+}
+
+.fmt-licence a {
+  color: inherit;
+}
