@@ -38,8 +38,8 @@ export const wordsViewers: ViewerEntry[] = [
   },
   {
     id: 'words/db',
-    // The whole database is loaded into the engine's memory.
-    heavyAbove: () => 500 * 1024 * 1024,
+    // Measured: an 800 MB SQLite (9 million rows) opened in 1 s; Access files are read whole.
+    heavyAbove: () => 1024 * 1024 * 1024,
     category: 'words',
     mimes: /x-msaccess|vnd\.ms-access|x-sqlite3|vnd\.sqlite3/,
     accepts: ({ format }) => ['mdb', 'accdb', 'sqlite'].includes(format?.id ?? ''),

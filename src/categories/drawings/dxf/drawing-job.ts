@@ -26,7 +26,7 @@ function watchScanner(report: Report): () => void {
 
 export async function buildDxfBytes(bytes: Uint8Array, report: Report): Promise<Built> {
   const head = new TextDecoder('latin1').decode(bytes.subarray(0, 65536));
-  report('parse', 0);
+  report('parse'); // no percentage until the parser starts walking the lines
   const text = new TextDecoder(dxfEncoding(head)).decode(bytes);
   const { default: DxfParser } = await import('dxf-parser');
   const unwatch = watchScanner(report);

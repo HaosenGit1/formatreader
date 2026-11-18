@@ -15,10 +15,24 @@ Phones and tablets have far less memory per tab: count on about a quarter of the
 | DWG | not measured (no tool can write a big DWG) | — | Warning above 60 MB (estimate: DWG is packed several times smaller than DXF) |
 | Pictures | 16000 × 16000 (256 MP) | 24000 × 24000 (576 MP) | Browser limit ≈ 268 MP; now the message gives the size and why |
 | Video, sound | streamed by the browser, any size | — | MP4/WebM/MOV/MKV are not loaded into memory |
+| SQLite | 800 MB (9 million rows) in 1 s | — | Shows the first 20,000 rows of a table; warning above 1 GB |
+| PDF | shown by the browser's own PDF viewer (pages load as needed) | — | Not measurable headless; no size limit of ours |
+
+## Loading times and progress (after moving the heavy work to background workers)
+
+| File | Time | What the loading screen shows |
+|---|---|---|
+| DXF 150 MB, 2.7 million objects | 6–7 s | Reading the file %, Reading the drawing %, Building the drawing %, Almost done |
+| Excel 109 MB, 1 million rows | 18–20 s | Reading the file %, Reading the workbook (timer: the engine reports no progress), Preparing rows % |
+| Text 600 MB | 6 s | Reading the file %, Recognising the text encoding |
+| Zip 2 GB | 3 s | Reading the file list |
+
+The page stays responsive during this work; Stop ends it at once (0.3 s).
 
 ## What the user sees
 
-- **Over 150 MB:** a note under the loading animation (“Large file … can take a moment”, then “Still working…”).
+- **Always, after a moment:** the step, a real percentage when it can be measured, the file and a timer.
+- **No progress for 30 s:** “This is taking longer than usual” with *Keep waiting* and *Stop*.
 - **Beyond the measured limit for that kind of file** (`heavyAbove` in each viewer entry): a warning first,
   with *Try anyway*, *How to open it elsewhere* and *Cancel*.
 - **Memory errors:** “Too big for this browser’s memory”, with what to try, instead of a raw error.
