@@ -1,6 +1,6 @@
 /**
  * Front-page sponsor: Goldwind Americas ("Driving a renewable future"), approved by Goldwind.
- * A silent looping video behind the circle and a small link bar. The video is this site's
+ * A silent looping video behind the circle; clicking it (outside the circle) opens their site. The video is this site's
  * own file (no third-party requests); it loads after the page is shown, and is skipped for
  * visitors who ask for less motion or less data. Clicking the circle still opens files.
  */
@@ -20,14 +20,9 @@ const s = strings({
   label: { en: 'Goldwind Americas website (opens in a new tab)', zh: '金风科技美洲官网（在新标签页打开）' },
 });
 
-/** The link bar (always shown on the front page). */
+/** No visible button: a link only screen readers see (the video itself is the visible link). */
 export function promoBar(): HTMLElement {
-  return h(
-    'a',
-    { class: 'promo-bar', href: PROMO.link, target: '_blank', rel: 'noopener', 'aria-label': s('label') },
-    h('span', { class: 'promo-line' }, h('strong', {}, s('name')), h('span', { class: 'promo-tagline' }, ` — ${s('tagline')}`)),
-    h('span', { class: 'promo-more' }, `${s('more')} ›`),
-  );
+  return h('a', { class: 'promo-sr', href: PROMO.link, target: '_blank', rel: 'noopener' }, s('label'));
 }
 
 /** Starts the background video behind `landing` once the page is idle (if the file exists). */
@@ -40,6 +35,10 @@ export function startPromoVideo(landing: HTMLElement): void {
     video.muted = true; // required for autoplay
     const bg = h('div', { class: 'promo-bg', 'aria-hidden': 'true' }, video);
     video.addEventListener('playing', () => landing.classList.add('promo-on'), { once: true });
+    // Clicking the video (anywhere but the circle and the links) opens Goldwind Americas.
+    landing.addEventListener('click', (e) => {
+      if (landing.classList.contains('promo-on') && e.target === landing) window.open(PROMO.link, '_blank', 'noopener');
+    });
     // No video on the server yet (or it can't play here): quietly keep the plain page.
     video.addEventListener('error', () => bg.remove(), { once: true });
     video.poster = PROMO.poster;
