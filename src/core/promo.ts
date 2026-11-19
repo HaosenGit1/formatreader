@@ -9,8 +9,8 @@ import { strings } from './i18n';
 
 export const PROMO = {
   link: 'https://www.goldwindamericas.com/',
-  video: '/promo/goldwind-americas.mp4',
-  poster: '/promo/goldwind-americas.jpg',
+  video: '/promo/goldwind-americas-v2.mp4',
+  poster: '/promo/goldwind-americas-v2.jpg',
 };
 
 const s = strings({
