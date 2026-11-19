@@ -66,6 +66,7 @@ function wander(landing: HTMLElement): void {
   const r0 = landing.getBoundingClientRect();
   const size0 = ball.offsetWidth;
   const G = 260; // px/s²: a slow, floaty fall
+  const PACE = 0.6; // the whole motion at 60 % speed: same arcs, more graceful
   let x = (r0.width - size0) / 2;
   let y = 24; // starts near the top and drops in
   let vx = (Math.random() < 0.5 ? -1 : 1) * (70 + Math.random() * 40);
@@ -84,7 +85,7 @@ function wander(landing: HTMLElement): void {
     const real = Math.min(0.05, (now - last) / 1000);
     last = now;
     timeScale += (target - timeScale) * Math.min(1, real * 3);
-    const dt = real * timeScale;
+    const dt = real * timeScale * PACE;
     const r = landing.getBoundingClientRect();
     const size = ball.offsetWidth;
     const pad = 16;
