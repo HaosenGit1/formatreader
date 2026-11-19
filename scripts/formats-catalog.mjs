@@ -46,7 +46,8 @@ const IMAGES = [
 
 const DRAWINGS = [
   { name: t('CAD drawings: layers, layouts, hatches, measure, find text, print', 'CAD 图纸：图层、布局、填充、测量、查找文字、打印'), viewer: 'drawings/dxf', ext: ['dwg', 'dxf'] },
-  { name: t('3D models', '3D 模型'), viewer: 'drawings/model', ext: ['stl', 'obj', 'ply', 'glb', 'gltf', '3mf', 'fbx'] },
+  { name: t('3D models', '3D 模型'), viewer: 'drawings/model', ext: ['stl', 'obj', 'ply', 'glb', 'gltf', '3mf', 'fbx', '3ds', 'dae', 'wrl', 'usdz', 'amf'] },
+  { name: t('Point clouds: laser scans, drone and survey (LAS, PCD, XYZ)', '点云：激光扫描、无人机和测量（LAS、PCD、XYZ）'), viewer: 'drawings/model', ext: ['las', 'pcd', 'xyz'] },
   { name: t('CAD & BIM models', 'CAD 和 BIM 模型'), viewer: 'drawings/model', ext: ['step', 'stp', 'iges', 'igs', 'brep', 'ifc'] },
   { name: t('Maps: Google Earth (KML, KMZ), GPS tracks (GPX), GeoJSON, Shapefiles', '地图：Google Earth（KML、KMZ）、GPS 轨迹（GPX）、GeoJSON、Shapefile'), viewer: 'drawings/map', ext: ['kml', 'kmz', 'gpx', 'geojson', 'shp'] },
   { name: t('Diagrams', '图表'), viewer: ['drawings/preview', 'drawings/mindmap'], ext: ['vsdx', 'odg', 'xmind'] },

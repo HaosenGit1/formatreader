@@ -1,5 +1,6 @@
 /**
- * 3D model viewer: STL, OBJ, PLY, glTF/GLB, 3MF and FBX, drawn with three.js
+ * 3D model viewer: STL, OBJ, PLY, glTF/GLB, 3MF, FBX, 3DS, Collada, VRML, USDZ, AMF, and
+ * point clouds (PCD, XYZ, LAS), drawn with three.js
  * (downloaded only when a model is opened). Drag to turn, scroll to zoom,
  * right-drag (or two fingers) to move. Shows size and triangle count.
  */
@@ -12,6 +13,7 @@ const s = strings({
   reset: { en: 'Reset view', zh: '重置视图' },
   wireframe: { en: 'Wireframe', zh: '线框' },
   triangles: { en: 'triangles', zh: '个三角形' },
+  points: { en: 'points', zh: '个点' },
   size: { en: 'Size', zh: '尺寸' },
   hint: { en: 'Drag to turn · scroll to zoom · right-drag to move', zh: '拖动旋转 · 滚轮缩放 · 右键拖动平移' },
   noWebgl: { en: 'This browser cannot draw 3D (WebGL is turned off or not available).', zh: '这个浏览器无法显示 3D（WebGL 被关闭或不可用）。' },
@@ -24,7 +26,9 @@ const s = strings({
 const extOf = (name: string) => /\.([a-z0-9]{1,6})$/i.exec(name)?.[1]?.toLowerCase() ?? '';
 
 /** Which loader a file needs. */
-export function modelKind(formatId: string | undefined, ext: string): 'stl' | 'obj' | 'ply' | 'gltf' | 'glb' | '3mf' | 'fbx' | 'step' | 'iges' | 'brep' | 'ifc' | null {
+export type ModelKind = 'stl' | 'obj' | 'ply' | 'gltf' | 'glb' | '3mf' | 'fbx' | 'step' | 'iges' | 'brep' | 'ifc' | '3ds' | 'dae' | 'wrl' | 'usdz' | 'amf' | 'pcd' | 'xyz' | 'las';
+
+export function modelKind(formatId: string | undefined, ext: string): ModelKind | null {
   // IFC first: it is "ISO-10303-21" text too, so the detector may call it STEP.
   if (ext === 'ifc' || formatId === 'ifc') return 'ifc';
   if (ext === 'step' || ext === 'stp' || ext === 'p21' || formatId === 'step') return 'step';
@@ -37,6 +41,14 @@ export function modelKind(formatId: string | undefined, ext: string): 'stl' | 'o
   if (ext === 'obj') return 'obj';
   if (ext === 'ply') return 'ply';
   if (ext === 'gltf') return 'gltf';
+  if (ext === '3ds') return '3ds';
+  if (ext === 'dae') return 'dae';
+  if (ext === 'wrl' || ext === 'vrml') return 'wrl';
+  if (ext === 'usdz') return 'usdz';
+  if (ext === 'amf') return 'amf';
+  if (ext === 'pcd') return 'pcd';
+  if (ext === 'xyz' || ext === 'pts') return 'xyz';
+  if (ext === 'las' || ext === 'laz') return 'las';
   return null;
 }
 
@@ -49,6 +61,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
 
   // ---- load into a scene object
   let object: import('three').Object3D;
+  let pointNote: string | undefined;
   if (kind === 'stl' || kind === 'ply') {
     const { STLLoader } = await import('three/addons/loaders/STLLoader.js');
     const { PLYLoader } = await import('three/addons/loaders/PLYLoader.js');
@@ -79,6 +92,34 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   } else if (kind === 'fbx') {
     const { FBXLoader } = await import('three/addons/loaders/FBXLoader.js');
     object = new FBXLoader().parse(data, '');
+  } else if (kind === '3ds') {
+    const { TDSLoader } = await import('three/addons/loaders/TDSLoader.js');
+    object = new TDSLoader().parse(data, '');
+  } else if (kind === 'dae') {
+    const { ColladaLoader } = await import('three/addons/loaders/ColladaLoader.js');
+    const dae = new ColladaLoader().parse(new TextDecoder().decode(data), '');
+    if (!dae?.scene) throw new Error('This Collada file has no scene.');
+    object = dae.scene;
+  } else if (kind === 'wrl') {
+    const { VRMLLoader } = await import('three/addons/loaders/VRMLLoader.js');
+    object = new VRMLLoader().parse(new TextDecoder().decode(data), '');
+  } else if (kind === 'usdz') {
+    const { USDZLoader } = await import('three/addons/loaders/USDZLoader.js');
+    object = new USDZLoader().parse(data);
+  } else if (kind === 'amf') {
+    const { AMFLoader } = await import('three/addons/loaders/AMFLoader.js');
+    object = new AMFLoader().parse(data);
+  } else if (kind === 'pcd') {
+    const { PCDLoader } = await import('three/addons/loaders/PCDLoader.js');
+    object = new PCDLoader().parse(data);
+  } else if (kind === 'xyz' || kind === 'las') {
+    const { readXyz, readLas } = await import('./points');
+    const cloud = kind === 'las' ? readLas(data) : readXyz(new TextDecoder().decode(data));
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(cloud.positions, 3));
+    if (cloud.colors) geometry.setAttribute('color', new THREE.BufferAttribute(cloud.colors, 3));
+    object = new THREE.Points(geometry, new THREE.PointsMaterial({ size: 1, vertexColors: !!cloud.colors, color: cloud.colors ? 0xffffff : 0x4d79c7 }));
+    pointNote = cloud.note;
   } else if (kind === 'step' || kind === 'iges' || kind === 'brep' || kind === 'ifc') {
     const { loadCad } = await import('./cad');
     object = await loadCad(THREE, new Uint8Array(data.slice(0)), kind);
@@ -87,7 +128,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   }
 
   // 3D printing and CAD formats (STL, 3MF, STEP, IGES) use "Z is up"; three.js uses "Y is up": stand them upright.
-  if (kind === 'stl' || kind === '3mf' || kind === 'step' || kind === 'iges' || kind === 'brep') {
+  if (kind === 'stl' || kind === '3mf' || kind === 'step' || kind === 'iges' || kind === 'brep' || kind === 'amf' || kind === 'las' || kind === 'xyz' || kind === 'pcd' || kind === '3ds') {
     object.rotation.x = -Math.PI / 2;
     object.updateMatrixWorld(true);
   }
@@ -115,9 +156,18 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   const center = box.getCenter(new THREE.Vector3());
   const radius = Math.max(size.length() / 2, 1e-6);
   let triangles = 0;
+  let points = 0;
   object.traverse((o) => {
     const g = (o as import('three').Mesh).geometry;
-    if (g) triangles += (g.index ? g.index.count : (g.attributes.position?.count ?? 0)) / 3;
+    if (!g) return;
+    if ((o as import('three').Points).isPoints) {
+      points += g.attributes.position?.count ?? 0;
+      // Point size relative to the cloud, so dense scans and sparse surveys both read well.
+      const m = (o as import('three').Points).material as import('three').PointsMaterial;
+      m.size = radius / 250;
+      m.sizeAttenuation = true;
+      if (!m.vertexColors) m.color.set(0x3f6fc4); // uncoloured scans: a clear blue, not white on white
+    } else triangles += (g.index ? g.index.count : (g.attributes.position?.count ?? 0)) / 3;
   });
 
   // A floor grid under the model.
@@ -198,9 +248,11 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   return {
     meta: () => [
       kind!.toUpperCase(),
-      `${Math.round(triangles).toLocaleString()} ${s('triangles')}`,
-      `${s('size')} ${fmt(size.x)} × ${fmt(size.y)} × ${fmt(size.z)}${kind === 'ifc' ? ' m' : kind === 'step' || kind === 'iges' ? ' mm' : ''}`,
+      ...(triangles ? [`${Math.round(triangles).toLocaleString()} ${s('triangles')}`] : []),
+      ...(points ? [`${points.toLocaleString()} ${s('points')}`] : []),
+      `${s('size')} ${fmt(size.x)} × ${fmt(size.y)} × ${fmt(size.z)}${kind === 'ifc' ? ' m' : kind === 'step' || kind === 'iges' || kind === 'amf' ? ' mm' : ''}`,
     ],
+    notices: () => (pointNote ? [h('div', { class: 'notice subtle' }, pointNote)] : []),
     tools: () => tools,
     destroy: () => {
       cancelAnimationFrame(frame);

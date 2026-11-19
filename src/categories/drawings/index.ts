@@ -24,6 +24,7 @@ export const drawingsViewers: ViewerEntry[] = [
   {
     id: 'drawings/model',
     heavyAbove: () => 300 * 1024 * 1024,
+    priority: 55, // ahead of the archive viewer (USDZ and zipped AMF are ZIPs)
     category: 'drawings',
     layout: 'fill',
     mimes: /^model\//,
@@ -37,6 +38,18 @@ export const drawingsViewers: ViewerEntry[] = [
       if (ext === 'brep') return /DBRep_DrawableShape|CASCADE Topology/.test(text(head, 300));
       if (ext === 'ply') return text(head, 3) === 'ply';
       if (ext === 'gltf') return /"asset"/.test(text(head));
+      if (ext === '3ds') return head[0] === 0x4d && head[1] === 0x4d;
+      if (ext === 'dae') return /<COLLADA[\s>]/.test(text(head));
+      if (ext === 'wrl' || ext === 'vrml') return /^#VRML V2/.test(text(head, 20));
+      if (ext === 'usdz') return head[0] === 0x50 && head[1] === 0x4b;
+      if (ext === 'amf') return /<amf[\s>]/.test(text(head)) || (head[0] === 0x50 && head[1] === 0x4b);
+      if (ext === 'pcd') return /^(#.*\n)*\s*(VERSION|FIELDS)\s/m.test(text(head, 600));
+      if (ext === 'las' || ext === 'laz') return text(head, 4) === 'LASF';
+      // XYZ / PTS point lists: lines of 3+ numbers (a chemistry .xyz has element symbols instead).
+      if (ext === 'xyz' || ext === 'pts') {
+        const lines = text(head).split(/\r?\n/).filter((l) => l.trim()).slice(0, 8);
+        return lines.filter((l) => /^\s*-?[\d.]+(e[-+]?\d+)?([\s,;]+-?[\d.]+(e[-+]?\d+)?){2,}\s*$/i.test(l)).length >= Math.min(3, lines.length - 1);
+      }
       // .obj is also a compiler's object file: only Wavefront geometry text.
       if (ext === 'obj') return /(^|\n)\s*(v|vn|vt|f|o|g|mtllib)\s/.test(text(head)) && !/\0/.test(text(head, 512));
       return false;
