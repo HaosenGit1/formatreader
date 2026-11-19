@@ -1,0 +1,74 @@
+.view-midi {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  --mi-guide: rgb(127 127 127 / 0.1);
+}
+
+.mi-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mi-clock {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.mi-scroll {
+  position: relative;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.mi-roll {
+  display: block;
+  cursor: pointer;
+}
+
+.mi-head {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  background: var(--fg);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.mi-tracks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+
+.mi-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 3px;
+  vertical-align: -1px;
+}
+
+.mi-muted {
+  color: var(--muted);
+}
+
+.mi-texts {
+  margin: 0;
+  font-size: 13px;
+}
+
+.mi-note {
+  margin: 0;
+  font-size: 12px;
+}

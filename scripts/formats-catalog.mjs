@@ -61,6 +61,7 @@ const DRAWINGS = [
 
 const SOUNDS = [
   { name: t('Music & sound', '音乐和音频'), viewer: 'sounds/audio', ext: ['mp3', 'm4a', 'aac', 'wav', 'flac', 'ogg', 'opus', 'weba', 'aiff'] },
+  { name: t('MIDI music (piano roll and playback)', 'MIDI 音乐（钢琴卷帘和播放）'), viewer: 'sounds/midi', ext: ['mid', 'midi'] },
 ];
 
 const VIDEOS = [
@@ -90,7 +91,7 @@ const ARCHIVES = [
 
 const COMING = [
   { name: t('More images', '更多图片'), ext: ['jxl', 'jp2', 'dds', 'ktx2'] },
-  { name: t('More audio & video, DivX/Xvid AVI (details only for now)', '更多音视频、DivX/Xvid 的 AVI（暂只显示信息）'), ext: ['wma', 'ape', 'amr', 'mid', 'wmv', 'rmvb', 'mpg'] },
+  { name: t('More audio & video, DivX/Xvid AVI (details only for now)', '更多音视频、DivX/Xvid 的 AVI（暂只显示信息）'), ext: ['wma', 'ape', 'amr', 'wmv', 'rmvb', 'mpg'] },
 
   { name: t('System logs', '系统日志'), ext: ['evtx', 'journal'] },
   { name: t('More documents & data', '更多文档和数据'), ext: ['chm', 'djvu', 'h5', 'mat', 'pst'] },

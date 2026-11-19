@@ -9,6 +9,7 @@ export const VIEWER_LABELS: Record<string, { en: string; zh: string; ext: string
   'drawings/map': { en: 'Maps (Google Earth, GPS, GIS)', zh: '地图（Google Earth、GPS、GIS）', ext: '.kml .kmz .gpx .geojson .shp' },
   'drawings/cadinfo': { en: 'SolidWorks, Inventor, Revit, SketchUp… (preview)', zh: 'SolidWorks、Inventor、Revit、SketchUp…（预览图）', ext: '.dwf .sldprt .ipt .rvt .skp .3dm .dgn …' },
   'drawings/mindmap': { en: 'Mind maps', zh: '思维导图', ext: '.xmind' },
+  'sounds/midi': { en: 'MIDI music', zh: 'MIDI 音乐', ext: '.mid .midi' },
   'sounds/audio': { en: 'Music & sound', zh: '音乐和音频', ext: '.mp3 .m4a .wav .flac .ogg .opus …' },
   'videos/video': { en: 'Videos', zh: '视频', ext: '.mp4 .webm .mov .mkv …' },
   'words/text': { en: 'Text & logs', zh: '文本和日志', ext: '.txt .log .md .srt …' },

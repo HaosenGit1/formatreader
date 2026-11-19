@@ -179,7 +179,7 @@ export const FORMAT_GUIDES: Record<string, FormatGuide> = {
   opus: audio(['Opus audio (WhatsApp/Telegram voice messages, web calls).', 'Opus 音频（WhatsApp/Telegram 语音消息、网络通话）。']),
   wma: audio(['Windows Media Audio.', 'Windows Media 音频。'], [way(WIN, 'Windows Media Player', 'Windows Media Player')]),
   amr: audio(['AMR: phone voice recordings and voice messages.', 'AMR：手机录音和语音消息。']),
-  mid: { from: ['MIDI: musical notes, not recorded sound (keyboards, music software).', 'MIDI：音符，不是录制的声音（电子琴、音乐软件）。'], open: [way(MAC, 'GarageBand', 'GarageBand'), way(ANY, 'MuseScore (free, shows the score)', 'MuseScore（免费，显示乐谱）'), VLC] },
+  mid: { from: ['MIDI: musical notes, not recorded sound (keyboards, music software).', 'MIDI：音符，不是录制的声音（电子琴、音乐软件）。'], open: [way(MAC, 'GarageBand', 'GarageBand'), way(ANY, 'MuseScore (free, shows the score)', 'MuseScore（免费，显示乐谱）'), VLC], tip: ['Here every note is drawn as a piano roll and played by a simple built-in synthesizer; real instruments sound richer in music software.', '这里把每个音符画成钢琴卷帘，并用简单的内置合成器播放；在音乐软件里乐器音色会更丰富。'] },
   ra: audio(['RealAudio (1990s–2000s internet radio).', 'RealAudio（1990–2000 年代网络电台）。']),
   mka: audio(['Matroska audio.', 'Matroska 音频。']),
 

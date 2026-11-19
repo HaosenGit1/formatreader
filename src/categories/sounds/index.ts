@@ -8,6 +8,14 @@ const IDS = new Set(['mp3', 'aac', 'm4a', 'wav', 'flac', 'ogg', 'opus', 'aiff', 
 
 export const soundsViewers: ViewerEntry[] = [
   {
+    // MIDI: piano roll and playback through a small built-in synthesizer.
+    id: 'sounds/midi',
+    category: 'sounds',
+    mimes: /midi/,
+    accepts: ({ format }) => format?.id === 'mid',
+    load: () => import('./midi/view'),
+  },
+  {
     id: 'sounds/audio',
     category: 'sounds',
     prefetch: true,
