@@ -44,6 +44,12 @@ export async function buildDxfBytes(bytes: Uint8Array, report: Report): Promise<
   return buildDxf(split, (f) => report('build', f));
 }
 
+export async function buildHpglBytes(bytes: Uint8Array, report: Report): Promise<Built> {
+  report('parse');
+  const { buildHpgl } = await import('./hpgl');
+  return buildHpgl(bytes);
+}
+
 export async function buildDwgBytes(bytes: Uint8Array, report: Report): Promise<Built> {
   report('dwg');
   const [{ readDwg }, { dwgToDxf }] = await Promise.all([import('./dwg-engine'), import('./dwg')]);

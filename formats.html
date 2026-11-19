@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob:; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' blob: 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self' blob: data:; media-src 'self' blob: data:; connect-src 'self' blob: data:; frame-src 'self' blob: data:; object-src blob:; form-action 'none'; base-uri 'self'" />
     <title>Supported formats — FormatReader</title>
-    <meta name="description" content="Every file format FormatReader opens in your browser: documents, ebooks, spreadsheets, databases, code, logs and archives. Nothing is uploaded." />
+    <meta name="description" content="Every file format FormatReader opens in your browser: documents, ebooks, spreadsheets, databases, code, logs and archives. Nothing is uploaded, and it works offline." />
     <meta name="theme-color" content="#f6f6f8" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#121316" media="(prefers-color-scheme: dark)" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -19,15 +19,8 @@
     </header>
     <main class="formats">
       <h1><span data-en="Formats" data-zh="支持的格式">Formats</span> <span class="fmt-total"><!--FORMATS_COUNT--></span></h1>
-      <p class="formats-lead"><span data-en="Open in your browser. Nothing is uploaded." data-zh="在浏览器中直接打开，文件不会上传。">Open in your browser. Nothing is uploaded.</span></p>
+      <p class="formats-lead"><span data-en="Files open on your own device — nothing is ever uploaded. Works offline too: tap “Offline ready” on the front page once, and every format opens without internet." data-zh="文件在你自己的设备上打开——从不上传。也能离线使用：在首页点一次“离线可用”，所有格式没有网络也能打开。">Files open on your own device — nothing is ever uploaded. Works offline too: tap “Offline ready” on the front page once, and every format opens without internet.</span></p>
       <input class="fmt-search" type="search" placeholder="Find an extension, e.g. mdb" data-placeholder-zh="查找扩展名，例如 mdb" aria-label="Find a format" autocomplete="off" spellcheck="false" />
-      <ul class="fmt-also fmt-notes fmt-edit-legend">
-        <li><span data-en="Folders and zips: browse them, open any file inside, or “Extract all”." data-zh="文件夹和压缩包：直接浏览、打开里面任何文件，或“全部解压”。">Folders and zips: browse them, open any file inside, or “Extract all”.</span></li>
-        <li><span data-en="About: every file explains what it is and how to open it in other apps." data-zh="文件说明：每个文件都说明它是什么、在其他软件中怎么打开。">About: every file explains what it is and how to open it in other apps.</span></li>
-        <li><span data-en="Passwords: locked Excel, Word and PowerPoint open here. The password stays on your computer." data-zh="密码：带密码的 Excel、Word、PowerPoint 可在这里打开，密码不离开你的电脑。">Passwords: locked Excel, Word and PowerPoint open here. The password stays on your computer.</span></li>
-        <li><span data-en="Garbled text (乱码) is fixed automatically, in any language." data-zh="乱码自动修复，适用于所有语言。">Garbled text (乱码) is fixed automatically, in any language.</span></li>
-        <li><span data-en="✏️ = can edit: change the text, save a copy. The original is never changed." data-zh="✏️ = 可编辑：修改文字后另存副本，原文件不会被改动。">✏️ = can edit: change the text, save a copy. The original is never changed.</span></li>
-      </ul>
       <p class="fmt-none" hidden><span data-en="Not supported yet." data-zh="暂不支持。">Not supported yet.</span></p>
       <!--FORMATS-->
       <section class="fmt-licence" id="licence">

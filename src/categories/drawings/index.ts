@@ -5,6 +5,7 @@
  */
 import type { ViewerEntry } from '../../core/viewer';
 import { isGeoJson, isShp } from './map/sniff';
+import { looksHpgl } from './dxf/hpgl-sniff';
 
 /** Kept in step with cadinfo/formats.ts (the table itself loads only with the viewer). */
 const CAD_EXT = new Set(['skp', 'sldprt', 'sldasm', 'slddrw', 'ipt', 'iam', 'idw', 'ipn', 'rvt', 'rfa', 'rte', 'rft', '3dm', 'dgn', 'catpart', 'catproduct', 'catdrawing', 'max', 'vsd']);
@@ -21,7 +22,11 @@ export const drawingsViewers: ViewerEntry[] = [
     layout: 'fill',
     mimes: /dxf/,
     // DXF, and DWG (read with LibreDWG, then drawn by the same renderer).
-    accepts: ({ format, ext, head }) => format?.id === 'dwg' || ((format?.id === 'dxf' || ext === 'dxf') && /(^|\n)\s*0\s*\r?\n\s*SECTION|^AutoCAD Binary DXF/.test(text(head))),
+    accepts: ({ format, ext, head }) =>
+      format?.id === 'dwg' ||
+      ((format?.id === 'dxf' || ext === 'dxf') && /(^|\n)\s*0\s*\r?\n\s*SECTION|^AutoCAD Binary DXF/.test(text(head))) ||
+      // HP-GL plot files (a gnuplot script can also be called .plt: checked by content).
+      (/^(plt|hpgl|hgl|hpg|plo)$/.test(ext) && looksHpgl(text(head, 2048))),
     load: () => import('./dxf/view'),
   },
   {

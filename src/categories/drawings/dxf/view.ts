@@ -50,12 +50,13 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   const bytes = new Uint8Array(await file.arrayBuffer());
   const head = new TextDecoder('latin1').decode(bytes.subarray(0, 65536));
   const isDwg = ctx.format?.id === 'dwg';
+  const isHpgl = !isDwg && /^(plt|hpgl|hgl|hpg|plo)$/i.test(/\.([a-z0-9]+)$/i.exec(file.name)?.[1] ?? '');
   const version = isDwg ? head.slice(0, 6) : /\$ACADVER\s*\r?\n\s*1\s*\r?\n\s*(AC\d{4})/.exec(head)?.[1];
-  if (!isDwg && head.startsWith('AutoCAD Binary DXF')) throw new Error(s('binary'));
+  if (!isDwg && !isHpgl && head.startsWith('AutoCAD Binary DXF')) throw new Error(s('binary'));
   const report: Report = (step, fraction) => ctx.progress?.(s(`step_${step}`), fraction);
   let built: Built;
   try {
-    built = await buildDrawing(isDwg ? bytes.slice() : bytes, isDwg, report, ctx.signal);
+    built = await buildDrawing(isDwg ? bytes.slice() : bytes, isDwg ? 'dwg' : isHpgl ? 'hpgl' : 'dxf', report, ctx.signal);
   } catch (err) {
     if ((err as Error)?.name === 'AbortError') throw err;
     if (isDwg) return dwgFallback(bytes, version ?? '', String((err as Error)?.message ?? err), ctx);
@@ -378,7 +379,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
 
   const skipped = [...built.skipped.entries()].filter(([t]) => !['VIEWPORT', 'ATTRIB', 'SEQEND', 'ATTRIB_HIDDEN'].includes(t));
   return {
-    meta: () => [isDwg ? 'DWG' : 'DXF', ...(version ? [`AutoCAD ${ACAD_VERSIONS[version] ?? version}`] : []), `${built.entityCount.toLocaleString()} ${s('entities')}`, `${built.layers.size} ${s('layerCount')}`, ...(built.layouts.length ? [`${built.layouts.length} ${s(built.layouts.length === 1 ? 'layoutOne' : 'layoutCount')}`] : [])],
+    meta: () => [isDwg ? 'DWG' : isHpgl ? 'HP-GL plot' : 'DXF', ...(version ? [`AutoCAD ${ACAD_VERSIONS[version] ?? version}`] : []), `${built.entityCount.toLocaleString()} ${s('entities')}`, `${built.layers.size} ${s('layerCount')}`, ...(built.layouts.length ? [`${built.layouts.length} ${s(built.layouts.length === 1 ? 'layoutOne' : 'layoutCount')}`] : [])],
     tools: () => tools,
     notices: () => (skipped.length ? [h('div', { class: 'notice subtle' }, s('skipped').replace('{list}', skipped.map(([t, n]) => `${t} (${n})`).join(', ')))] : []),
     destroy: () => {
@@ -504,13 +505,13 @@ function drawPrims(g: CanvasRenderingContext2D, prims: Prim[], m: Affine, layers
 
 /** A DWG LibreDWG can't read: show the preview AutoCAD saved in it, with the reason. */
 /** Parse and build in the background worker (website) or on the page (portable file). */
-async function buildDrawing(bytes: Uint8Array, dwg: boolean, report: Report, signal?: AbortSignal): Promise<Built> {
+async function buildDrawing(bytes: Uint8Array, kind: 'dxf' | 'dwg' | 'hpgl', report: Report, signal?: AbortSignal): Promise<Built> {
   if (import.meta.env.MODE === 'portable') {
     const job = await import('./drawing-job');
-    return (dwg ? job.buildDwgBytes : job.buildDxfBytes)(bytes, report);
+    return (kind === 'dwg' ? job.buildDwgBytes : kind === 'hpgl' ? job.buildHpglBytes : job.buildDxfBytes)(bytes, report);
   }
   const [{ startDrawingWorker }, { unpack }] = await Promise.all([import('./drawing-worker-host'), import('./drawing-job')]);
-  const packed = await runWorker<Packed>(startDrawingWorker(), { bytes, dwg }, [bytes.buffer], (step, f) => report(step as Parameters<Report>[0], f), signal);
+  const packed = await runWorker<Packed>(startDrawingWorker(), { bytes, dwg: kind === 'dwg', kind }, [bytes.buffer], (step, f) => report(step as Parameters<Report>[0], f), signal);
   return unpack(packed);
 }
 
