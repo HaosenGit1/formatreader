@@ -79,12 +79,14 @@ function wander(landing: HTMLElement): void {
   const ball = landing.querySelector<HTMLElement>('.circle');
   if (!ball) return;
   landing.classList.add('promo-ball');
-  // Preview of the crystal-ball look: ?ball=crystal
+  // The crystal-ball look (the earlier midnight-blue ball stays available as ?ball=classic).
+  let classic = false;
   try {
-    if (new URLSearchParams(location.search).get('ball') === 'crystal') landing.classList.add('promo-crystal');
+    classic = new URLSearchParams(location.search).get('ball') === 'classic';
   } catch {
     /* no address */
   }
+  if (!classic) landing.classList.add('promo-crystal');
   // A small caption under the slogan: on hover with a mouse, always on touchscreens.
   ball.append(h('span', { class: 'circle-hint hint-mouse', 'aria-hidden': 'true' }, 'Open a file'), h('span', { class: 'circle-hint hint-touch', 'aria-hidden': 'true' }, 'Tap to open'));
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;

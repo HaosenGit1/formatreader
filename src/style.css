@@ -1577,7 +1577,7 @@ html.fr-immersive .site-header {
   }
 }
 
-/* ---- Crystal ball (preview: ?ball=crystal) ----
+/* ---- Crystal ball (the default; ?ball=classic shows the earlier midnight-blue ball) ----
    Clear glass over the video: a soft refraction blur, a slowly swirling gold-and-blue
    light inside, a bright window highlight on top and a warm caustic glow at the bottom. */
 .promo-crystal .circle {
