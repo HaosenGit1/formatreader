@@ -1,11 +1,10 @@
-import { infoView, messageView } from '../../../core/info-view';
+import { infoView } from '../../../core/info-view';
 import { strings } from '../../../core/i18n';
 import type { OpenedView } from '../../../core/viewer';
 import { TextSource } from './text-source';
 import { nextPaint, readWithProgress, type Progress } from '../../../core/progress';
 
 const s = strings({
-  empty: { en: 'This file is empty.', zh: '这个文件是空的。' },
   reading: { en: 'Reading the file…', zh: '正在读取文件…' },
   detecting: { en: 'Recognising the text encoding…', zh: '正在识别文字编码…' },
 });
@@ -45,10 +44,8 @@ export async function readText(file: File, mount: HTMLElement, reopen?: () => vo
     await nextPaint();
   }
   const bytes = part ? wholeLines(new Uint8Array(raw), part === 'end') : new Uint8Array(raw);
-  if (bytes.length === 0) {
-    mount.replaceChildren(messageView(file.name, s('empty')));
-    return {};
-  }
+  // An empty file opens blank, so it can be edited (and saved as a copy) like any other.
+  if (bytes.length === 0) return TextSource.empty();
   const src = await TextSource.fromBytes(bytes);
   if (!src) {
     mount.replaceChildren(infoView(file.size, bytes.subarray(0, 64 * 1024), null));

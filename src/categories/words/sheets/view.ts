@@ -251,7 +251,8 @@ export const preload = () => (import.meta.env.MODE === 'portable' ? import('xlsx
 
 export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   const ext = extOf(file.name);
-  if (DELIMITED_EXT.has(ext)) return openDelimited(file, ctx);
+  // An empty file (any table extension) opens as an empty table you can type into.
+  if (DELIMITED_EXT.has(ext) || file.size === 0) return openDelimited(file, ctx);
   // Many systems (banks, ERPs) save tab-separated text and call it .xls: read it as text, with
   // encoding detection (GBK, Big5, Shift-JIS…), instead of guessing Western encoding.
   if (/^xls[xmb]?$/.test(ext) && isPlainTable(new Uint8Array(await file.slice(0, 4096).arrayBuffer()))) return openDelimited(file, ctx);

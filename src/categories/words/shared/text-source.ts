@@ -63,6 +63,7 @@ const s = strings({
   partialEnd: { en: 'This file is very large ({total}): the last {shown} are shown (the newest lines of a log).', zh: '这个文件非常大（{total}）：这里显示最后 {shown}（日志中最新的部分）。' },
   showEnd: { en: 'Show the end instead', zh: '改为显示末尾' },
   showStart: { en: 'Show the beginning instead', zh: '改为显示开头' },
+  emptyFile: { en: 'This file is empty. Press “Edit” to write in it — your text is saved as a new copy.', zh: '这个文件是空的。点击“编辑”即可输入内容——会另存为新副本。' },
   showRepaired: { en: 'Show repaired', zh: '查看修复后' },
 });
 
@@ -94,6 +95,11 @@ export class TextSource {
     this.decodeEnabled = true;
     this.decoded = this.repair ? null : decodeEscapes(this.raw);
     return this;
+  }
+
+  /** A file with no bytes: shown blank and editable (the copy is saved as UTF-8). */
+  static empty(): TextSource {
+    return new TextSource(new Uint8Array(0), null, 'utf-8', '', null);
   }
 
   /** Returns null when the bytes are binary, not text. */
@@ -191,6 +197,7 @@ export class TextSource {
       const text = s(p.part === 'end' ? 'partialEnd' : 'partialStart').replace('{shown}', formatBytes(p.shown)).replace('{total}', formatBytes(p.total));
       out.push(h('div', { class: 'notice' }, text, p.toggle ? ' ' : '', p.toggle ? h('button', { type: 'button', class: 'link', onclick: p.toggle }, s(p.part === 'end' ? 'showStart' : 'showEnd')) : null));
     }
+    if (this.bytes && !this.bytes.length) out.push(h('div', { class: 'notice subtle' }, s('emptyFile')));
     const destroyed = destroyedKind(this.raw);
     if (destroyed) out.push(h('div', { class: 'notice warn' }, s(destroyed === 'lost' ? 'destroyedLost' : 'destroyedMemory')));
     if (qLost) out.push(h('div', { class: 'notice warn' }, s('questionLoss').replace('{n}', qLost.toLocaleString())));

@@ -51,7 +51,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
     }
     let text = src.text;
     jsonError = null;
-    if (kind.json === 'document' && text.length < PRETTY_LIMIT) {
+    if (kind.json === 'document' && text.length < PRETTY_LIMIT && text.trim()) {
       try {
         text = JSON.stringify(JSON.parse(text), null, 2);
       } catch (e) {

@@ -1,0 +1,104 @@
+.view-pcap {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 420px;
+  font-size: 13px;
+}
+
+.pc-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.pc-chips {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pc-chip {
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.pc-chip.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.pc-filter {
+  width: 280px;
+  max-width: 100%;
+}
+
+.pc-wrap {
+  flex: 1;
+  min-height: 160px;
+  overflow: auto;
+}
+
+.pc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+
+.pc-table th {
+  position: sticky;
+  top: 0;
+  padding: 5px 8px;
+  background: var(--surface-2);
+  text-align: left;
+}
+
+.pc-table td {
+  padding: 3px 8px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.pc-table td.num {
+  text-align: right;
+}
+
+.pc-table tbody tr {
+  cursor: pointer;
+}
+
+.pc-table tbody tr:hover,
+.pc-table tr.sel {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.pc-note {
+  margin: 0;
+  padding: 0 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.pc-note:empty {
+  display: none;
+}
+
+.pc-hex {
+  max-height: 34%;
+  margin: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 12px;
+}

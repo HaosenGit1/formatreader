@@ -189,6 +189,9 @@ function fromMagic(h: Uint8Array, ext: string): FormatInfo | null {
   if (h[0] === 0xd7 && h[1] === 0xcd && h[2] === 0xc6 && h[3] === 0x9a) return F('wmf', 'Windows metafile (WMF)', 'images');
   if (ext === 'wmf' && (h[0] === 1 || h[0] === 2) && h[1] === 0 && h[2] === 9 && h[3] === 0) return F('wmf', 'Windows metafile (WMF)', 'images');
   if (ascii(h, 0, 6) === '(DWF V') return F('dwf', 'DWF drawing (Autodesk)', 'drawings');
+  // Network captures: pcap (µs / ns, either byte order) and pcapng.
+  if ([0xa1b2c3d4, 0xd4c3b2a1, 0xa1b23c4d, 0x4d3cb2a1].includes(((h[0] << 24) | (h[1] << 16) | (h[2] << 8) | h[3]) >>> 0)) return F('pcap', 'Network capture (pcap)', 'data');
+  if (h[0] === 0x0a && h[1] === 0x0d && h[2] === 0x0d && h[3] === 0x0a) return F('pcap', 'Network capture (pcapng)', 'data');
   if (ascii(h, 0, 3) === 'FLV') return F('flv', 'Flash video', 'videos');
   if (ascii(h, 0, 4) === '.RMF') return ext === 'ra' ? F('ra', 'RealAudio', 'sounds') : F('rmvb', 'RealMedia video', 'videos');
   if (startsWith(h, [0, 0, 1, 0xba]) || startsWith(h, [0, 0, 1, 0xb3])) return F('mpg', 'MPEG video', 'videos');

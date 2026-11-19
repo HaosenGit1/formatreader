@@ -56,7 +56,11 @@ export function encodeLike(text: string, f: TextFormat): Uint8Array | null {
 }
 
 /** "report.csv" → "report (edited).csv". */
-export function copyName(name: string): string {
+/** Formats whose real files are not plain text: a copy typed into an empty one is saved as .txt / .csv. */
+const RICH_EXT = /\.(docx?|docm|dotx?|odt|rtf|wps|pages|xlsx?|xlsm|xlsb|xltx|ods|et|numbers|pptx?|odp|key|pdf|epub)$/i;
+
+export function copyName(name: string, empty = false, table = false): string {
+  if (empty && RICH_EXT.test(name)) return `${name.replace(RICH_EXT, '')} (edited).${table ? 'csv' : 'txt'}`;
   const dot = name.lastIndexOf('.');
   return dot > 0 ? `${name.slice(0, dot)} (edited)${name.slice(dot)}` : `${name || 'text'} (edited).txt`;
 }

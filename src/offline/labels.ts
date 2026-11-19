@@ -36,4 +36,5 @@ export const VIEWER_LABELS: Record<string, { en: string; zh: string; ext: string
   'archives/archive': { en: 'Archives', zh: '压缩包', ext: '.zip .7z .rar .tar .xz .iso …' },
   'archives/gzip': { en: 'GZIP', zh: 'GZIP', ext: '.gz' },
   'data/comtrade': { en: 'COMTRADE fault records', zh: 'COMTRADE 故障录波', ext: '.cfg + .dat, .cff' },
+  'data/pcap': { en: 'Network captures', zh: '网络抓包', ext: '.pcap .pcapng' },
 };

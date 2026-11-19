@@ -121,7 +121,7 @@ export function editing(o: EditOptions): Editing {
       f = { ...f, encoding: 'utf-8', bom: true };
       bytes = encodeLike(text, f)!;
     }
-    const name = copyName(o.name || 'pasted.txt');
+    const name = copyName(o.name || 'pasted.txt', o.src.bytes?.length === 0, o.mode === 'table');
     downloadCopy(bytes, name, o.mode === 'table' ? 'text/csv' : 'text/plain');
     dirty = false;
     lastSaved = name;
@@ -141,7 +141,7 @@ export function editing(o: EditOptions): Editing {
     notice: () => {
       if (!active) return null;
       if (message) return message;
-      const text = s('editing').replace('{name}', copyName(o.name || 'pasted.txt')).replace('{enc}', encName());
+      const text = s('editing').replace('{name}', copyName(o.name || 'pasted.txt', o.src.bytes?.length === 0, o.mode === 'table')).replace('{enc}', encName());
       return h('div', { class: 'notice subtle' }, repaired ? `${text} ${s('repairedNote')}` : text);
     },
     unsaved: () => active && dirty,

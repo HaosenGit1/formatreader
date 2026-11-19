@@ -7,6 +7,15 @@ import { looksLikeCfg } from './comtrade/detect';
 
 export const dataViewers: ViewerEntry[] = [
   {
+    // Network captures (Wireshark / tcpdump): pcap and pcapng.
+    id: 'data/pcap',
+    category: 'data',
+    layout: 'fill',
+    mimes: /pcap|tcpdump/,
+    accepts: ({ format }) => format?.id === 'pcap',
+    load: () => import('./pcap/view'),
+  },
+  {
     id: 'data/comtrade',
     category: 'data',
     accepts: ({ format, ext, head }) =>

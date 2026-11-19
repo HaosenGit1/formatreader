@@ -77,7 +77,10 @@ const VIDEOS = [
   { name: t('AVI from cameras, CCTV & dashcams (MJPEG, H.264)', '相机、监控和行车记录仪的 AVI（MJPEG、H.264）'), viewer: 'videos/video', ext: ['avi'] },
 ];
 
-const DATA = [{ name: t('COMTRADE fault records', 'COMTRADE 故障录波'), viewer: 'data/comtrade', ext: ['cfg', 'dat', 'cff'] }];
+const DATA = [
+  { name: t('COMTRADE fault records', 'COMTRADE 故障录波'), viewer: 'data/comtrade', ext: ['cfg', 'dat', 'cff'] },
+  { name: t('Network captures (Wireshark, tcpdump) — Modbus, IEC 104, DNP3, GOOSE named', '网络抓包（Wireshark、tcpdump）——标出 Modbus、IEC 104、DNP3、GOOSE'), viewer: 'data/pcap', ext: ['pcap', 'pcapng'] },
+];
 
 const ARCHIVES = [
   { name: t('Archives', '压缩包'), viewer: 'archives/archive', ext: ['zip', '7z', 'rar', 'tar', 'tgz', 'xz', 'bz2', 'zst', 'cab', 'iso'] },
@@ -88,7 +91,7 @@ const COMING = [
   { name: t('More images', '更多图片'), ext: ['jxl', 'jp2', 'dds', 'ktx2'] },
   { name: t('More audio & video, DivX/Xvid AVI (details only for now)', '更多音视频、DivX/Xvid 的 AVI（暂只显示信息）'), ext: ['wma', 'ape', 'amr', 'mid', 'wmv', 'rmvb', 'mpg'] },
 
-  { name: t('System logs', '系统日志'), ext: ['evtx', 'plist', 'journal', 'pcap'] },
+  { name: t('System logs', '系统日志'), ext: ['evtx', 'plist', 'journal'] },
   { name: t('More documents & data', '更多文档和数据'), ext: ['chm', 'djvu', 'parquet', 'h5', 'mat', 'pst'] },
 ];
 
