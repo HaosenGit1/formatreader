@@ -165,7 +165,12 @@ export function formatsHtml(root = process.cwd()) {
             (g) => `
         <div class="fmt-group">
           <div class="fmt-name">${both(g.name)}</div>
-          <div class="fmt-exts">${g.ext.map((e) => (mark(g, e) ? `<span class="fmt-ext fmt-edit" title="Basic editing · 可编辑">.${esc(e)} ✏️</span>` : `<span class="fmt-ext">.${esc(e)}</span>`)).join('')}</div>
+          <div class="fmt-exts">${g.ext.map((e) => {
+            // Supported formats link to their "How to open" page (/open/<ext>).
+            const tag = c.coming || !/^[a-z0-9]{1,10}$/.test(e) ? 'span' : 'a';
+            const href = tag === 'a' ? ` href="/open/${esc(e)}"` : '';
+            return mark(g, e) ? `<${tag} class="fmt-ext fmt-edit"${href} title="Basic editing · 可编辑">.${esc(e)} ✏️</${tag}>` : `<${tag} class="fmt-ext"${href}>.${esc(e)}</${tag}>`;
+          }).join('')}</div>
         </div>`,
           )
           .join('')}
