@@ -18,7 +18,7 @@ const s = strings({
   tagline: { en: 'Driving a renewable future', zh: '驱动可再生未来' },
   more: { en: 'Learn more', zh: '了解更多' },
   label: { en: 'Goldwind Americas website (opens in a new tab)', zh: '金风科技美洲官网（在新标签页打开）' },
-  tag: { en: 'Sponsored', zh: 'Sponsored' }, // English for everyone, like the slogan
+  tag: { en: 'Ad space available', zh: 'Ad space available' }, // 广告招租 — English for everyone, like the slogan
 });
 
 /** No visible button: a link only screen readers see (the video itself is the visible link). */
