@@ -15,6 +15,8 @@ import { detectFormat, extOf } from './detect-format';
 import { withReadProgress } from './progress';
 import { loadingInfo } from './loading-info';
 import { formatBytes, h } from './dom';
+import { device } from './device';
+import { limit as sizeLimit } from './limits';
 import { lang, onLangChange, setLang, strings } from './i18n';
 import { infoEntry } from './info-entry';
 import { feedbackLink, promoBar, startPromoVideo } from './promo';
@@ -45,6 +47,7 @@ const s = strings({
   heavyTitle: { en: 'This file is very large', zh: '这个文件非常大' },
   heavyText: { en: '“{name}” is {size}. Files of this kind above about {limit} usually don’t fit in a browser’s memory{phone}: the page may stop responding or close.', zh: '“{name}”有 {size}。这类文件超过约 {limit} 时，通常超出浏览器的内存{phone}：页面可能会卡住或关闭。' },
   heavyPhone: { en: ' on a phone', zh: '（手机上）' },
+  heavyTablet: { en: ' on a tablet', zh: '（平板上）' },
   tryAnyway: { en: 'Try anyway', zh: '仍然尝试' },
   elsewhere: { en: 'How to open it elsewhere', zh: '在其他软件中怎么打开' },
   memoryTitle: { en: 'Too big for this browser’s memory', zh: '超出了浏览器的内存' },
@@ -81,7 +84,6 @@ interface Current {
   format: OpenContext['format'];
 }
 
-const isPhone = () => /iPhone|iPad|Android/i.test(navigator.userAgent) || ((navigator as { deviceMemory?: number }).deviceMemory ?? 8) <= 4;
 
 /** A file whose opening never finished (the tab ran out of memory and was closed), from the last visit. */
 const OPENING_KEY = 'formatreader-opening';
@@ -332,7 +334,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
   }
 
   /** Asks before opening a file beyond what its kind usually fits in a browser. */
-  function heavyWarning(mount: HTMLElement, name: string, size: number, limit: number, phone: boolean, format: OpenContext['format'], viewerId: string): Promise<boolean> {
+  function heavyWarning(mount: HTMLElement, name: string, size: number, limit: number, where: string, format: OpenContext['format'], viewerId: string): Promise<boolean> {
     return new Promise((resolve) => {
       const guide = h('div', { class: 'heavy-guide' });
       const card = h(
@@ -342,7 +344,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
           'div',
           { class: 'info-card heavy-card' },
           h('h2', {}, s('heavyTitle')),
-          h('p', { class: 'info-note' }, s('heavyText').replace('{name}', name).replace('{size}', formatBytes(size)).replace('{limit}', formatBytes(limit)).replace('{phone}', phone ? s('heavyPhone') : '')),
+          h('p', { class: 'info-note' }, s('heavyText').replace('{name}', name).replace('{size}', formatBytes(size)).replace('{limit}', formatBytes(limit)).replace('{phone}', where)),
           h(
             'div',
             { class: 'heavy-buttons' },
@@ -377,12 +379,13 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     app.replaceChildren(header(), page, cover);
 
     // Beyond what this kind of file usually fits in a browser: warn first, the user may still try.
-    const phone = isPhone();
+    // The viewer names its heavy size for a computer; limits.ts scales it for phones and tablets.
     const heavy = size >= 0 ? entry.heavyAbove?.(format) : undefined;
-    const limit = heavy && (phone ? heavy / 4 : heavy);
+    const limit = heavy && Math.max(sizeLimit('small'), heavy * sizeLimit('heavyScale'));
     if (limit && size > limit) {
       cover.remove();
-      const go = await heavyWarning(mount, name, size, limit, phone, format, entry.id);
+      const kind = device().kind;
+      const go = await heavyWarning(mount, name, size, limit, kind === 'phone' ? s('heavyPhone') : kind === 'tablet' ? s('heavyTablet') : '', format, entry.id);
       if (my !== token) return;
       if (!go) return goHome();
       app.append(cover);

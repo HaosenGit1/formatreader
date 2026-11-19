@@ -3,7 +3,7 @@ import { readSheets } from './sheet-job';
 
 const post = (m: unknown, t: Transferable[] = []) => (self as unknown as Worker).postMessage(m, t);
 
-self.onmessage = async (e: MessageEvent<{ data: ArrayBuffer; ext: string; password?: string }>) => {
+self.onmessage = async (e: MessageEvent<{ data: ArrayBuffer; ext: string; password?: string; rows?: number }>) => {
   try {
     await readSheets(
       e.data.data,
@@ -12,6 +12,7 @@ self.onmessage = async (e: MessageEvent<{ data: ArrayBuffer; ext: string; passwo
       (sheets) => post({ sheets }),
       (chunk) => post({ chunk }, [chunk.flags.buffer]),
       e.data.password,
+      e.data.rows,
     );
     post({ ok: true, result: null });
   } catch (err) {

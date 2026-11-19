@@ -59,9 +59,12 @@ const s = strings({
     zh: '“烫烫烫”“屯屯屯”不是文字，而是程序错误写出的空白内存（Visual C++ 调试版本会用这些字节填充内存）。这里没有可恢复的内容。',
   },
   showDecoded: { en: 'Show decoded', zh: '查看解码后' },
-  partialStart: { en: 'This file is very large ({total}): browsers can’t show it all at once, so the first {shown} are shown.', zh: '这个文件非常大（{total}）：浏览器无法一次显示全部，这里显示前 {shown}。' },
-  partialEnd: { en: 'This file is very large ({total}): the last {shown} are shown (the newest lines of a log).', zh: '这个文件非常大（{total}）：这里显示最后 {shown}（日志中最新的部分）。' },
+  partialStart: { en: 'Large file ({total}): only the first {shown} are shown, so it opens quickly.', zh: '大文件（{total}）：为了打开得快，只显示了前 {shown}。' },
+  partialEnd: { en: 'Large file ({total}): only the last {shown} are shown (the newest lines of a log).', zh: '大文件（{total}）：只显示了最后 {shown}（日志中最新的部分）。' },
   showEnd: { en: 'Show the end instead', zh: '改为显示末尾' },
+  partialMax: { en: 'Large file ({total}): the first {shown} are shown — as much as this device can safely hold. On a computer you can see more.', zh: '大文件（{total}）：显示了前 {shown}——这是这台设备能安全容纳的最大量。在电脑上可以看到更多。' },
+  loadAll: { en: 'Load the whole file', zh: '加载完整文件' },
+  loadMore: { en: 'Load more (the first {max})', zh: '加载更多（前 {max}）' },
   showStart: { en: 'Show the beginning instead', zh: '改为显示开头' },
   emptyFile: { en: 'This file is empty. Press “Edit” to write in it — your text is saved as a new copy.', zh: '这个文件是空的。点击“编辑”即可输入内容——会另存为新副本。' },
   showRepaired: { en: 'Show repaired', zh: '查看修复后' },
@@ -81,7 +84,7 @@ export class TextSource {
   ) {}
 
   /** Set when only part of a very large file is shown. */
-  partial: { part: 'start' | 'end'; shown: number; total: number; toggle?: () => void } | null = null;
+  partial: { part: 'start' | 'end' | 'full'; shown: number; total: number; toggle?: () => void; more?: { all: boolean; upTo: number; load: () => void } } | null = null;
 
   /** Escapes/Base64 decoding: only viewers meant for reading text turn this on. */
   private decodeEnabled = false;
@@ -194,8 +197,11 @@ export class TextSource {
     const qLost = this.questionLost();
     if (this.partial) {
       const p = this.partial;
-      const text = s(p.part === 'end' ? 'partialEnd' : 'partialStart').replace('{shown}', formatBytes(p.shown)).replace('{total}', formatBytes(p.total));
-      out.push(h('div', { class: 'notice' }, text, p.toggle ? ' ' : '', p.toggle ? h('button', { type: 'button', class: 'link', onclick: p.toggle }, s(p.part === 'end' ? 'showStart' : 'showEnd')) : null));
+      const text = s(p.part === 'end' ? 'partialEnd' : p.more ? 'partialStart' : 'partialMax').replace('{shown}', formatBytes(p.shown)).replace('{total}', formatBytes(p.total));
+      const more = p.more ? h('button', { type: 'button', class: 'link', onclick: p.more.load }, p.more.all ? s('loadAll') : s('loadMore').replace('{max}', formatBytes(p.more.upTo))) : null;
+      out.push(
+        h('div', { class: 'notice' }, text, more ? ' ' : '', more, p.toggle ? ' · ' : '', p.toggle ? h('button', { type: 'button', class: 'link', onclick: p.toggle }, s(p.part === 'end' ? 'showStart' : 'showEnd')) : null),
+      );
     }
     if (this.bytes && !this.bytes.length) out.push(h('div', { class: 'notice subtle' }, s('emptyFile')));
     const destroyed = destroyedKind(this.raw);

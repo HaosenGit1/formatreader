@@ -15,6 +15,7 @@ import { runWorker } from '../../../core/progress';
 import { drawingExtent as drawingExtentOf } from './drawings';
 import { layDrawings } from './drawings-layer';
 import { parseDelimited, sniffDelimiter } from './delimited';
+import { limit } from '../../../core/limits';
 
 const s = strings({
   rows: { en: 'rows', zh: '行' },
@@ -26,6 +27,8 @@ const s = strings({
   passwordLabel: { en: 'Password', zh: '密码' },
   unlock: { en: 'Open', zh: '打开' },
   wrongPassword: { en: 'That password is not right.', zh: '密码不正确。' },
+  firstRows: { en: 'Large workbook: only the first {n} rows of each sheet are read on this device, so it opens smoothly.', zh: '大工作簿：在这台设备上每个工作表只读取前 {n} 行，以便流畅打开。' },
+  allRows: { en: 'Load all rows', zh: '加载全部行' },
   stepParse: { en: 'Reading the workbook…', zh: '正在读取工作簿…' },
   stepRows: { en: 'Preparing rows…', zh: '正在准备数据行…' },
   partial: { en: 'Formulas show their saved results (hover a cell to see the formula).', zh: '公式显示保存时的结果（鼠标悬停可查看公式）。' },
@@ -98,8 +101,13 @@ async function openDelimited(file: File, ctx: OpenContext): Promise<OpenedView> 
 /** Formats that may store text in legacy code pages (need SheetJS's code-page tables). */
 
 
+/** Workbooks the user asked to read in full (kept while the page is open). */
+const allRows = new WeakSet<File>();
+
 async function openWorkbook(file: File, ctx: OpenContext, password?: string): Promise<OpenedView> {
   const ext = extOf(file.name);
+  // Large workbook on a phone or tablet: read only the first rows of each sheet (core/limits.ts).
+  const rowCap = !allRows.has(file) && file.size > limit('sheetPreview') ? limit('sheetPreviewRows') : 0;
   const data = await file.arrayBuffer();
   // Read in the background (website) or on the page (portable file), rows arriving in chunks.
   let infos: SheetInfo[] = [];
@@ -115,10 +123,10 @@ async function openWorkbook(file: File, ctx: OpenContext, password?: string): Pr
   try {
     if (import.meta.env.MODE === 'portable') {
       const { readSheets } = await import('./sheet-job');
-      await readSheets(data, ext, report, onInfo, onChunk, password);
+      await readSheets(data, ext, report, onInfo, onChunk, password, rowCap);
     } else {
       const { startSheetWorker } = await import('./sheet-worker-host');
-      await runWorker(startSheetWorker(), { data, ext, password }, [data], (step, f) => report(step as 'parse' | 'rows', f), ctx.signal, (m) => {
+      await runWorker(startSheetWorker(), { data, ext, password, rows: rowCap }, [data], (step, f) => report(step as 'parse' | 'rows', f), ctx.signal, (m) => {
         const msg = m as { sheets?: SheetInfo[]; chunk?: RowChunk };
         if (msg.sheets) onInfo(msg.sheets);
         if (msg.chunk) onChunk(msg.chunk);
@@ -212,7 +220,12 @@ async function openWorkbook(file: File, ctx: OpenContext, password?: string): Pr
       ...(names.length > 1 ? [`${names.length} ${s('sheets')}`] : []),
       `${formatCount(size.rows)} ${s('rows')} × ${size.cols} ${s('columns')}`,
     ],
-    notices: () => [h('div', { class: 'notice subtle' }, drawings?.bySheet.size ? s('drawn') : /^(xlsx|xlsm|xltx|xltm)$/.test(ext) ? s('partial') : s('partialOld'))],
+    notices: () => [
+      ...(rowCap
+        ? [h('div', { class: 'notice' }, s('firstRows').replace('{n}', formatCount(rowCap)), ' ', h('button', { type: 'button', class: 'link', onclick: () => (allRows.add(file), ctx.openFile(file, { replace: true })) }, s('allRows')))]
+        : []),
+      h('div', { class: 'notice subtle' }, drawings?.bySheet.size ? s('drawn') : /^(xlsx|xlsm|xltx|xltm)$/.test(ext) ? s('partial') : s('partialOld')),
+    ],
     destroy: () => {
       undraw();
       drawings?.revoke();

@@ -2,6 +2,7 @@ import { infoView } from '../../../core/info-view';
 import { strings } from '../../../core/i18n';
 import type { OpenedView } from '../../../core/viewer';
 import { TextSource } from './text-source';
+import { limit } from '../../../core/limits';
 import { nextPaint, readWithProgress, type Progress } from '../../../core/progress';
 
 const s = strings({
@@ -10,15 +11,17 @@ const s = strings({
 });
 
 /**
- * Browsers can't hold more than about 500 million characters as one text, and big texts use
- * a lot of memory: larger files show one part (the start, or the end — where the newest log
- * lines are) with a notice. Phones get a smaller part.
+ * Big texts use a lot of memory, and browsers can't hold more than about 500 million
+ * characters as one text. So (sizes per device in core/limits.ts):
+ *  - small files are read whole, as always;
+ *  - large ones show their first part at once, with "Load the whole file" when the device
+ *    can hold it, or "Show the end instead" (the newest lines of a log);
+ *  - nothing beyond `textMax` is read on this device, even on request.
  */
-const isPhone = () => /iPhone|iPad|Android/i.test(navigator.userAgent) || (navigator as { deviceMemory?: number }).deviceMemory! <= 4;
-export const textLimit = () => (isPhone() ? 64 : 256) * 1024 * 1024;
+type Part = 'start' | 'end' | 'full';
 
 /** Which part of each large file the user chose to see (kept while the page is open). */
-const partChoice = new WeakMap<File, 'start' | 'end'>();
+const partChoice = new WeakMap<File, Part>();
 
 /** Cut at a line break so no line (or multi-byte character) is split. */
 function wholeLines(b: Uint8Array, fromEnd: boolean): Uint8Array {
@@ -35,9 +38,12 @@ function wholeLines(b: Uint8Array, fromEnd: boolean): Uint8Array {
  * a ready view explaining that instead (so every text viewer behaves alike).
  */
 export async function readText(file: File, mount: HTMLElement, reopen?: () => void, progress?: Progress): Promise<TextSource | OpenedView> {
-  const limit = textLimit();
-  const part = file.size > limit ? (partChoice.get(file) ?? 'start') : null;
-  const blob = part ? file.slice(part === 'end' ? file.size - limit : 0, part === 'end' ? file.size : limit) : file;
+  const max = limit('textMax');
+  const choice = partChoice.get(file);
+  const whole = choice === 'full' || file.size <= limit('textPreview');
+  const readSize = whole ? Math.min(file.size, max) : Math.min(file.size, max, limit('textPreviewPart'));
+  const part: Part | null = readSize >= file.size ? null : choice === 'end' ? 'end' : 'start';
+  const blob = part ? file.slice(part === 'end' ? file.size - readSize : 0, part === 'end' ? file.size : readSize) : file;
   const raw = progress && blob.size > 8 * 1024 * 1024 ? await readWithProgress(blob, (f) => progress(s('reading'), f)) : await blob.arrayBuffer();
   if (progress && raw.byteLength > 8 * 1024 * 1024) {
     progress(s('detecting'));
@@ -62,6 +68,11 @@ export async function readText(file: File, mount: HTMLElement, reopen?: () => vo
             reopen();
           }
         : undefined,
+      // Only a preview so far, and this device can hold more: offer to read it all (up to textMax).
+      more:
+        reopen && readSize < Math.min(file.size, max)
+          ? { all: file.size <= max, upTo: max, load: () => (partChoice.set(file, 'full'), reopen()) }
+          : undefined,
     };
   }
   return src;

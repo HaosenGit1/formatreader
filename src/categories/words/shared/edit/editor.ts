@@ -9,6 +9,7 @@
  */
 import './edit.css';
 import { h } from '../../../../core/dom';
+import { limit } from '../../../../core/limits';
 import { strings } from '../../../../core/i18n';
 import type { TextSource } from '../text-source';
 import { rebuild, records, type Record } from './csv';
@@ -31,7 +32,8 @@ const s = strings({
   tableTooBig: { en: 'Large table: edited as text.', zh: '表格较大：以文本方式编辑。' },
 });
 
-export const EDIT_LIMIT = 20 * 1024 * 1024;
+/** Editing is offered up to this size on this device (core/limits.ts). */
+export const editLimit = () => limit('edit');
 const TABLE_LIMIT = 5000;
 
 export interface EditOptions {
@@ -56,7 +58,7 @@ export interface Editing {
 
 /** Is this source editable here? (shown in full, not too large) */
 export function canEdit(src: TextSource): boolean {
-  return !src.partial && (src.bytes?.length ?? src.text.length) <= EDIT_LIMIT;
+  return !src.partial && (src.bytes?.length ?? src.text.length) <= editLimit();
 }
 
 export function editing(o: EditOptions): Editing {

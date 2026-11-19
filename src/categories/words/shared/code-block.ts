@@ -2,11 +2,13 @@
 import './code-block.css';
 import { formatCount, h, renderProgressively } from '../../../core/dom';
 import { strings } from '../../../core/i18n';
+import { limit } from '../../../core/limits';
 
 const s = strings({ lines: { en: 'lines', zh: '行' } });
 
 /** Above this size we skip syntax highlighting (it would be slow and adds little). */
-const HIGHLIGHT_LIMIT = 400 * 1024;
+/** Syntax colours up to this size on this device (core/limits.ts); bigger code is shown plain. */
+const highlightLimit = () => limit('highlight');
 
 // ---------------------------------------------------------------------------
 // Syntax highlighting (highlight.js core + only the language that is needed)
@@ -73,7 +75,7 @@ const escapeHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;')
 export async function codeView(text: string, language: string): Promise<HTMLElement> {
   let htmlLines: string[];
   // Colours are optional: if the highlighter can't be loaded (e.g. offline), show plain code.
-  const hljs = text.length <= HIGHLIGHT_LIMIT && language !== 'plaintext' ? await highlighter(language).catch(() => null) : null;
+  const hljs = text.length <= highlightLimit() && language !== 'plaintext' ? await highlighter(language).catch(() => null) : null;
   if (hljs) {
     htmlLines = splitHighlightedLines(hljs.highlight(text, { language, ignoreIllegals: true }).value);
   } else {
@@ -100,7 +102,7 @@ export async function codeView(text: string, language: string): Promise<HTMLElem
 /** A highlighted block without line numbers (e.g. a notebook cell). */
 export async function highlightBlock(text: string, language: string): Promise<HTMLElement> {
   const code = h('code', { class: 'hljs', dir: 'ltr' });
-  const hljs = text.length <= HIGHLIGHT_LIMIT ? await highlighter(language) : null;
+  const hljs = text.length <= highlightLimit() ? await highlighter(language) : null;
   if (hljs) code.innerHTML = hljs.highlight(text, { language, ignoreIllegals: true }).value;
   else code.textContent = text;
   return h('pre', { class: 'code-plain' }, code);
