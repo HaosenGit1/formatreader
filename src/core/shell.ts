@@ -17,6 +17,7 @@ import { loadingInfo } from './loading-info';
 import { formatBytes, h } from './dom';
 import { lang, onLangChange, setLang, strings } from './i18n';
 import { infoEntry } from './info-entry';
+import { promoBar, startPromoVideo } from './promo';
 import { messageView } from './info-view';
 import { assertUniqueIds, pickViewer, withTrials } from './registry';
 import type { OpenContext, OpenedView, ViewerEntry, ViewerModule } from './viewer';
@@ -157,7 +158,16 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
       h('button', { class: 'brand', type: 'button', onclick: goHome }, h('span', { class: 'brand-mark', 'aria-hidden': 'true' }, 'F'), h('span', { class: 'brand-name' }, 'FormatReader')),
     );
 
-  const landing = () =>
+  const landing = () => {
+    const main = landingMain();
+    // Sponsor (website only; the portable file stays offline and self-contained).
+    if (import.meta.env.MODE !== 'portable') {
+      main.append(promoBar());
+      startPromoVideo(main);
+    }
+    return main;
+  };
+  const landingMain = () =>
     h(
       'main',
       { class: 'landing' },

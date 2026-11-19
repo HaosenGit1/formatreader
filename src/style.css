@@ -1055,3 +1055,91 @@ html.fr-immersive .site-header {
   flex: 1;
   margin: 0;
 }
+
+/* --------------------------------------------- front-page sponsor (Goldwind Americas) */
+.landing {
+  position: relative;
+  isolation: isolate;
+}
+
+.promo-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.8s;
+  pointer-events: none;
+}
+
+.promo-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgb(0 0 0 / 0.45), rgb(0 0 0 / 0.55));
+}
+
+.promo-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.promo-on .promo-bg {
+  opacity: 1;
+}
+
+.promo-on .circle {
+  border-color: rgb(255 255 255 / 0.7);
+  color: #fff;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.5);
+}
+
+.promo-on .circle:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+
+.promo-on .foot-link {
+  color: rgb(255 255 255 / 0.85);
+}
+
+.promo-bar {
+  position: fixed;
+  bottom: 56px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 32px);
+  padding: 7px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  color: var(--fg);
+  font-size: 13px;
+  text-decoration: none;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+}
+
+.promo-line {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.promo-more {
+  flex: none;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.promo-bar:hover .promo-more {
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .promo-tagline {
+    display: none;
+  }
+}
