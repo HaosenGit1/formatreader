@@ -120,21 +120,34 @@ select {
 }
 
 .brand-mark {
+  /* Midnight medallion with a gold ring and a gold serif F — the same style as the ball. */
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: var(--accent);
-  color: var(--accent-fg);
-  font-weight: 800;
-  font-size: 16px;
+  width: 32px;
+  height: 32px;
+  padding-top: 1px;
+  border: 1.5px solid #c9a96e;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #1e2e4c, #070d1a);
+  box-shadow: 0 0 0 3px rgb(201 169 110 / 0.15);
+  color: #e6cd98;
+  font-family: 'Cormorant Garamond', Didot, 'Bodoni 72', 'Times New Roman', serif;
+  font-weight: 500;
+  font-size: 19px;
 }
 
 .brand-name {
-  font-weight: 700;
-  font-size: 17px;
-  letter-spacing: -0.01em;
+  color: #14203a;
+  font-family: 'Cormorant Garamond', Didot, 'Bodoni 72', 'Times New Roman', serif;
+  font-weight: 500;
+  font-size: 21px;
+  letter-spacing: 0.03em;
+}
+
+@media (prefers-color-scheme: dark) {
+  .brand-name {
+    color: #efe5cf;
+  }
 }
 
 
