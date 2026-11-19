@@ -22,6 +22,8 @@ const s = strings({
   },
   audioOnly: { en: 'This file has sound only, no picture.', zh: '这个文件只有声音，没有画面。' },
   appOnly: { en: 'This is the encrypted download format of the {app} app: no browser or other player can open it. Play it in the {app} app, or use the app’s export / convert function to save it as MP4.', zh: '这是{app}客户端的加密下载格式，浏览器和其他播放器都打不开。请在{app}客户端里播放，或用客户端的“导出/转码”功能另存为 MP4。' },
+  exoOnly: { en: 'This is an offline download saved inside an Android app (YouTube and other apps built on ExoPlayer). It is encrypted for that app and phone: no browser or other player can open it. Play it in the app that downloaded it.', zh: '这是安卓 App 内保存的离线下载（YouTube 等基于 ExoPlayer 的 App）。它为该 App 和手机加密，浏览器和其他播放器都打不开，请在下载它的 App 里播放。' },
+  amrSound: { en: 'The sound is AMR (old-phone / voice-recorder audio), which browsers can’t play, so the video is silent here. VLC plays it with sound.', zh: '声音是 AMR 格式（旧手机/录音常用），浏览器无法播放，所以这里没有声音。用 VLC 播放可以听到声音。' },
   companion: { en: 'Playing with its sound from {name} (saved separately, as B站 does).', zh: '同时播放单独保存的声音 {name}（B站缓存就是这样分开保存的）。' },
 });
 
@@ -43,9 +45,11 @@ const VIDEO_CODECS: Array<[RegExp, string]> = [
   [/mp4v|V_MPEG4\/ISO\/(SP|ASP)|xvid|divx/i, 'MPEG-4 Part 2'],
   [/theora/i, 'Theora'],
   [/wmv|vc-?1/i, 'Windows Media Video'],
+  [/s263|h\.?263/i, 'H.263'],
   [/apcn|apch|apcs|apco|ap4h|prores/i, 'ProRes'],
 ];
 const CONTAINERS: Array<[RegExp, string]> = [
+  [/3gp|3g2|3ge|3gg/i, '3GP'],
   [/qt/i, 'MOV'],
   [/webm/i, 'WebM'],
   [/matroska/i, 'MKV'],
@@ -55,15 +59,18 @@ const CONTAINERS: Array<[RegExp, string]> = [
 ];
 
 /** Video codec and container names from the file (music-metadata reads MP4/MKV/WebM/AVI/ASF headers). */
-async function codecInfo(file: File): Promise<{ container?: string; codec?: string; fps?: number } | null> {
+async function codecInfo(file: File): Promise<{ container?: string; codec?: string; fps?: number; audio?: string } | null> {
   try {
     const { parseBlob } = await import('music-metadata');
-    const m = await parseBlob(file, { duration: false, skipCovers: true });
+    // 3GP is the MP4 container under another name; the reader only accepts the MP4 type.
+    const blob = /3gpp/.test(file.type) || /\.3g[p2]$/i.test(file.name) ? file.slice(0, file.size, 'video/mp4') : file;
+    const m = await parseBlob(blob, { duration: false, skipCovers: true });
     const track = m.format.trackInfo?.find((t) => t.type === 1 || t.video);
     const raw = track?.codecName?.replace(/[<>]/g, '') ?? '';
     const codec = VIDEO_CODECS.find(([re]) => re.test(raw))?.[1] ?? (raw || undefined);
     const container = CONTAINERS.find(([re]) => re.test(m.format.container ?? ''))?.[1] ?? m.format.container;
-    return { container, codec, fps: track?.video?.frameRate };
+    const audio = m.format.trackInfo?.find((t) => t.type === 2 || t.audio)?.codecName ?? m.format.codec;
+    return { container, codec, fps: track?.video?.frameRate, audio };
   } catch {
     return null;
   }
@@ -115,6 +122,10 @@ async function openAvi(file: File, ctx: OpenContext): Promise<OpenedView | strin
 const APP_FORMATS: Record<string, [string, string]> = { qsv: ['iQiyi', '爱奇艺'], kux: ['Youku', '优酷'], qlv: ['Tencent Video', '腾讯视频'], xv: ['Xunlei', '迅雷'] };
 
 export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
+  if (ctx.format?.id === 'exo') {
+    ctx.mount.replaceChildren(h('div', { class: 'view view-video' }, h('div', { class: 'vd-message' }, s('exoOnly'))));
+    return { meta: () => [ctx.format!.name] };
+  }
   const app = APP_FORMATS[ctx.format?.id ?? ''];
   if (app) {
     ctx.mount.replaceChildren(h('div', { class: 'view view-video' }, h('div', { class: 'vd-message' }, s('appOnly').replace(/\{app\}/g, lang() === 'zh' ? app[1] : app[0]))));
@@ -153,11 +164,16 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
     video.hidden = true;
     message.hidden = false;
     // Formats no browser plays at all (Windows Media, AVI, Flash, RealMedia): don't suggest Safari.
-    const legacy = ({ wmv: 'Windows Media (WMV)', avi: 'AVI', flv: 'Flash (FLV)', rmvb: 'RealMedia', asf: 'Windows Media' } as Record<string, string>)[ctx.format?.id ?? ''] ?? (ci?.container === 'ASF' ? 'Windows Media' : ci?.container === 'AVI' ? 'AVI' : '');
+    const legacy = ({ wmv: 'Windows Media (WMV)', avi: 'AVI', flv: 'Flash (FLV)', rmvb: 'RealMedia', asf: 'Windows Media', '3gp': '3GP' } as Record<string, string>)[ctx.format?.id ?? ''] ?? (ci?.container === 'ASF' ? 'Windows Media' : ci?.container === 'AVI' ? 'AVI' : '');
     message.textContent = (legacy ? s('noBrowser').replace('{format}', legacy) : s('cannot')).replace('{codec}', codec ? ` (${codec})` : '');
   } else if (!video.videoWidth) {
     message.hidden = false;
     message.textContent = s('audioOnly');
+    message.classList.add('subtle');
+  } else if (/samr|sawb|amr/i.test(ci?.audio ?? '')) {
+    // 3GP from older phones / WhatsApp: H.264 picture with AMR sound.
+    message.hidden = false;
+    message.textContent = s('amrSound');
     message.classList.add('subtle');
   }
 

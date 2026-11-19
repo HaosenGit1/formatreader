@@ -11,3 +11,5 @@ AVI samples, made by `scripts/make-avi-samples.py` (Pillow):
 - `cctv-mjpeg-nodht.avi`: MJPEG frames without Huffman tables (as many webcams and CCTV recorders
   write them), μ-law sound, and no index (like an interrupted recording).
 - `turbine-h264.avi`: the H.264 frames of `turbine.mp4` copied into AVI (no re-encoding), IMA ADPCM tone.
+- whatsapp-phone.3gp — turbine.mp4 with its ftyp brand changed to 3gp6 (3GP is the same ISO container; H.264 + AAC, as WhatsApp sends).
+- mms-phone.3g2 — same, with brand 3g2a (3GPP2, CDMA phones / MMS).

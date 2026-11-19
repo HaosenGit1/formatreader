@@ -34,6 +34,8 @@ const BY_EXTENSION: Record<string, FormatInfo> = {
   kux: F('kux', 'Youku video (KUX)', 'videos'),
   qlv: F('qlv', 'Tencent Video (QLV)', 'videos'),
   xv: F('xv', 'Xunlei video (XV)', 'videos'),
+  // Android apps built on ExoPlayer (YouTube offline downloads…) save encrypted .exo files.
+  exo: F('exo', 'App offline video (EXO)', 'videos'),
   doc: F('doc', 'Word 97–2003 document', 'words'),
   xls: F('xls', 'Excel 97–2003 workbook', 'words'),
   ppt: F('ppt', 'PowerPoint 97–2003 presentation', 'words'),

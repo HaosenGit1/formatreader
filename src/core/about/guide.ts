@@ -187,7 +187,8 @@ export const FORMAT_GUIDES: Record<string, FormatGuide> = {
   mpg: video(['MPEG-1/2 video (VCD, DVD, TV recordings).', 'MPEG-1/2 视频（VCD、DVD、电视录像）。']),
   ts: video(['MPEG transport stream: TV, camcorders (.mts/.m2ts), recorded streams.', 'MPEG 传输流：电视、摄像机（.mts/.m2ts）、录制的直播。']),
   ogv: video(['Ogg video (Theora).', 'Ogg 视频（Theora）。']),
-  '3gp': video(['3GP: video from older mobile phones.', '3GP：旧手机拍的视频。']),
+  '3gp': video(['3GP: phone video — older phones, and WhatsApp / MMS videos sent over slow networks (common in India, Latin America, Africa). Old ones use H.263 picture and AMR sound, which browsers can’t play.', '3GP：手机视频——旧手机，以及在慢速网络下通过 WhatsApp / 彩信发送的视频（印度、拉美、非洲常见）。较老的使用 H.263 画面和 AMR 声音，浏览器无法播放。']),
+  exo: { from: ['EXO: an encrypted offline download inside an Android app (YouTube and other ExoPlayer apps). Only that app, on that phone, can play it.', 'EXO：安卓 App 内的加密离线下载（YouTube 等基于 ExoPlayer 的 App）。只有那台手机上的该 App 能播放。'], open: [way(['Android phone', '安卓手机'], 'The app that downloaded it (YouTube: Library → Downloads)', '下载它的 App（YouTube：媒体库 → 下载内容）')] },
 
   zip: archive(['ZIP archive.', 'ZIP 压缩包。'], [way(ANY, 'Built into Windows and Mac (double-click)', 'Windows 和 Mac 自带（双击）')]),
   rar: archive(['RAR archive (WinRAR).', 'RAR 压缩包（WinRAR）。'], [way(WIN, 'WinRAR; Windows 11 opens RAR itself', 'WinRAR；Windows 11 自带支持 RAR')]),

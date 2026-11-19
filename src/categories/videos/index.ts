@@ -4,7 +4,7 @@
  */
 import type { ViewerEntry } from '../../core/viewer';
 
-const IDS = new Set(['qsv', 'kux', 'qlv', 'xv', 'mp4', 'webm', 'mov', 'mkv', 'ogv', 'avi', 'wmv', 'flv', 'mpg', 'ts', '3gp', 'rmvb']);
+const IDS = new Set(['qsv', 'kux', 'qlv', 'xv', 'exo', 'mp4', 'webm', 'mov', 'mkv', 'ogv', 'avi', 'wmv', 'flv', 'mpg', 'ts', '3gp', 'rmvb']);
 
 export const videosViewers: ViewerEntry[] = [
   {
