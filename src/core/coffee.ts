@@ -1,5 +1,5 @@
 /**
- * "Buy us a coffee": a small cup in the footer and a panel with a fixed $5 payment link.
+ * "Tip a coffee": a small cup in the footer and a panel with a fixed $5 payment link.
  * The site itself stays free; the link goes to a Stripe Payment Link (set COFFEE_URL).
  * While COFFEE_URL is empty the cup is hidden (preview it with ?coffee in the address).
  */
@@ -10,14 +10,14 @@ import { strings } from './i18n';
 export const COFFEE_URL = '';
 
 const s = strings({
-  link: { en: 'Buy us a coffee', zh: '请我们喝杯咖啡' },
+  link: { en: 'Tip a coffee', zh: '打赏一杯咖啡' },
   kicker: { en: 'Always free', zh: '永久免费' },
   title: { en: 'A cup of coffee', zh: '一杯咖啡' },
   text: {
-    en: 'FormatReader will always be free for everyone. If it helped you, a cup of coffee is all we ask — $5, no more.',
-    zh: 'FormatReader 会一直对所有人免费。如果它帮到了你，请我们喝杯咖啡就好——5 美元，仅此而已。',
+    en: 'FormatReader will always be free for everyone. If it helped you, tip a cup of coffee — $5, no more.',
+    zh: 'FormatReader 会一直对所有人免费。如果它帮到了你，打赏一杯咖啡就好——5 美元，仅此而已。',
   },
-  buy: { en: 'Buy a coffee · $5', zh: '请一杯咖啡 · 5 美元' },
+  buy: { en: 'Tip a coffee · $5', zh: '打赏一杯咖啡 · 5 美元' },
   notYet: { en: 'Coming soon — thank you for the thought!', zh: '即将开放——谢谢你的心意！' },
   later: { en: 'Maybe later', zh: '下次吧' },
   close: { en: 'Close', zh: '关闭' },
