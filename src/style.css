@@ -1511,3 +1511,68 @@ html.fr-immersive .site-header {
 .fb-status {
   color: #f0d9a8;
 }
+
+/* ---- Buy us a coffee ---- */
+.coffee-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.coffee-mini {
+  color: #c9a96e;
+}
+
+.coffee-mini .cf-steam,
+.coffee-cup .cf-steam {
+  color: rgb(243 231 207 / 0.75);
+}
+
+.coffee-mini .cf-steam {
+  color: #c9a96e;
+  opacity: 0.6;
+}
+
+.coffee-cup {
+  display: block;
+  margin: -6px auto 6px;
+  filter: drop-shadow(0 8px 18px rgb(0 0 0 / 0.35));
+}
+
+.coffee-cup .cf-steam path {
+  animation: cf-rise 3.2s ease-in-out infinite;
+  opacity: 0;
+}
+
+.coffee-cup .cf-steam path:nth-child(2) {
+  animation-delay: 1s;
+}
+
+.coffee-cup .cf-steam path:nth-child(3) {
+  animation-delay: 2s;
+}
+
+@keyframes cf-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  40% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.coffee-soon {
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coffee-cup .cf-steam path {
+    animation: none;
+    opacity: 0.6;
+  }
+}

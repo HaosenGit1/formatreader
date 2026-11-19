@@ -20,6 +20,7 @@ import { limit as sizeLimit } from './limits';
 import { lang, onLangChange, setLang, strings } from './i18n';
 import { infoEntry } from './info-entry';
 import { feedbackLink, promoBar, startPromoVideo } from './promo';
+import { coffeeLink } from './coffee';
 import { pickFromMany } from './companions';
 import { messageView } from './info-view';
 import { assertUniqueIds, pickViewer, withTrials } from './registry';
@@ -190,7 +191,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
             h('span', { class: 'foot-link', title: s('portableNote') }, s('portable')),
             h('span', { class: 'foot-legal' }, s('portableLicence'), h('a', { href: 'https://github.com/HaosenGit1/formatreader' }, 'github.com/HaosenGit1/formatreader')),
           )
-        : h('footer', { class: 'landing-foot' }, h('a', { class: 'foot-link', href: 'formats.html' }, s('formats')), feedbackLink(), offlineLine()),
+        : h('footer', { class: 'landing-foot' }, h('a', { class: 'foot-link', href: 'formats.html' }, s('formats')), feedbackLink(), coffeeLink(), offlineLine()),
     );
 
   /** The only loading state: the name fills with colour like a progress bar. */
