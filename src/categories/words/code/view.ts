@@ -65,7 +65,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
     ctx.refreshChrome();
   };
   await draw();
-  const ed = editing({ src, name: file.name, mount: ctx.mount, mode: 'text', redraw: draw, refreshChrome: ctx.refreshChrome });
+  const ed = editing({ src, name: file.name, mount: ctx.mount, mode: 'text', redraw: draw, refreshChrome: ctx.refreshChrome, openFile: (f) => void ctx.openFile(f) });
 
   return {
     meta: () => {

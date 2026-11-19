@@ -10,6 +10,7 @@
 import './edit.css';
 import { h } from '../../../../core/dom';
 import { limit } from '../../../../core/limits';
+import { makeNewFile } from '../../../../core/new-file';
 import { strings } from '../../../../core/i18n';
 import type { TextSource } from '../text-source';
 import { rebuild, records, type Record } from './csv';
@@ -20,6 +21,11 @@ const s = strings({
   editTitle: { en: 'Edit this file; your changes are saved as a new copy, the original is never changed', zh: '编辑这个文件；修改会另存为新副本，原文件不会被改动' },
   save: { en: 'Save a copy', zh: '另存副本' },
   savedNew: { en: 'Saved {name} (see your downloads).', zh: '已保存 {name}（见“下载”文件夹）。' },
+  new: { en: '+ New', zh: '+ 新建' },
+  newTitle: { en: 'Start a new file', zh: '新建文件' },
+  newSame: { en: 'New .{ext} file', zh: '新建 .{ext} 文件' },
+  newOther: { en: 'Other format…', zh: '其他格式…' },
+  untitled: { en: 'Untitled', zh: '未命名' },
   saveNew: { en: 'Save', zh: '保存' },
   newFile: { en: 'New file — type here. “Save” downloads {name} ({enc}) to your device; nothing is uploaded.', zh: '新文件——在这里输入。“保存”会把 {name}（{enc}）下载到你的设备；不会上传任何内容。' },
   cancel: { en: 'Cancel', zh: '取消' },
@@ -49,6 +55,8 @@ export interface EditOptions {
   /** Redraw the normal (reading) view. */
   redraw(): void | Promise<void>;
   refreshChrome(): void;
+  /** Opens another file (used by "+ New": a new, empty file of the same kind). */
+  openFile?(file: File): void;
 }
 
 export interface Editing {
@@ -141,6 +149,32 @@ export function editing(o: EditOptions): Editing {
     o.refreshChrome();
   };
 
+  /** "+ New": a new file of the same kind in one tap, or any other editable kind on the Formats page. */
+  function newMenu(): HTMLElement {
+    const ext = /\.([a-z0-9]{1,10})$/i.exec(o.name)?.[1]?.toLowerCase() ?? 'txt';
+    const menu = h('div', { class: 'ed-new-menu', role: 'menu', hidden: true },
+      h('button', { type: 'button', role: 'menuitem', onclick: () => (hide(), o.openFile!(makeNewFile(ext, s('untitled')))) }, s('newSame').replace('{ext}', ext)),
+      h('a', { role: 'menuitem', href: 'formats.html' }, s('newOther')),
+    ); // prettier-ignore
+    const btn = h('button', { type: 'button', class: 'btn', 'aria-haspopup': 'menu', 'aria-expanded': 'false', title: s('newTitle'), onclick: () => (menu.hidden ? show() : hide()) }, s('new')) as HTMLButtonElement;
+    const away = (e: Event) => !wrap.contains(e.target as Node) && hide();
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && (hide(), btn.focus());
+    function show() {
+      menu.hidden = false;
+      btn.setAttribute('aria-expanded', 'true');
+      document.addEventListener('pointerdown', away);
+      document.addEventListener('keydown', esc);
+    }
+    function hide() {
+      menu.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+      document.removeEventListener('pointerdown', away);
+      document.removeEventListener('keydown', esc);
+    }
+    const wrap = h('div', { class: 'ed-new' }, btn, menu);
+    return wrap;
+  }
+
   // A new file keeps its own name; edits of an existing file are saved as "… (edited)".
   function saveName(): string {
     return o.src.fresh ? o.name : copyName(o.name || 'pasted.txt', o.src.bytes?.length === 0, o.mode === 'table');
@@ -151,8 +185,8 @@ export function editing(o: EditOptions): Editing {
 
   return {
     tools: () => {
+      if (!active) return [...(canEdit(o.src) ? [h('button', { type: 'button', class: 'btn', title: s('editTitle'), onclick: start }, '✏️ ', s('edit'))] : []), ...(o.openFile ? [newMenu()] : [])];
       if (!canEdit(o.src)) return [];
-      if (!active) return [h('button', { type: 'button', class: 'btn', title: s('editTitle'), onclick: start }, '✏️ ', s('edit'))];
       return [
         h('button', { type: 'button', class: 'btn btn-primary', onclick: save }, s(o.src.fresh ? 'saveNew' : 'save')),
         h('button', { type: 'button', class: 'btn', onclick: () => void stop() }, lastSaved && !dirty ? s('done') : s('cancel')),

@@ -5,6 +5,13 @@
  */
 export const freshFiles = new WeakSet<File>();
 
+/** A new, empty file of this kind, opened straight in the editor. */
+export function makeNewFile(ext: string, untitled: string): File {
+  const file = new File([], `${untitled}.${ext.toLowerCase()}`, { type: '' });
+  freshFiles.add(file);
+  return file;
+}
+
 /** The empty file asked for by ?new=<ext>, or null. */
 export function newFileFromAddress(untitled: string): File | null {
   let ext: string | null = null;
@@ -14,8 +21,7 @@ export function newFileFromAddress(untitled: string): File | null {
     return null;
   }
   if (!ext || !/^[a-z0-9]{1,10}$/i.test(ext)) return null;
-  const file = new File([], `${untitled}.${ext.toLowerCase()}`, { type: '' });
-  freshFiles.add(file);
+  const file = makeNewFile(ext, untitled);
   // Don't create another one on reload.
   try {
     const url = new URL(location.href);

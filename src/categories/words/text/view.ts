@@ -46,7 +46,7 @@ async function makeView(src: TextSource, name: string, ctx: OpenContext): Promis
     ctx.refreshChrome();
   };
   await draw();
-  const ed = editing({ src, name, mount: ctx.mount, mode: 'text', redraw: draw, refreshChrome: ctx.refreshChrome });
+  const ed = editing({ src, name, mount: ctx.mount, mode: 'text', redraw: draw, refreshChrome: ctx.refreshChrome, openFile: (f) => void ctx.openFile(f) });
 
   return {
     meta: () => [kindLabel(kind)],

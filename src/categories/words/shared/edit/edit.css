@@ -77,3 +77,47 @@
 .ed-add {
   align-self: flex-start;
 }
+
+/* "+ New" menu in the toolbar */
+.ed-new {
+  position: relative;
+}
+
+.ed-new-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 170px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.14);
+}
+
+.ed-new-menu[hidden] {
+  display: none;
+}
+
+.ed-new-menu > * {
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ed-new-menu > *:hover,
+.ed-new-menu > *:focus-visible {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  outline: none;
+}

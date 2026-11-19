@@ -74,7 +74,7 @@ async function openDelimited(file: File, ctx: OpenContext): Promise<OpenedView> 
   draw();
 
   const delimName = () => (delimiter === '\t' ? s('tab') : delimiter === ',' ? s('comma') : `"${delimiter}"`);
-  const ed = editing({ src, name: file.name, mount: ctx.mount, mode: 'table', get delimiter() { return delimiter; }, redraw: draw, refreshChrome: ctx.refreshChrome });
+  const ed = editing({ src, name: file.name, mount: ctx.mount, mode: 'table', get delimiter() { return delimiter; }, redraw: draw, refreshChrome: ctx.refreshChrome, openFile: (f) => void ctx.openFile(f) });
   return {
     meta: () => [
       delimiter === '\t' ? 'TSV' : 'CSV',
