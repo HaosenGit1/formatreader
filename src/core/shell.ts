@@ -21,6 +21,7 @@ import { lang, onLangChange, setLang, strings } from './i18n';
 import { infoEntry } from './info-entry';
 import { feedbackLink, promoBar, startPromoVideo } from './promo';
 import { coffeeLink } from './coffee';
+import { newFileFromAddress } from './new-file';
 import { pickFromMany } from './companions';
 import { messageView } from './info-view';
 import { assertUniqueIds, pickViewer, withTrials } from './registry';
@@ -48,6 +49,7 @@ const s = strings({
   heavyTitle: { en: 'This file is very large', zh: '这个文件非常大' },
   heavyText: { en: '“{name}” is {size}. Files of this kind above about {limit} usually don’t fit in a browser’s memory{phone}: the page may stop responding or close.', zh: '“{name}”有 {size}。这类文件超过约 {limit} 时，通常超出浏览器的内存{phone}：页面可能会卡住或关闭。' },
   heavyPhone: { en: ' on a phone', zh: '（手机上）' },
+  untitled: { en: 'Untitled', zh: '未命名' },
   heavyTablet: { en: ' on a tablet', zh: '（平板上）' },
   tryAnyway: { en: 'Try anyway', zh: '仍然尝试' },
   elsewhere: { en: 'How to open it elsewhere', zh: '在其他软件中怎么打开' },
@@ -750,4 +752,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
 
   setLang(lang());
   goHome();
+  // ?new=md (from the Formats page): start a new, empty file of that kind in the editor.
+  const fresh = newFileFromAddress(s('untitled'));
+  if (fresh) void openFile(fresh);
 }

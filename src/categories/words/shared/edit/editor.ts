@@ -19,6 +19,9 @@ const s = strings({
   edit: { en: 'Edit', zh: '编辑' },
   editTitle: { en: 'Edit this file; your changes are saved as a new copy, the original is never changed', zh: '编辑这个文件；修改会另存为新副本，原文件不会被改动' },
   save: { en: 'Save a copy', zh: '另存副本' },
+  savedNew: { en: 'Saved {name} (see your downloads).', zh: '已保存 {name}（见“下载”文件夹）。' },
+  saveNew: { en: 'Save', zh: '保存' },
+  newFile: { en: 'New file — type here. “Save” downloads {name} ({enc}) to your device; nothing is uploaded.', zh: '新文件——在这里输入。“保存”会把 {name}（{enc}）下载到你的设备；不会上传任何内容。' },
   cancel: { en: 'Cancel', zh: '取消' },
   done: { en: 'Done', zh: '完成' },
   addRow: { en: '+ Add row', zh: '+ 添加一行' },
@@ -93,6 +96,8 @@ export function editing(o: EditOptions): Editing {
     };
     if (o.mode === 'table' && o.delimiter) {
       const { list, trailingBreak } = records(text, o.delimiter);
+      // An empty table starts as a small blank grid to type into.
+      if (!list.length) for (let r = 0; r < 3; r++) list.push({ raw: null, cells: ['', '', '', ''] });
       if (list.length <= TABLE_LIMIT) {
         getText = tableEditor(o.mount, list, o.delimiter, trailingBreak, onInput);
       } else {
@@ -114,7 +119,12 @@ export function editing(o: EditOptions): Editing {
   };
 
   const save = () => {
-    const text = getText();
+    let text = getText();
+    // A new table: leave out blank rows at the end (lines of only delimiters).
+    if (o.src.fresh && o.mode === 'table' && o.delimiter) {
+      const d = o.delimiter.replace(/[\\^$.*+?()[\]{}|-]/g, '\\$&');
+      text = text.replace(new RegExp(`(?:\\r?\\n(?:${d})*)+$`), '').replace(new RegExp(`^(?:${d})*$`), '');
+    }
     let f = format();
     let bytes = encodeLike(text, f);
     if (!bytes) {
@@ -123,27 +133,35 @@ export function editing(o: EditOptions): Editing {
       f = { ...f, encoding: 'utf-8', bom: true };
       bytes = encodeLike(text, f)!;
     }
-    const name = copyName(o.name || 'pasted.txt', o.src.bytes?.length === 0, o.mode === 'table');
+    const name = saveName();
     downloadCopy(bytes, name, o.mode === 'table' ? 'text/csv' : 'text/plain');
     dirty = false;
     lastSaved = name;
-    message = h('div', { class: 'notice' }, s('saved').replace('{name}', name));
+    message = h('div', { class: 'notice' }, s(o.src.fresh ? 'savedNew' : 'saved').replace('{name}', name));
     o.refreshChrome();
   };
+
+  // A new file keeps its own name; edits of an existing file are saved as "… (edited)".
+  function saveName(): string {
+    return o.src.fresh ? o.name : copyName(o.name || 'pasted.txt', o.src.bytes?.length === 0, o.mode === 'table');
+  }
+
+  // A new file from the Formats page opens straight in the editor.
+  if (o.src.fresh) setTimeout(start, 0);
 
   return {
     tools: () => {
       if (!canEdit(o.src)) return [];
       if (!active) return [h('button', { type: 'button', class: 'btn', title: s('editTitle'), onclick: start }, '✏️ ', s('edit'))];
       return [
-        h('button', { type: 'button', class: 'btn btn-primary', onclick: save }, s('save')),
+        h('button', { type: 'button', class: 'btn btn-primary', onclick: save }, s(o.src.fresh ? 'saveNew' : 'save')),
         h('button', { type: 'button', class: 'btn', onclick: () => void stop() }, lastSaved && !dirty ? s('done') : s('cancel')),
       ];
     },
     notice: () => {
       if (!active) return null;
       if (message) return message;
-      const text = s('editing').replace('{name}', copyName(o.name || 'pasted.txt', o.src.bytes?.length === 0, o.mode === 'table')).replace('{enc}', encName());
+      const text = s(o.src.fresh ? 'newFile' : 'editing').replace('{name}', saveName()).replace('{enc}', encName());
       return h('div', { class: 'notice subtle' }, repaired ? `${text} ${s('repairedNote')}` : text);
     },
     unsaved: () => active && dirty,

@@ -1576,3 +1576,80 @@ html.fr-immersive .site-header {
     opacity: 0.6;
   }
 }
+
+/* ---- Crystal ball (preview: ?ball=crystal) ----
+   Clear glass over the video: a soft refraction blur, a slowly swirling gold-and-blue
+   light inside, a bright window highlight on top and a warm caustic glow at the bottom. */
+.promo-crystal .circle {
+  overflow: hidden;
+  border: 1px solid rgb(232 214 170 / 0.85);
+  background:
+    radial-gradient(circle at 50% 58%, rgb(18 30 56 / 0.28), rgb(10 18 36 / 0.5) 60%, rgb(5 9 20 / 0.82) 100%);
+  backdrop-filter: blur(9px) saturate(1.5) brightness(0.88);
+  box-shadow:
+    inset 0 -18px 34px rgb(214 180 110 / 0.38),
+    inset 0 10px 24px rgb(255 255 255 / 0.16),
+    0 0 0 1px rgb(201 169 110 / 0.35),
+    0 0 34px rgb(150 185 255 / 0.22),
+    0 24px 50px rgb(0 0 0 / 0.45);
+  animation: none;
+}
+
+.promo-crystal .circle::before {
+  content: '';
+  position: absolute;
+  inset: -25%;
+  z-index: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0 8%, rgb(222 196 140 / 0.42) 17%, transparent 30%, rgb(120 165 255 / 0.32) 46%, transparent 60%, rgb(190 150 255 / 0.26) 74%, transparent 88%);
+  filter: blur(16px);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.promo-crystal .circle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse 28% 13% at 36% 17%, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.18) 55%, transparent 70%),
+    radial-gradient(circle at 74% 30%, rgb(255 255 255 / 0.5) 0 1.5%, transparent 2.5%),
+    radial-gradient(ellipse 46% 16% at 50% 90%, rgb(255 228 170 / 0.4), transparent 75%);
+  pointer-events: none;
+}
+
+.promo-crystal .circle-text,
+.promo-crystal .circle-hint {
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 1px 10px rgb(0 0 0 / 0.65);
+}
+
+.promo-crystal .circle:hover {
+  background:
+    radial-gradient(circle at 50% 58%, rgb(22 36 66 / 0.3), rgb(12 22 42 / 0.52) 60%, rgb(6 10 22 / 0.84) 100%);
+  box-shadow:
+    inset 0 -20px 40px rgb(224 190 120 / 0.5),
+    inset 0 10px 24px rgb(255 255 255 / 0.2),
+    0 0 0 1px rgb(224 196 138 / 0.6),
+    0 0 46px rgb(150 185 255 / 0.32),
+    0 26px 56px rgb(0 0 0 / 0.5);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .promo-crystal .circle::before {
+    animation: crystal-swirl 16s linear infinite;
+  }
+
+  .promo-crystal .circle:hover::before {
+    animation-duration: 6s;
+  }
+}
+
+@keyframes crystal-swirl {
+  to {
+    transform: rotate(1turn);
+  }
+}

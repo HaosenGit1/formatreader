@@ -158,7 +158,7 @@ export function formatsHtml(root = process.cwd()) {
   const supported = new Set(cats.filter((c) => !c.coming).flatMap((c) => c.groups.flatMap((g) => g.ext)));
   // ✏️ Basic editing (save a copy; the original is never changed): plain-text formats only.
   const editable = new Set(['csv', 'tsv', 'tab', 'psv']);
-  const textOnly = (g) => [].concat(g.viewer ?? []).length > 0 && [].concat(g.viewer).every((v) => v === 'words/text' || v === 'words/code');
+  const textOnly = (g) => [].concat(g.viewer ?? []).length > 0 && [].concat(g.viewer).every((v) => v === 'words/text' || v === 'words/code' || v === 'words/plist');
   for (const c of cats) for (const g of c.groups) if (!c.coming && textOnly(g)) for (const e of g.ext) editable.add(e);
   // Marked in text/code groups and on CSV/TSV in the spreadsheet group only.
   const mark = (g, e) => editable.has(e) && (textOnly(g) || [].concat(g.viewer ?? []).includes('words/sheets'));
@@ -173,10 +173,10 @@ export function formatsHtml(root = process.cwd()) {
         <div class="fmt-group">
           <div class="fmt-name">${both(g.name)}</div>
           <div class="fmt-exts">${g.ext.map((e) => {
-            // Supported formats link to their "How to open" page (/open/<ext>).
-            const tag = c.coming || !/^[a-z0-9]{1,10}$/.test(e) ? 'span' : 'a';
-            const href = tag === 'a' ? ` href="/open/${esc(e)}"` : '';
-            return mark(g, e) ? `<${tag} class="fmt-ext fmt-edit"${href} title="Basic editing · 可编辑">.${esc(e)} ✏️</${tag}>` : `<${tag} class="fmt-ext"${href}>.${esc(e)}</${tag}>`;
+            // Editable formats are a link that starts a new, empty file of that kind in the
+            // editor; every other format is plain text (not clickable).
+            if (mark(g, e) && /^[a-z0-9]{1,10}$/.test(e)) return `<a class="fmt-ext fmt-edit" href="/?new=${esc(e)}" title="New .${esc(e)} file · 新建 .${esc(e)} 文件">.${esc(e)} ✏️</a>`;
+            return `<span class="fmt-ext">.${esc(e)}</span>`;
           }).join('')}</div>
         </div>`,
           )

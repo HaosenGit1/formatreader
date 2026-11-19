@@ -3,6 +3,7 @@ import { strings } from '../../../core/i18n';
 import type { OpenedView } from '../../../core/viewer';
 import { TextSource } from './text-source';
 import { limit } from '../../../core/limits';
+import { freshFiles } from '../../../core/new-file';
 import { nextPaint, readWithProgress, type Progress } from '../../../core/progress';
 
 const s = strings({
@@ -51,7 +52,11 @@ export async function readText(file: File, mount: HTMLElement, reopen?: () => vo
   }
   const bytes = part ? wholeLines(new Uint8Array(raw), part === 'end') : new Uint8Array(raw);
   // An empty file opens blank, so it can be edited (and saved as a copy) like any other.
-  if (bytes.length === 0) return TextSource.empty();
+  if (bytes.length === 0) {
+    const src = TextSource.empty();
+    src.fresh = freshFiles.has(file);
+    return src;
+  }
   const src = await TextSource.fromBytes(bytes);
   if (!src) {
     mount.replaceChildren(infoView(file.size, bytes.subarray(0, 64 * 1024), null));

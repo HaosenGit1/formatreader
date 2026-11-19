@@ -178,3 +178,16 @@ a.fmt-ext {
 a.fmt-ext:hover {
   border-color: currentColor;
 }
+
+/* Editable formats: the whole chip starts a new file of that kind. */
+a.fmt-ext.fmt-edit:hover,
+a.fmt-ext.fmt-edit:focus-visible {
+  background: color-mix(in srgb, var(--accent) 24%, var(--surface-2));
+  outline: none;
+}
+
+.fmt-hint {
+  margin: -4px 0 14px;
+  color: var(--muted);
+  font-size: 14px;
+}

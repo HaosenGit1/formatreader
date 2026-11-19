@@ -86,6 +86,9 @@ export class TextSource {
   /** Set when only part of a very large file is shown. */
   partial: { part: 'start' | 'end' | 'full'; shown: number; total: number; toggle?: () => void; more?: { all: boolean; upTo: number; load: () => void } } | null = null;
 
+  /** A new file made here (Formats page ✏️): opens in the editor, saved under its own name. */
+  fresh = false;
+
   /** Escapes/Base64 decoding: only viewers meant for reading text turn this on. */
   private decodeEnabled = false;
   decoded: DecodedText | null = null;
@@ -203,7 +206,7 @@ export class TextSource {
         h('div', { class: 'notice' }, text, more ? ' ' : '', more, p.toggle ? ' · ' : '', p.toggle ? h('button', { type: 'button', class: 'link', onclick: p.toggle }, s(p.part === 'end' ? 'showStart' : 'showEnd')) : null),
       );
     }
-    if (this.bytes && !this.bytes.length) out.push(h('div', { class: 'notice subtle' }, s('emptyFile')));
+    if (this.bytes && !this.bytes.length && !this.fresh) out.push(h('div', { class: 'notice subtle' }, s('emptyFile')));
     const destroyed = destroyedKind(this.raw);
     if (destroyed) out.push(h('div', { class: 'notice warn' }, s(destroyed === 'lost' ? 'destroyedLost' : 'destroyedMemory')));
     if (qLost) out.push(h('div', { class: 'notice warn' }, s('questionLoss').replace('{n}', qLost.toLocaleString())));
