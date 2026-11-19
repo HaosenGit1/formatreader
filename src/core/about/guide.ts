@@ -73,7 +73,7 @@ const comic = ebook(['Comic book: the pages are pictures inside an archive (CBZ 
 const archive = (from: T, extra: OpenWay[] = []): FormatGuide => ({
   from,
   open: [...extra, SEVENZIP, UNARCHIVER, way(LINUX, 'Built in (tar, unzip, 7z)', '系统自带（tar、unzip、7z）')],
-  tip: ['If file names inside show 乱码 (zip made on Chinese/Japanese Windows): on Mac use The Unarchiver, which asks for the encoding; on Linux: unzip -O GBK file.zip', '如果里面的文件名是乱码（在中文/日文 Windows 上打包的 zip）：Mac 上用 The Unarchiver，它会询问编码；Linux 上：unzip -O GBK 文件.zip'],
+  tip: ['If file names inside show garbled text (zip made on Chinese/Japanese Windows): on Mac use The Unarchiver, which asks for the encoding; on Linux: unzip -O GBK file.zip', '如果里面的文件名是乱码（在中文/日文 Windows 上打包的 zip）：Mac 上用 The Unarchiver，它会询问编码；Linux 上：unzip -O GBK 文件.zip'],
 });
 const image = (from: T, extra: OpenWay[] = []): FormatGuide => ({
   from,
@@ -98,7 +98,7 @@ export const FORMAT_GUIDES: Record<string, FormatGuide> = {
   wps, et: wps, dps: wps,
   pdf,
   rtf: { from: ['Rich Text Format: simple formatted text, readable by almost every word processor.', 'RTF 富文本：简单的带格式文本，几乎所有文字处理软件都能读。'], open: [way(WIN, 'Word, WordPad', 'Word、写字板'), way(MAC, 'TextEdit, Pages', '文本编辑、Pages'), LIBRE('Writer', 'Writer')] },
-  ofd: { from: ['OFD: China’s national fixed-layout document standard (e-invoices 电子发票, government documents).', 'OFD：中国国家版式文档标准（电子发票、公文）。'], open: [way(WIN, 'An OFD reader such as 数科 OFD 阅读器 or Foxit OFD', 'OFD 阅读器，例如数科 OFD 阅读器或福昕 OFD'), way(ONLINE, 'The e-invoice platform where it was issued can also give a PDF', '开票平台通常也能下载 PDF 版本')] },
+  ofd: { from: ['OFD: China’s national fixed-layout document standard (e-invoices, government documents).', 'OFD：中国国家版式文档标准（电子发票、公文）。'], open: [way(WIN, 'An OFD reader such as 数科 OFD 阅读器 or Foxit OFD', 'OFD 阅读器，例如数科 OFD 阅读器或福昕 OFD'), way(ONLINE, 'The e-invoice platform where it was issued can also give a PDF', '开票平台通常也能下载 PDF 版本')] },
   xps: { from: ['XPS: Microsoft’s fixed-layout document (from “Print to XPS”).', 'XPS：微软的版式文档（来自“打印到 XPS”）。'], open: [way(WIN, 'XPS Viewer (Windows optional feature)', 'XPS 查看器（Windows 可选功能）'), way(ANY, 'SumatraPDF (free)', 'SumatraPDF（免费）')] },
   oxps: { from: ['OpenXPS: Windows 8+ “Print to XPS”.', 'OpenXPS：Windows 8 及以上的“打印到 XPS”。'], open: [way(WIN, 'XPS Viewer, SumatraPDF', 'XPS 查看器、SumatraPDF')] },
   hwp: { from: ['Hangul (HWP): the standard word processor of Korea (government, schools).', 'Hangul（HWP）：韩国的标准文字处理软件（政府、学校）。'], open: [way(ANY, 'Hancom Office / Hancom Docs; free Hancom viewer', 'Hancom Office / Hancom Docs；免费的 Hancom 阅读器'), LIBRE('Writer (older HWP)', 'Writer（旧版 HWP）')] },
@@ -147,7 +147,7 @@ export const FORMAT_GUIDES: Record<string, FormatGuide> = {
   jxl: image(['JPEG XL: a new photo format.', 'JPEG XL：新的照片格式。']),
   jp2: image(['JPEG 2000: archives, maps and medical images.', 'JPEG 2000：档案、地图和医学影像。'], [way(ANY, 'GIMP (free), IrfanView (Windows)', 'GIMP（免费）、IrfanView（Windows）')]),
 
-  dwg: { from: ['AutoCAD drawing: the standard 2D/3D CAD format (engineering, architecture, plant layouts).', 'AutoCAD 图纸：标准的二维/三维 CAD 格式（工程、建筑、电站布置）。'], open: [way(WIN, 'Autodesk DWG TrueView (free), AutoCAD, 中望CAD / GstarCAD', 'Autodesk DWG TrueView（免费）、AutoCAD、中望CAD / 浩辰CAD'), way(ONLINE, 'Autodesk Viewer (free, in the browser)', 'Autodesk Viewer（免费，在浏览器中）'), way(MAC, 'AutoCAD for Mac, DraftSight', 'AutoCAD for Mac、DraftSight')], tip: ['Text with 乱码 or “?” in DWG usually means a missing font (SHX / big font): install the font or choose a substitute (e.g. gbcbig.shx for Chinese).', 'DWG 中文字乱码或“？”通常是缺少字体（SHX / 大字体）：安装字体或指定替换字体（中文常用 gbcbig.shx）。'] },
+  dwg: { from: ['AutoCAD drawing: the standard 2D/3D CAD format (engineering, architecture, plant layouts).', 'AutoCAD 图纸：标准的二维/三维 CAD 格式（工程、建筑、电站布置）。'], open: [way(WIN, 'Autodesk DWG TrueView (free), AutoCAD, 中望CAD / GstarCAD', 'Autodesk DWG TrueView（免费）、AutoCAD、中望CAD / 浩辰CAD'), way(ONLINE, 'Autodesk Viewer (free, in the browser)', 'Autodesk Viewer（免费，在浏览器中）'), way(MAC, 'AutoCAD for Mac, DraftSight', 'AutoCAD for Mac、DraftSight')], tip: ['Garbled text or “?” in DWG usually means a missing font (SHX / big font): install the font or choose a substitute (e.g. gbcbig.shx for Chinese).', 'DWG 中文字乱码或“？”通常是缺少字体（SHX / 大字体）：安装字体或指定替换字体（中文常用 gbcbig.shx）。'] },
   dxf: { from: ['DXF: AutoCAD’s exchange format for drawings.', 'DXF：AutoCAD 的图纸交换格式。'], open: [way(ANY, 'LibreCAD, QCAD (free), AutoCAD, DWG TrueView', 'LibreCAD、QCAD（免费）、AutoCAD、DWG TrueView')] },
   step: cad3d(['STEP: 3D models exchanged between mechanical CAD programs (SolidWorks, Inventor, CATIA, Creo, Fusion).', 'STEP：机械 CAD 软件（SolidWorks、Inventor、CATIA、Creo、Fusion）之间交换的三维模型。'], [way(WIN, 'eDrawings (free)', 'eDrawings（免费）')]),
   iges: cad3d(['IGES: an older 3D CAD exchange format.', 'IGES：较旧的三维 CAD 交换格式。']),
@@ -215,7 +215,7 @@ export const FORMAT_GUIDES: Record<string, FormatGuide> = {
 /** Text files: by extension. */
 const editor = way(ANY, 'Any text editor: Notepad / Notepad++ (Windows), TextEdit (Mac), VS Code', '任何文本编辑器：记事本 / Notepad++（Windows）、文本编辑（Mac）、VS Code');
 export const TEXT_GUIDES: Record<string, FormatGuide> = {
-  csv: { from: ['CSV: a table as plain text, separated by commas. Exported by Excel, databases, SCADA/PLC logs, banks.', 'CSV：用逗号分隔的纯文本表格。由 Excel、数据库、SCADA/PLC 日志、银行等导出。'], open: [way(ANY, 'Excel, WPS, Numbers, LibreOffice Calc, Google Sheets', 'Excel、WPS、Numbers、LibreOffice Calc、Google 表格'), editor], tip: ['Double-clicking a CSV makes Excel guess the encoding (your Windows language) — this is the most common cause of 乱码. Use the import steps below instead. To send CSV safely: Excel → Save As → “CSV UTF-8”.', '双击 CSV 时 Excel 会按你的 Windows 语言猜编码——这是最常见的乱码原因。请改用下面的导入步骤。发送 CSV 时：Excel → 另存为 →“CSV UTF-8”。'] },
+  csv: { from: ['CSV: a table as plain text, separated by commas. Exported by Excel, databases, SCADA/PLC logs, banks.', 'CSV：用逗号分隔的纯文本表格。由 Excel、数据库、SCADA/PLC 日志、银行等导出。'], open: [way(ANY, 'Excel, WPS, Numbers, LibreOffice Calc, Google Sheets', 'Excel、WPS、Numbers、LibreOffice Calc、Google 表格'), editor], tip: ['Double-clicking a CSV makes Excel guess the encoding (your Windows language) — this is the most common cause of garbled text. Use the import steps below instead. To send CSV safely: Excel → Save As → “CSV UTF-8”.', '双击 CSV 时 Excel 会按你的 Windows 语言猜编码——这是最常见的乱码原因。请改用下面的导入步骤。发送 CSV 时：Excel → 另存为 →“CSV UTF-8”。'] },
   tsv: { from: ['TSV: a table as plain text, separated by tabs.', 'TSV：用制表符分隔的纯文本表格。'], open: [way(ANY, 'Excel, LibreOffice Calc, Google Sheets', 'Excel、LibreOffice Calc、Google 表格'), editor] },
   txt: { from: ['Plain text.', '纯文本。'], open: [editor] },
   log: { from: ['A log file written by a program, device or server.', '由程序、设备或服务器写出的日志文件。'], open: [editor, way(WIN, 'For big logs: Notepad++, glogg / klogg (free)', '大日志：Notepad++、glogg / klogg（免费）'), way(MAC, 'Console', '控制台')] },
@@ -223,7 +223,7 @@ export const TEXT_GUIDES: Record<string, FormatGuide> = {
   xml: { from: ['XML: structured data (settings, exchanges between systems, IEC 61850 SCL…).', 'XML：结构化数据（配置、系统间交换、IEC 61850 SCL……）。'], open: [way(ANY, 'Any web browser, VS Code, Notepad++', '任何网页浏览器、VS Code、Notepad++')] },
   md: { from: ['Markdown: plain text with simple formatting (README files, notes).', 'Markdown：带简单格式的纯文本（README、笔记）。'], open: [way(ANY, 'VS Code (preview), Typora, Obsidian', 'VS Code（预览）、Typora、Obsidian')] },
   html: { from: ['A web page.', '网页。'], open: [way(ANY, 'Any web browser', '任何网页浏览器')] },
-  srt: { from: ['SRT subtitles for a video.', '视频的 SRT 字幕。'], open: [way(ANY, 'Put it next to the video with the same name; VLC and most players load it', '与视频同名放在一起；VLC 和大多数播放器会自动加载')], tip: ['Subtitles in GBK/Big5 show 乱码 on phones and TVs: save them as UTF-8.', 'GBK/Big5 编码的字幕在手机和电视上会乱码：请另存为 UTF-8。'] },
+  srt: { from: ['SRT subtitles for a video.', '视频的 SRT 字幕。'], open: [way(ANY, 'Put it next to the video with the same name; VLC and most players load it', '与视频同名放在一起；VLC 和大多数播放器会自动加载')], tip: ['Subtitles in GBK/Big5 show garbled text on phones and TVs: save them as UTF-8.', 'GBK/Big5 编码的字幕在手机和电视上会乱码：请另存为 UTF-8。'] },
   ini: { from: ['Settings file (Windows programs).', '配置文件（Windows 程序）。'], open: [editor] },
 };
 TEXT_GUIDES.vtt = TEXT_GUIDES.srt;

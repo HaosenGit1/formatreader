@@ -24,7 +24,7 @@ const s = strings({
   appOnly: { en: 'This is the encrypted download format of the {app} app: no browser or other player can open it. Play it in the {app} app, or use the app’s export / convert function to save it as MP4.', zh: '这是{app}客户端的加密下载格式，浏览器和其他播放器都打不开。请在{app}客户端里播放，或用客户端的“导出/转码”功能另存为 MP4。' },
   exoOnly: { en: 'This is an offline download saved inside an Android app (YouTube and other apps built on ExoPlayer). It is encrypted for that app and phone: no browser or other player can open it. Play it in the app that downloaded it.', zh: '这是安卓 App 内保存的离线下载（YouTube 等基于 ExoPlayer 的 App）。它为该 App 和手机加密，浏览器和其他播放器都打不开，请在下载它的 App 里播放。' },
   amrSound: { en: 'The sound is AMR (old-phone / voice-recorder audio), which browsers can’t play, so the video is silent here. VLC plays it with sound.', zh: '声音是 AMR 格式（旧手机/录音常用），浏览器无法播放，所以这里没有声音。用 VLC 播放可以听到声音。' },
-  companion: { en: 'Playing with its sound from {name} (saved separately, as B站 does).', zh: '同时播放单独保存的声音 {name}（B站缓存就是这样分开保存的）。' },
+  companion: { en: 'Playing with its sound from {name} (saved separately, as Bilibili does).', zh: '同时播放单独保存的声音 {name}（B站缓存就是这样分开保存的）。' },
 });
 
 const time = (t: number) => {

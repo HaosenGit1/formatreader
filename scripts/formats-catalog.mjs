@@ -25,7 +25,7 @@ const WORDS = [
   { name: t('Audit data: SAF-T (PT, PL, NO, LT, RO, AT, LU…), China GB/T 24589, other accounting XML', '审计数据：SAF-T（葡萄牙、波兰、挪威、立陶宛、罗马尼亚、奥地利、卢森堡等）、国标 GB/T 24589、其他会计 XML'), viewer: ['words/ledger', 'words/code'], ext: ['xml'] },
   { name: t('XBRL financial reports (XBRL, Inline XBRL: SEC, ESEF/EU, Companies House)', 'XBRL 财报（XBRL、Inline XBRL：SEC、欧盟 ESEF、英国 Companies House）'), viewer: 'words/xbrl', ext: ['xbrl'] },
   { name: t('Bank statements (MT940, camt.053, OFX/QFX/QBO, BAI2)', '银行流水（MT940、camt.053、OFX/QFX/QBO、BAI2）'), viewer: 'words/bank', ext: ['sta', '940', 'mt940', 'ofx', 'qfx', 'qbo', 'bai', 'bai2'] },
-  { name: t('E-invoices (China 数电票, UBL/Peppol, ZUGFeRD/Factur-X)', '电子发票（数电票、UBL/Peppol、ZUGFeRD/Factur-X）'), viewer: ['words/invoice', 'words/code'], ext: ['xml'] },
+  { name: t('E-invoices (China fully digital e-invoices, UBL/Peppol, ZUGFeRD/Factur-X)', '电子发票（数电票、UBL/Peppol、ZUGFeRD/Factur-X）'), viewer: ['words/invoice', 'words/code'], ext: ['xml'] },
 ];
 
 const TABLES = [
@@ -61,12 +61,12 @@ const SOUNDS = [
 const VIDEOS = [
   { name: t('Videos', '视频'), viewer: 'videos/video', ext: ['mp4', 'm4v', 'webm', 'mov', 'mkv', 'ogv'] },
   { name: t('Short videos worldwide: TikTok, Instagram Reels, YouTube Shorts, Facebook, Snapchat, X, WhatsApp & Telegram videos', '全球短视频：TikTok、Instagram Reels、YouTube Shorts、Facebook、Snapchat、X、WhatsApp 和 Telegram 视频'), viewer: 'videos/video', ext: ['mp4', 'webm', 'mov', '3gp', '3g2'] },
-  { name: t('China: 抖音, 快手, 小红书, 视频号, 西瓜视频, B站 (incl. B站 cache video.m4s + audio.m4s, .m3u8 + pieces in a dropped folder)', '中国：抖音、快手、小红书、视频号、西瓜视频、B站（含 B站缓存 video.m4s + audio.m4s、拖入文件夹的 .m3u8 + 分段）'), viewer: ['videos/video', 'words/text', 'words/code'], ext: ['mp4', 'm4s', 'f4v', 'blv', 'm3u8'] },
+  { name: t('China: Douyin, Kuaishou, RedNote (Xiaohongshu), WeChat Channels, Xigua Video, Bilibili (incl. Bilibili cache video.m4s + audio.m4s, .m3u8 + pieces in a dropped folder)', '中国：抖音、快手、小红书、视频号、西瓜视频、B站（含 B站缓存 video.m4s + audio.m4s、拖入文件夹的 .m3u8 + 分段）'), viewer: ['videos/video', 'words/text', 'words/code'], ext: ['mp4', 'm4s', 'f4v', 'blv', 'm3u8'] },
   { name: t('India: Moj, Josh, ShareChat, MX TakaTak, Chingari, Roposo — and 3GP videos from WhatsApp and older phones', '印度：Moj、Josh、ShareChat、MX TakaTak、Chingari、Roposo——以及 WhatsApp 和旧手机的 3GP 视频'), viewer: 'videos/video', ext: ['mp4', '3gp'] },
   { name: t('Japan & Korea: LINE VOOM, Niconico (incl. old .flv), TVer / camera .mts (AVCHD), Naver, KakaoTV', '日本和韩国：LINE VOOM、Niconico（含旧 .flv）、TVer / 相机 .mts（AVCHD）、Naver、KakaoTV'), viewer: 'videos/video', ext: ['mp4', 'flv', 'm2ts'] },
   { name: t('Latin America, Southeast Asia & Middle East: Kwai, Snack Video, Likee, Bigo, Triller', '拉美、东南亚和中东：Kwai、Snack Video、Likee、Bigo、Triller'), viewer: 'videos/video', ext: ['mp4', '3gp'] },
   { name: t('Europe & Russia: Dailymotion, VK Clips, Rutube, Yappy', '欧洲和俄罗斯：Dailymotion、VK Clips、Rutube、Yappy'), viewer: 'videos/video', ext: ['mp4', 'webm'] },
-  { name: t('Encrypted app downloads (explained): YouTube offline .exo, 爱奇艺 .qsv, 优酷 .kux, 腾讯视频 .qlv, 迅雷 .xv. Netflix, Prime Video, Disney+, JioHotstar, ABEMA downloads stay inside their apps', 'App 加密下载（给出说明）：YouTube 离线 .exo、爱奇艺 .qsv、优酷 .kux、腾讯视频 .qlv、迅雷 .xv。Netflix、Prime Video、Disney+、JioHotstar、ABEMA 的下载只能在各自 App 内播放'), viewer: 'videos/video', ext: ['exo', 'qsv', 'kux', 'qlv', 'xv'] },
+  { name: t('Encrypted app downloads (explained): YouTube offline .exo, iQIYI .qsv, Youku .kux, Tencent Video .qlv, Xunlei .xv. Netflix, Prime Video, Disney+, JioHotstar, ABEMA downloads stay inside their apps', 'App 加密下载（给出说明）：YouTube 离线 .exo、爱奇艺 .qsv、优酷 .kux、腾讯视频 .qlv、迅雷 .xv。Netflix、Prime Video、Disney+、JioHotstar、ABEMA 的下载只能在各自 App 内播放'), viewer: 'videos/video', ext: ['exo', 'qsv', 'kux', 'qlv', 'xv'] },
   { name: t('Phone, action-camera and drone videos (iPhone, Android, GoPro, Insta360, DJI)', '手机、运动相机和无人机视频（iPhone、安卓、GoPro、Insta360、大疆）'), viewer: 'videos/video', ext: ['mov', 'mp4', 'lrv', 'insv'] },
   // MPEG-TS '.ts' video is recognised by content; the extension itself belongs to TypeScript here.
   { name: t('FLV & MPEG-TS (H.264)', 'FLV 和 MPEG-TS（H.264）'), viewer: 'videos/video', ext: ['flv', 'm2ts'] },

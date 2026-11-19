@@ -38,7 +38,7 @@ const s = strings({
   copyLinesTitle: { en: 'Copy the invoice lines as a table, to paste into Excel', zh: '把发票明细复制为表格，可直接粘贴到 Excel' },
   copied: { en: 'Copied', zh: '已复制' },
   all: { en: 'All fields in the file', zh: '文件中的全部字段' },
-  cn: { en: 'Chinese e-invoice (数电票)', zh: '数电票 / 全电发票' },
+  cn: { en: 'Chinese fully digital e-invoice', zh: '数电票 / 全电发票' },
   ubl: { en: 'UBL e-invoice (Peppol, XRechnung)', zh: 'UBL 电子发票（Peppol、XRechnung）' },
   cii: { en: 'CII e-invoice (ZUGFeRD, Factur-X, XRechnung)', zh: 'CII 电子发票（ZUGFeRD、Factur-X、XRechnung）' },
 });
