@@ -12,6 +12,7 @@ import { dwgPreview } from '../shared/dwg-preview';
 import { type Built, type Label, type Prim, type Viewport } from './build';
 import type { Packed, Report } from './drawing-job';
 import { runWorker } from '../../../core/progress';
+import { looksExcellon, looksGerber } from './gerber-sniff';
 
 const s = strings({
   fit: { en: 'Fit', zh: '适应窗口' },
@@ -23,6 +24,7 @@ const s = strings({
   dark: { en: 'Dark', zh: '深色' },
   entities: { en: 'objects', zh: '个对象' },
   layerCount: { en: 'layers', zh: '个图层' },
+  layerOne: { en: 'layer', zh: '个图层' },
   empty: { en: 'This drawing has nothing to draw.', zh: '这个图纸没有可显示的内容。' },
   binary: { en: 'This is a binary DXF, which is not supported yet. Save it as an ASCII DXF.', zh: '这是二进制 DXF，暂不支持。请另存为 ASCII DXF。' },
   dwgFallback: {
@@ -50,13 +52,16 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   const bytes = new Uint8Array(await file.arrayBuffer());
   const head = new TextDecoder('latin1').decode(bytes.subarray(0, 65536));
   const isDwg = ctx.format?.id === 'dwg';
-  const isHpgl = !isDwg && /^(plt|hpgl|hgl|hpg|plo)$/i.test(/\.([a-z0-9]+)$/i.exec(file.name)?.[1] ?? '');
+  const fileExt = /\.([a-z0-9]+)$/i.exec(file.name)?.[1]?.toLowerCase() ?? '';
+  const isHpgl = !isDwg && /^(plt|hpgl|hgl|hpg|plo)$/.test(fileExt);
+  const isGerber = !isDwg && !isHpgl && (looksGerber(head) || looksExcellon(head));
+  const isDrill = isGerber && /^\s*M48\b/m.test(head);
   const version = isDwg ? head.slice(0, 6) : /\$ACADVER\s*\r?\n\s*1\s*\r?\n\s*(AC\d{4})/.exec(head)?.[1];
-  if (!isDwg && !isHpgl && head.startsWith('AutoCAD Binary DXF')) throw new Error(s('binary'));
+  if (!isDwg && !isHpgl && !isGerber && head.startsWith('AutoCAD Binary DXF')) throw new Error(s('binary'));
   const report: Report = (step, fraction) => ctx.progress?.(s(`step_${step}`), fraction);
   let built: Built;
   try {
-    built = await buildDrawing(isDwg ? bytes.slice() : bytes, isDwg ? 'dwg' : isHpgl ? 'hpgl' : 'dxf', report, ctx.signal);
+    built = await buildDrawing(isDwg ? bytes.slice() : bytes, isDwg ? 'dwg' : isHpgl ? 'hpgl' : isGerber ? 'gerber' : 'dxf', report, ctx.signal, file.name);
   } catch (err) {
     if ((err as Error)?.name === 'AbortError') throw err;
     if (isDwg) return dwgFallback(bytes, version ?? '', String((err as Error)?.message ?? err), ctx);
@@ -379,7 +384,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
 
   const skipped = [...built.skipped.entries()].filter(([t]) => !['VIEWPORT', 'ATTRIB', 'SEQEND', 'ATTRIB_HIDDEN'].includes(t));
   return {
-    meta: () => [isDwg ? 'DWG' : isHpgl ? 'HP-GL plot' : 'DXF', ...(version ? [`AutoCAD ${ACAD_VERSIONS[version] ?? version}`] : []), `${built.entityCount.toLocaleString()} ${s('entities')}`, `${built.layers.size} ${s('layerCount')}`, ...(built.layouts.length ? [`${built.layouts.length} ${s(built.layouts.length === 1 ? 'layoutOne' : 'layoutCount')}`] : [])],
+    meta: () => [isDwg ? 'DWG' : isHpgl ? 'HP-GL plot' : isDrill ? 'Excellon drill' : isGerber ? 'Gerber' : 'DXF', ...(version ? [`AutoCAD ${ACAD_VERSIONS[version] ?? version}`] : []), `${built.entityCount.toLocaleString()} ${s('entities')}`, `${built.layers.size} ${s(built.layers.size === 1 ? 'layerOne' : 'layerCount')}`, ...(built.layouts.length ? [`${built.layouts.length} ${s(built.layouts.length === 1 ? 'layoutOne' : 'layoutCount')}`] : [])],
     tools: () => tools,
     notices: () => (skipped.length ? [h('div', { class: 'notice subtle' }, s('skipped').replace('{list}', skipped.map(([t, n]) => `${t} (${n})`).join(', ')))] : []),
     destroy: () => {
@@ -443,10 +448,10 @@ function drawPrims(g: CanvasRenderingContext2D, prims: Prim[], m: Affine, layers
   };
   const flush = () => {
     for (const [key, path] of fills) {
-      const [col, tint] = key.split('|');
-      g.globalAlpha = tint ? 0.22 : 1;
+      const [col, kind] = key.split('|');
+      g.globalAlpha = kind === 't' ? 0.22 : 1;
       g.fillStyle = col;
-      g.fill(path, 'evenodd');
+      g.fill(path, kind === 'n' ? 'nonzero' : 'evenodd');
     }
     g.globalAlpha = 1;
     g.lineWidth = 1;
@@ -475,7 +480,7 @@ function drawPrims(g: CanvasRenderingContext2D, prims: Prim[], m: Affine, layers
     }
     const col = css(p.color);
     if (p.fill) {
-      const key = p.fill === 2 ? `${col}|t` : col;
+      const key = p.fill === 2 ? `${col}|t` : p.fill === 4 ? `${col}|n` : col;
       let path = fills.get(key);
       if (!path) fills.set(key, (path = new Path2D()));
       trace(path, p.pts, true);
@@ -505,13 +510,14 @@ function drawPrims(g: CanvasRenderingContext2D, prims: Prim[], m: Affine, layers
 
 /** A DWG LibreDWG can't read: show the preview AutoCAD saved in it, with the reason. */
 /** Parse and build in the background worker (website) or on the page (portable file). */
-async function buildDrawing(bytes: Uint8Array, kind: 'dxf' | 'dwg' | 'hpgl', report: Report, signal?: AbortSignal): Promise<Built> {
+async function buildDrawing(bytes: Uint8Array, kind: 'dxf' | 'dwg' | 'hpgl' | 'gerber', report: Report, signal?: AbortSignal, name?: string): Promise<Built> {
   if (import.meta.env.MODE === 'portable') {
     const job = await import('./drawing-job');
+    if (kind === 'gerber') return job.buildGerberBytes(bytes, report, name);
     return (kind === 'dwg' ? job.buildDwgBytes : kind === 'hpgl' ? job.buildHpglBytes : job.buildDxfBytes)(bytes, report);
   }
   const [{ startDrawingWorker }, { unpack }] = await Promise.all([import('./drawing-worker-host'), import('./drawing-job')]);
-  const packed = await runWorker<Packed>(startDrawingWorker(), { bytes, dwg: kind === 'dwg', kind }, [bytes.buffer], (step, f) => report(step as Parameters<Report>[0], f), signal);
+  const packed = await runWorker<Packed>(startDrawingWorker(), { bytes, dwg: kind === 'dwg', kind, name }, [bytes.buffer], (step, f) => report(step as Parameters<Report>[0], f), signal);
   return unpack(packed);
 }
 

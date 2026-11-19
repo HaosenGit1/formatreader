@@ -29,5 +29,6 @@ export const CAD_KINDS: Record<string, CadKind> = {
   catproduct: { name: 'CATIA assembly', maker: 'Dassault Systèmes CATIA', open: ['3DEXPERIENCE; export to STEP to open here', '3DEXPERIENCE；导出为 STEP 即可在这里打开'] },
   catdrawing: { name: 'CATIA drawing', maker: 'Dassault Systèmes CATIA', open: ['CATIA; export to PDF or DXF', 'CATIA；导出为 PDF 或 DXF'] },
   max: { name: '3ds Max scene', maker: 'Autodesk 3ds Max', open: ['Autodesk 3ds Max; export to FBX/OBJ to open here', 'Autodesk 3ds Max；导出为 FBX/OBJ 即可在这里打开'] },
+  dwf: { name: 'DWF drawing (Autodesk Design Web Format)', maker: 'Autodesk — published from AutoCAD, Revit, Inventor', open: ['Autodesk Design Review (free, Windows), Autodesk Viewer (viewer.autodesk.com)', 'Autodesk Design Review（免费，Windows），Autodesk Viewer（viewer.autodesk.com）'] },
   vsd: { name: 'Visio 2003–2010 drawing', maker: 'Microsoft Visio', open: ['Visio, Visio Viewer (free, Windows), LibreOffice Draw (free); save as VSDX to open here', 'Visio、Visio Viewer（免费，Windows）、LibreOffice Draw（免费）；另存为 VSDX 即可在这里打开'] },
 };

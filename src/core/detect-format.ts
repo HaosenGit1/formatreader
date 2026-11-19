@@ -188,6 +188,7 @@ function fromMagic(h: Uint8Array, ext: string): FormatInfo | null {
   if (h[0] === 1 && h[1] === 0 && h[2] === 0 && h[3] === 0 && ascii(h, 40, 4) === ' EMF') return F('emf', 'Windows enhanced metafile (EMF)', 'images');
   if (h[0] === 0xd7 && h[1] === 0xcd && h[2] === 0xc6 && h[3] === 0x9a) return F('wmf', 'Windows metafile (WMF)', 'images');
   if (ext === 'wmf' && (h[0] === 1 || h[0] === 2) && h[1] === 0 && h[2] === 9 && h[3] === 0) return F('wmf', 'Windows metafile (WMF)', 'images');
+  if (ascii(h, 0, 6) === '(DWF V') return F('dwf', 'DWF drawing (Autodesk)', 'drawings');
   if (ascii(h, 0, 3) === 'FLV') return F('flv', 'Flash video', 'videos');
   if (ascii(h, 0, 4) === '.RMF') return ext === 'ra' ? F('ra', 'RealAudio', 'sounds') : F('rmvb', 'RealMedia video', 'videos');
   if (startsWith(h, [0, 0, 1, 0xba]) || startsWith(h, [0, 0, 1, 0xb3])) return F('mpg', 'MPEG video', 'videos');
@@ -258,7 +259,8 @@ function fromZip(names: string[], head: Uint8Array, ext: string): FormatInfo {
   if (has('xl/workbook.bin')) return F('xlsb', 'Excel binary workbook', 'words');
   if (has('ppt/presentation.xml')) return F('pptx', 'PowerPoint presentation', 'words');
   if (has('visio/document.xml')) return F('vsdx', 'Visio drawing', 'drawings');
-  if (any(/\.fdseq$/i) || any(/\.fpage$/i)) return F(ext === 'oxps' ? 'oxps' : 'xps', ext === 'oxps' ? 'OpenXPS document' : 'XPS document', 'words');
+  // DWFx (Autodesk) is an XPS package too: its sheets open in the XPS viewer.
+  if (any(/\.fdseq$/i) || any(/\.fpage$/i)) return ext === 'dwfx' ? F('xps', 'DWFx drawing (Autodesk)', 'drawings') : F(ext === 'oxps' ? 'oxps' : 'xps', ext === 'oxps' ? 'OpenXPS document' : 'XPS document', 'words');
   if (has('OFD.xml')) return F('ofd', 'OFD document', 'words');
   if (has('Index/Document.iwa') || any(/^Index\/.*\.iwa$/)) {
     return BY_EXTENSION[ext] ?? F('iwork', 'Apple iWork document', 'words');

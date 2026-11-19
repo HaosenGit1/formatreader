@@ -59,3 +59,19 @@
     grid-template-columns: 1fr;
   }
 }
+
+.ci-picture {
+  gap: 16px;
+  padding: 16px;
+}
+
+.ci-fig {
+  margin: 0;
+  text-align: center;
+}
+
+.ci-fig figcaption {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}

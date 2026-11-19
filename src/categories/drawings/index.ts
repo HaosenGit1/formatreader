@@ -6,9 +6,12 @@
 import type { ViewerEntry } from '../../core/viewer';
 import { isGeoJson, isShp } from './map/sniff';
 import { looksHpgl } from './dxf/hpgl-sniff';
+import { looksExcellon, looksGerber } from './dxf/gerber-sniff';
+
+const GERBER_EXT = /^(gbr|ger|pho|art|gtl|gbl|gts|gbs|gto|gbo|gtp|gbp|gko|gm\d*|gml|g[1-9]|gp[1-9]|cmp|sol|stc|sts|plc|pls|drl|xln|exc|drd|txt)$/;
 
 /** Kept in step with cadinfo/formats.ts (the table itself loads only with the viewer). */
-const CAD_EXT = new Set(['skp', 'sldprt', 'sldasm', 'slddrw', 'ipt', 'iam', 'idw', 'ipn', 'rvt', 'rfa', 'rte', 'rft', '3dm', 'dgn', 'catpart', 'catproduct', 'catdrawing', 'max', 'vsd']);
+const CAD_EXT = new Set(['dwf', 'skp', 'sldprt', 'sldasm', 'slddrw', 'ipt', 'iam', 'idw', 'ipn', 'rvt', 'rfa', 'rte', 'rft', '3dm', 'dgn', 'catpart', 'catproduct', 'catdrawing', 'max', 'vsd']);
 
 const text = (head: Uint8Array, n = 4096) => new TextDecoder('latin1').decode(head.subarray(0, n));
 
@@ -26,7 +29,9 @@ export const drawingsViewers: ViewerEntry[] = [
       format?.id === 'dwg' ||
       ((format?.id === 'dxf' || ext === 'dxf') && /(^|\n)\s*0\s*\r?\n\s*SECTION|^AutoCAD Binary DXF/.test(text(head))) ||
       // HP-GL plot files (a gnuplot script can also be called .plt: checked by content).
-      (/^(plt|hpgl|hgl|hpg|plo)$/.test(ext) && looksHpgl(text(head, 2048))),
+      (/^(plt|hpgl|hgl|hpg|plo)$/.test(ext) && looksHpgl(text(head, 2048))) ||
+      // Circuit boards: Gerber layers and Excellon drill files (checked by content).
+      (GERBER_EXT.test(ext) && (looksGerber(text(head, 8192)) || looksExcellon(text(head, 8192)))),
     load: () => import('./dxf/view'),
   },
   {
@@ -87,7 +92,7 @@ export const drawingsViewers: ViewerEntry[] = [
     id: 'drawings/cadinfo',
     category: 'drawings',
     heavyAbove: () => 400 * 1024 * 1024,
-    accepts: ({ ext, head }) => CAD_EXT.has(ext) && (ext !== 'prt' || text(head, 4) === '#UGC'),
+    accepts: ({ format, ext, head }) => format?.id === 'dwf' || (CAD_EXT.has(ext) && (ext !== 'prt' || text(head, 4) === '#UGC')),
     load: () => import('./cadinfo/view'),
   },
   {

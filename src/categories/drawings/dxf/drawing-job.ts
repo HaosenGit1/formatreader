@@ -50,6 +50,12 @@ export async function buildHpglBytes(bytes: Uint8Array, report: Report): Promise
   return buildHpgl(bytes);
 }
 
+export async function buildGerberBytes(bytes: Uint8Array, report: Report, name?: string): Promise<Built> {
+  report('parse');
+  const { buildGerber } = await import('./gerber');
+  return buildGerber(bytes, name);
+}
+
 export async function buildDwgBytes(bytes: Uint8Array, report: Report): Promise<Built> {
   report('dwg');
   const [{ readDwg }, { dwgToDxf }] = await Promise.all([import('./dwg-engine'), import('./dwg')]);
@@ -129,7 +135,7 @@ export function unpack(p: Packed): Built {
     }
     const s = p.start[pi];
     const f = p.closed[pi];
-    prims[order] = { kind: 'poly', pts: p.pts.subarray(s, s + p.count[pi]) as unknown as number[], closed: (f & 1) === 1, color: p.color[pi], layer: p.layerNames[p.layer[pi]], ...(f >> 1 ? { fill: (f >> 1) as 1 | 2 | 3 } : {}) };
+    prims[order] = { kind: 'poly', pts: p.pts.subarray(s, s + p.count[pi]) as unknown as number[], closed: (f & 1) === 1, color: p.color[pi], layer: p.layerNames[p.layer[pi]], ...(f >> 1 ? { fill: (f >> 1) as 1 | 2 | 3 | 4 } : {}) };
     pi++;
   }
   return { prims, layouts: p.layouts, units: p.units, layers: new Map(p.layers), bounds: p.bounds, entityCount: p.entityCount, skipped: new Map(p.skipped) };

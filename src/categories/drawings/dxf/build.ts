@@ -14,8 +14,11 @@ export interface Poly {
   closed: boolean;
   color: number; // 0xRRGGBB, or -1 for "foreground" (ACI 7: black on white, white on black)
   layer: string;
-  /** 1 = solid fill, 2 = light tint (a hatch too dense to draw line by line), 3 = background (wipeout). */
-  fill?: 0 | 1 | 2 | 3;
+  /**
+   * 1 = solid fill (even-odd: islands stay open), 2 = light tint (a hatch too dense to draw line
+   * by line), 3 = background (wipeout), 4 = solid fill where overlaps merge (circuit-board copper).
+   */
+  fill?: 0 | 1 | 2 | 3 | 4;
 }
 export interface Label {
   kind: 'text';
