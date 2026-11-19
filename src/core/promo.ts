@@ -62,6 +62,8 @@ function wander(landing: HTMLElement): void {
   const ball = landing.querySelector<HTMLElement>('.circle');
   if (!ball) return;
   landing.classList.add('promo-ball');
+  // A small caption under the slogan: on hover with a mouse, always on touchscreens.
+  ball.append(h('span', { class: 'circle-hint hint-mouse', 'aria-hidden': 'true' }, 'Open a file'), h('span', { class: 'circle-hint hint-touch', 'aria-hidden': 'true' }, 'Tap to open'));
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const r0 = landing.getBoundingClientRect();
   const size0 = ball.offsetWidth;
