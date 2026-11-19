@@ -3,7 +3,10 @@
  * arcs, circles, ellipses, splines, polyline bulges all become points) and
  * texts. Blocks (INSERT) are expanded with their position, scale and rotation,
  * nested up to a sane depth. Colours resolve BYLAYER / BYBLOCK.
+ * Hatches (solid, pattern lines or a tint), leaders, wipeouts, image frames,
+ * construction lines and paper-space layouts with their viewports.
  */
+import { patternPieces, type PatternLine } from './shapes';
 
 export interface Poly {
   kind: 'poly';
@@ -11,6 +14,8 @@ export interface Poly {
   closed: boolean;
   color: number; // 0xRRGGBB, or -1 for "foreground" (ACI 7: black on white, white on black)
   layer: string;
+  /** 1 = solid fill, 2 = light tint (a hatch too dense to draw line by line), 3 = background (wipeout). */
+  fill?: 0 | 1 | 2 | 3;
 }
 export interface Label {
   kind: 'text';
@@ -28,8 +33,31 @@ export interface Label {
 }
 export type Prim = Poly | Label;
 
+/** A paper-space window onto model space. */
+export interface Viewport {
+  cx: number;
+  cy: number;
+  w: number;
+  h: number;
+  /** Model point at the window's centre, model height shown, twist (radians). */
+  vx: number;
+  vy: number;
+  vh: number;
+  twist: number;
+}
+export interface Layout {
+  name: string;
+  prims: Prim[];
+  viewports: Viewport[];
+  bounds: { minX: number; minY: number; maxX: number; maxY: number } | null;
+}
+
 export interface Built {
   prims: Prim[];
+  /** Paper-space layouts (title blocks, notes, viewports), in tab order. */
+  layouts: Layout[];
+  /** $INSUNITS: 1 inch, 2 feet, 4 mm, 5 cm, 6 m … (0 / undefined = unitless). */
+  units?: number;
   layers: Map<string, { color: number; visible: boolean }>;
   bounds: { minX: number; minY: number; maxX: number; maxY: number } | null;
   entityCount: number;
@@ -40,9 +68,12 @@ interface Pt {
   x: number;
   y: number;
 }
-type Entity = Record<string, unknown> & { type: string; layer?: string; color?: number; colorIndex?: number };
+type Entity = Record<string, unknown> & { type: string; layer?: string; color?: number; colorIndex?: number; inPaperSpace?: boolean };
 interface Dxf {
   entities?: Entity[];
+  layouts?: Array<{ name: string; entities: Entity[] }>;
+  units?: number;
+  header?: Record<string, unknown>;
   blocks?: Record<string, { entities?: Entity[]; position?: Pt; name?: string }>;
   tables?: { layer?: { layers?: Record<string, { color?: number; colorIndex?: number; visible?: boolean; frozen?: boolean }> } };
 }
@@ -162,6 +193,10 @@ export function plainMtext(raw: string): string {
 
 export function buildDxf(dxf: Dxf, report?: (fraction: number) => void): Built {
   const prims: Prim[] = [];
+  // Where emitted shapes go (model space, or the layout being built) and its viewports.
+  let target: Prim[] = prims;
+  let viewports: Viewport[] | null = null;
+  const construction: Array<{ x: number; y: number; dx: number; dy: number; ray: boolean; color: number; layer: string }> = [];
   const topLevel = Math.max(1, (dxf as { entities?: unknown[] }).entities?.length ?? 1);
   const skipped = new Map<string, number>();
   const layers = new Map<string, { color: number; visible: boolean }>();
@@ -181,11 +216,27 @@ export function buildDxf(dxf: Dxf, report?: (fraction: number) => void): Built {
     return e.color ?? FOREGROUND;
   };
 
-  const emitPoly = (m: M, local: number[], closed: boolean, color: number, layer: string) => {
+  const emitPoly = (m: M, local: number[], closed: boolean, color: number, layer: string, fill: Poly['fill'] = 0) => {
     if (local.length < 4) return;
     const pts = new Array<number>(local.length);
     for (let i = 0; i < local.length; i += 2) [pts[i], pts[i + 1]] = apply(m, local[i], local[i + 1]);
-    prims.push({ kind: 'poly', pts, closed, color, layer });
+    target.push(fill ? { kind: 'poly', pts, closed: true, color, layer, fill } : { kind: 'poly', pts, closed, color, layer });
+  };
+  /** Closed filled arrowhead with its tip at `tip`, pointing away from `from`. */
+  const arrowhead = (m: M, tip: Pt, from: Pt, size: number, color: number, layer: string) => {
+    const len = Math.hypot(from.x - tip.x, from.y - tip.y);
+    if (!len || !(size > 0)) return;
+    const ux = (from.x - tip.x) / len;
+    const uy = (from.y - tip.y) / len;
+    const bx = tip.x + ux * size;
+    const by = tip.y + uy * size;
+    const w = size / 6;
+    emitPoly(m, [tip.x, tip.y, bx - uy * w, by + ux * w, bx + uy * w, by - ux * w], true, color, layer, 1);
+  };
+  const flat = (v: Pt[]) => v.flatMap((q) => [q.x, q.y]);
+  const leaderSize = (v: Pt[], size?: number) => {
+    const first = Math.hypot(v[1].x - v[0].x, v[1].y - v[0].y);
+    return Math.min(size && size > 0 ? size : first * 0.2, first * 0.5);
   };
 
   const walk = (entities: Entity[], m: M, insertLayer: string | null, blockColor: number, depth: number) => {
@@ -251,7 +302,7 @@ export function buildDxf(dxf: Dxf, report?: (fraction: number) => void): Built {
           const v = ((e.points ?? e.vertices) as Pt[] | undefined) ?? [];
           // SOLID corners are stored in "Z" order: 1, 2, 4, 3.
           const order = e.type === 'SOLID' && v.length === 4 ? [v[0], v[1], v[3], v[2]] : v;
-          emitPoly(m, order.flatMap((q) => [q.x, q.y]), true, color, layer);
+          emitPoly(m, order.flatMap((q) => [q.x, q.y]), true, color, layer, e.type === 'SOLID' ? 1 : 0);
           break;
         }
         case 'POINT': {
@@ -278,17 +329,85 @@ export function buildDxf(dxf: Dxf, report?: (fraction: number) => void): Built {
           const align = isM ? (['left', 'center', 'right'] as const)[(ap - 1) % 3] : hAlign === 1 || hAlign === 4 ? 'center' : hAlign === 2 ? 'right' : 'left';
           const baseline = isM ? (ap <= 3 ? 'top' : ap <= 6 ? 'middle' : 'bottom') : (e.valign as number) === 2 ? 'middle' : (e.valign as number) === 3 ? 'top' : 'alphabetic';
           const width = isM && (e.width as number) > 0 ? (e.width as number) * scale : undefined;
-          prims.push({ kind: 'text', x, y, height: (((isM ? e.height : e.textHeight) as number) || 2.5) * scale, rotation: rot, text, align, baseline, width, color, layer });
+          target.push({ kind: 'text', x, y, height: (((isM ? e.height : e.textHeight) as number) || 2.5) * scale, rotation: rot, text, align, baseline, width, color, layer });
           break;
         }
+        case 'HATCH': {
+          const loops = ((e.loops as number[][] | undefined) ?? []).filter((l) => l.length >= 6);
+          if (!loops.length) break;
+          if (e.solid) {
+            for (const l of loops) emitPoly(m, l, true, color, layer, 1);
+            break;
+          }
+          const lines = (e.patternLines as PatternLine[] | undefined) ?? [];
+          const pieces = lines.length ? patternPieces(loops, lines) : null;
+          if (!pieces?.length) for (const l of loops) emitPoly(m, l, true, color, layer, 2);
+          else for (const pc of pieces) emitPoly(m, pc, false, color, layer);
+          break;
+        }
+        case 'LEADER': {
+          const v = ((e.vertices as Pt[] | undefined) ?? []).filter(Boolean);
+          if (v.length < 2) break;
+          emitPoly(m, flat(v), false, color, layer);
+          if (e.arrow) arrowhead(m, v[0], v[1], leaderSize(v, e.textHeight as number), color, layer);
+          break;
+        }
+        case 'MULTILEADER': {
+          for (const line of (e.lines as Pt[][] | undefined) ?? []) {
+            const v = line.filter(Boolean);
+            if (v.length < 2) continue;
+            emitPoly(m, flat(v), false, color, layer);
+            arrowhead(m, v[0], v[1], leaderSize(v, (e.arrowSize as number) ?? (e.textHeight as number)), color, layer);
+          }
+          const text = plainMtext(String(e.text ?? ''));
+          const at = e.textPos as Pt | undefined;
+          if (text.trim() && at) {
+            const [x, y] = apply(m, at.x, at.y);
+            const scale = Math.hypot(m.a, m.b);
+            target.push({ kind: 'text', x, y, height: (((e.textHeight as number) || 2.5) * scale), rotation: Math.atan2(m.b, m.a), text, align: 'left', baseline: 'top', color, layer });
+          }
+          break;
+        }
+        case 'WIPEOUT':
+        case 'IMAGE': {
+          const b = (e.boundary as Pt[] | undefined) ?? [];
+          if (b.length < 3) break;
+          if (e.type === 'WIPEOUT') emitPoly(m, flat(b), true, color, layer, 3);
+          else {
+            // The picture itself lives in a separate file: show its frame.
+            emitPoly(m, flat(b), true, color, layer);
+            if (b.length === 4) (emitPoly(m, flat([b[0], b[2]]), false, color, layer), emitPoly(m, flat([b[1], b[3]]), false, color, layer));
+          }
+          break;
+        }
+        case 'XLINE':
+        case 'RAY': {
+          const p = e.first as Pt | undefined;
+          const d = e.dir as Pt | undefined;
+          if (!p || !d || target !== prims) break;
+          const [x, y] = apply(m, p.x, p.y);
+          construction.push({ x, y, dx: m.a * d.x + m.c * d.y, dy: m.b * d.x + m.d * d.y, ray: e.type === 'RAY', color, layer });
+          break;
+        }
+        case 'VIEWPORT': {
+          const c = e.center as Pt | undefined;
+          const vc = e.viewCenter as Pt | undefined;
+          // Viewport 1 is the paper sheet itself; others are windows onto the model.
+          if (!viewports || !c || !vc || e.off || e.id === 1 || !((e.width as number) > 0) || !((e.viewHeight as number) > 0)) break;
+          viewports.push({ cx: c.x, cy: c.y, w: e.width as number, h: e.height as number, vx: vc.x, vy: vc.y, vh: e.viewHeight as number, twist: (e.twist as number) ?? 0 });
+          break;
+        }
+        case 'ATTRIB_HIDDEN':
+          break;
         case 'INSERT':
+        case 'ACAD_TABLE':
         case 'DIMENSION': {
-          const name = String(e.type === 'DIMENSION' ? e.block : e.name);
+          const name = String(e.type === 'INSERT' ? e.name : e.block);
           const block = dxf.blocks?.[name];
           if (!block?.entities?.length || depth > 8) break;
           const base = block.position ?? { x: 0, y: 0 };
-          if (e.type === 'DIMENSION') {
-            // Dimension blocks are already drawn in drawing coordinates.
+          if (e.type !== 'INSERT') {
+            // Dimension and table blocks are already drawn in drawing coordinates.
             walk(block.entities, m, layer, color, depth + 1);
             break;
           }
@@ -352,7 +471,68 @@ export function buildDxf(dxf: Dxf, report?: (fraction: number) => void): Built {
     });
   }
 
-  return { prims, layers, bounds: robustBounds(prims), entityCount, skipped };
+  const bounds = robustBounds(prims);
+
+  // Construction lines (XLINE, RAY) are endless: draw them across the drawing's area.
+  if (bounds && construction.length) {
+    const span = Math.max(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY, 1e-9);
+    const box = { x0: bounds.minX - span, y0: bounds.minY - span, x1: bounds.maxX + span, y1: bounds.maxY + span };
+    for (const c of construction) {
+      let t0 = c.ray ? 0 : -Infinity;
+      let t1 = Infinity;
+      for (const [p, d, lo, hi] of [[c.x, c.dx, box.x0, box.x1], [c.y, c.dy, box.y0, box.y1]] as const) {
+        if (Math.abs(d) < 1e-15) {
+          if (p < lo || p > hi) t1 = -Infinity;
+          continue;
+        }
+        const a = (lo - p) / d;
+        const b = (hi - p) / d;
+        t0 = Math.max(t0, Math.min(a, b));
+        t1 = Math.min(t1, Math.max(a, b));
+      }
+      if (t1 > t0) prims.push({ kind: 'poly', pts: [c.x + c.dx * t0, c.y + c.dy * t0, c.x + c.dx * t1, c.y + c.dy * t1], closed: false, color: c.color, layer: c.layer });
+    }
+  }
+
+  // Paper-space layouts: their own shapes, and viewports showing the model.
+  const layouts: Layout[] = [];
+  for (const l of dxf.layouts ?? []) {
+    const lp: Prim[] = [];
+    const vps: Viewport[] = [];
+    target = lp;
+    viewports = vps;
+    walk(l.entities, I, null, FOREGROUND, 0);
+    target = prims;
+    viewports = null;
+    if (!lp.length && !vps.length) continue;
+    const b = boundsOf([...lp, ...vps.map((v): Prim => ({ kind: 'poly', pts: [v.cx - v.w / 2, v.cy - v.h / 2, v.cx + v.w / 2, v.cy + v.h / 2], closed: false, color: 0, layer: '' }))]);
+    layouts.push({ name: l.name, prims: lp, viewports: vps, bounds: b });
+  }
+  const units = dxf.units ?? (dxf.header?.$INSUNITS as number | undefined);
+  return { prims, layouts, units, layers, bounds, entityCount, skipped };
+}
+
+/**
+ * DXF: shapes marked as paper space, and the *Paper_Space* blocks, become layouts
+ * (named and ordered from the file's LAYOUT objects when present).
+ */
+export function splitDxfLayouts(dxf: Dxf & { blocks?: Record<string, { entities?: Entity[]; ownerHandle?: string }> }, names: Map<string, { name: string; order: number }>): Dxf {
+  const model: Entity[] = [];
+  const active: Entity[] = [];
+  for (const e of dxf.entities ?? []) (e.inPaperSpace ? active : model).push(e);
+  const found: Array<{ name: string; order: number; entities: Entity[] }> = [];
+  let n = 0;
+  for (const [blockName, b] of Object.entries(dxf.blocks ?? {})) {
+    if (!/^\*Paper_Space/i.test(blockName)) continue;
+    const ents = [...(blockName.toLowerCase() === '*paper_space' ? active : []), ...(b.entities ?? [])];
+    if (!ents.length) continue;
+    const meta = names.get(String(b.ownerHandle ?? '').toUpperCase());
+    n++;
+    found.push({ name: meta?.name || `Layout ${n}`, order: meta?.order ?? 100 + n, entities: ents });
+  }
+  if (active.length && !found.some((f) => f.entities.includes(active[0]))) found.push({ name: 'Layout', order: 0, entities: active });
+  found.sort((a, b) => a.order - b.order);
+  return { ...dxf, entities: model, layouts: found.map(({ name, entities }) => ({ name, entities })) };
 }
 
 /**

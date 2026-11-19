@@ -4,6 +4,7 @@
  * drawn by the same renderer as DXF (layers, blocks, text, dimensions…).
  */
 import ACI from 'dxf-parser/dist/AutoCadColorIndex.js';
+import { bulgeLoop, edgeLoop, imageBoundary, type Edge } from './shapes';
 
 type Obj = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -83,22 +84,49 @@ function convert(e: Obj, out: Obj[]) {
     case 'MLINE':
       out.push({ ...base, type: 'LWPOLYLINE', vertices: (e.vertices ?? []).map((v: Obj) => v.vertex), shape: !!(e.flags & 2) });
       break;
-    case 'HATCH':
-      // Outline of each boundary (fill patterns are not drawn).
+    case 'HATCH': {
+      const loops: number[][] = [];
       for (const path of e.boundaryPaths ?? []) {
         if (path.vertices?.length) {
-          out.push({ ...base, type: 'LWPOLYLINE', vertices: path.vertices, shape: true });
+          loops.push(bulgeLoop(path.vertices));
           continue;
         }
-        for (const edge of path.edges ?? []) {
-          if (edge.type === 1 && edge.start && edge.end) out.push({ ...base, type: 'LINE', vertices: [edge.start, edge.end] });
-          else if (edge.type === 2 && edge.center) out.push({ ...base, type: 'ARC', center: edge.center, radius: edge.radius, startAngle: edge.isCCW === false ? -edge.endAngle : edge.startAngle, endAngle: edge.isCCW === false ? -edge.startAngle : edge.endAngle });
+        const edges: Edge[] = [];
+        for (const ed of path.edges ?? []) {
+          if (ed.type === 1 && ed.start && ed.end) edges.push({ type: 1, start: ed.start, end: ed.end });
+          else if (ed.type === 2 && ed.center) edges.push({ type: 2, center: ed.center, radius: ed.radius, startAngle: ed.startAngle, endAngle: ed.endAngle, ccw: ed.isCCW !== false });
+          else if (ed.type === 3 && ed.center) edges.push({ type: 3, center: ed.center, end: ed.end, ratio: ed.lengthOfMinorAxis, startAngle: ed.startAngle, endAngle: ed.endAngle, ccw: ed.isCCW !== false });
+          else if (ed.type === 4) edges.push({ type: 4, degree: ed.degree, knots: ed.knots ?? [], controlPoints: ed.controlPoints ?? [], fitPoints: ed.fitDatum ?? [] });
         }
+        loops.push(edgeLoop(edges));
       }
+      const patternLines = (e.definitionLines ?? []).map((l: Obj) => ({ angle: l.angle, base: l.base, offset: l.offset, dashes: l.dashLengths ?? [] }));
+      out.push({ ...base, loops, solid: e.solidFill === 1, patternLines });
+      break;
+    }
+    case 'LEADER':
+      out.push({ ...base, vertices: e.vertices ?? [], arrow: e.isArrowheadEnabled !== false, textHeight: e.textHeight });
+      break;
+    case 'MULTILEADER': {
+      const lines: Obj[][] = [];
+      for (const sec of e.leaderSections ?? []) for (const l of sec.leaderLines ?? []) lines.push([...(l.vertices ?? []), ...(sec.lastLeaderLinePoint ? [sec.lastLeaderLinePoint] : [])]);
+      out.push({ ...base, lines, text: e.textContent, textPos: e.textAnchor, textHeight: e.textHeight, arrowSize: e.arrowheadSize });
+      break;
+    }
+    case 'WIPEOUT':
+    case 'IMAGE':
+      if (e.position && e.uPixel && e.vPixel) out.push({ ...base, boundary: imageBoundary(e.position, e.uPixel, e.vPixel, e.imageSize ?? { x: 1, y: 1 }, e.clippingBoundaryPath ?? []) });
       break;
     case 'XLINE':
     case 'RAY':
-      break; // infinite construction lines: drawing them would make the extents infinite
+      out.push({ ...base, first: e.firstPoint, dir: e.unitDirection });
+      break;
+    case 'ACAD_TABLE':
+      out.push({ ...base, block: e.name, blockHandle: e.blockRecordHandle });
+      break;
+    case 'VIEWPORT':
+      out.push({ ...base, center: e.viewportCenter, width: e.width, height: e.height, id: e.viewportId, viewCenter: e.displayCenter, viewHeight: e.viewHeight, twist: e.viewTwistAngle ?? 0, off: !!((e.statusBitFlags ?? 0) & 131072) });
+      break;
     default:
       out.push({ type: e.type }); // counted as "not drawn yet"
   }
@@ -119,12 +147,32 @@ export function dwgToDxf(db: Obj): Obj {
     for (const e of b.entities ?? []) convert(e, ents);
     blocks[b.name] = { name: b.name, position: b.basePoint, entities: ents };
   }
-  // Model space only (paper-space layouts hold title blocks and viewports, not the drawing).
-  const owner = new Map<string, string>((db.tables?.BLOCK_RECORD?.entries ?? []).map((b: Obj) => [b.handle, b.name]));
+  // Model space; each paper-space layout separately (title blocks, notes, viewports).
+  const records: Obj[] = db.tables?.BLOCK_RECORD?.entries ?? [];
+  const owner = new Map<string, string>(records.map((b: Obj) => [b.handle, b.name]));
   const entities: Obj[] = [];
+  const paper = new Map<string, Obj[]>();
   for (const e of db.entities ?? []) {
     const name = owner.get(e.ownerBlockRecordSoftId);
     if (!name || /^\*Model_Space/i.test(name)) convert(e, entities);
+    else if (/^\*Paper_Space/i.test(name)) {
+      if (!paper.has(name)) paper.set(name, []);
+      convert(e, paper.get(name)!);
+    }
   }
-  return { tables: { layer: { layers } }, blocks, entities };
+  for (const b of records) {
+    if (!/^\*Paper_Space/i.test(b.name) || paper.get(b.name)?.length) continue;
+    const ents: Obj[] = [];
+    for (const e of b.entities ?? []) convert(e, ents);
+    if (ents.length) paper.set(b.name, ents);
+  }
+  // Table blocks referenced by handle.
+  for (const e of [...entities, ...[...paper.values()].flat()]) if (e.type === 'ACAD_TABLE' && !e.block && e.blockHandle) e.block = owner.get(e.blockHandle);
+  const layouts = ((db.objects?.LAYOUT ?? []) as Obj[])
+    .map((l) => ({ name: l.layoutName as string, order: (l.tabOrder as number) ?? 0, block: owner.get(l.paperSpaceTableId as string) }))
+    .filter((l) => l.block && /^\*Paper_Space/i.test(l.block) && paper.get(l.block)?.length)
+    .sort((a, b) => a.order - b.order)
+    .map((l) => ({ name: l.name, entities: paper.get(l.block!)! }));
+  const units = db.header?.INSUNITS ?? db.header?.insunits;
+  return { tables: { layer: { layers } }, blocks, entities, layouts, units };
 }

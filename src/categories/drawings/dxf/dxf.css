@@ -100,3 +100,55 @@
   max-height: 70vh;
   box-shadow: 0 1px 6px rgb(0 0 0 / 0.12);
 }
+
+.dx-measuring {
+  cursor: crosshair;
+}
+
+.dx-measuring:active {
+  cursor: crosshair;
+}
+
+.dx-readout {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 20px);
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.15);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.dx-search {
+  width: 140px;
+  min-width: 0;
+}
+
+.dx-count {
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dx-print {
+  display: none;
+}
+
+@media print {
+  body.dx-printing > :not(.dx-print) {
+    display: none !important;
+  }
+
+  body.dx-printing .dx-print {
+    display: block;
+  }
+
+  .dx-print img {
+    width: 100%;
+  }
+}

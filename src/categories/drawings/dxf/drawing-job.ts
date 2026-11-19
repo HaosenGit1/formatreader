@@ -7,7 +7,8 @@
  * worker takes longer than building them (measured: 5 s for 2.7 million lines).
  */
 import DxfArrayScanner from 'dxf-parser/dist/DxfArrayScanner.js';
-import { buildDxf, dxfEncoding, type Built, type Label, type Prim } from './build';
+import { buildDxf, dxfEncoding, splitDxfLayouts, type Built, type Label, type Layout, type Prim } from './build';
+import { dxfLayouts, registerExtra } from './dxf-extra';
 
 export type Report = (step: 'parse' | 'build' | 'dwg' | 'pack', fraction?: number) => void;
 
@@ -32,12 +33,15 @@ export async function buildDxfBytes(bytes: Uint8Array, report: Report): Promise<
   const unwatch = watchScanner(report);
   let parsed: unknown;
   try {
-    parsed = new DxfParser().parseSync(text);
+    const parser = new DxfParser();
+    registerExtra(parser as never);
+    parsed = parser.parseSync(text);
   } finally {
     unwatch();
   }
   report('build', 0);
-  return buildDxf(parsed as never, (f) => report('build', f));
+  const split = splitDxfLayouts(parsed as never, dxfLayouts(text));
+  return buildDxf(split, (f) => report('build', f));
 }
 
 export async function buildDwgBytes(bytes: Uint8Array, report: Report): Promise<Built> {
@@ -53,7 +57,7 @@ export async function buildDwgBytes(bytes: Uint8Array, report: Report): Promise<
 export interface Packed {
   /** All polyline points, x0 y0 x1 y1 … */
   pts: Float64Array;
-  /** Per polyline: start index in pts, number of values, color, layer index, closed (1/0). */
+  /** Per polyline: start index in pts, number of values, color, layer index, flags (bit 0 closed, bits 1-2 fill). */
   start: Uint32Array;
   count: Uint32Array;
   color: Int32Array;
@@ -62,6 +66,9 @@ export interface Packed {
   /** Texts are few: kept as objects, with their position in drawing order. */
   labels: Array<[number, Label]>;
   layerNames: string[];
+  /** Paper-space layouts are small: kept as objects. */
+  layouts: Layout[];
+  units?: number;
   layers: Array<[string, { color: number; visible: boolean }]>;
   bounds: Built['bounds'];
   entityCount: number;
@@ -94,13 +101,13 @@ export function pack(b: Built): { packed: Packed; transfer: Transferable[] } {
     count[i] = p.pts.length;
     color[i] = p.color;
     layer[i] = li;
-    closed[i] = p.closed ? 1 : 0;
+    closed[i] = (p.closed ? 1 : 0) | ((p.fill ?? 0) << 1);
     pts.set(p.pts, at);
     at += p.pts.length;
     i++;
   }
   return {
-    packed: { pts, start, count, color, layer, closed, labels, layerNames, layers: [...b.layers], bounds: b.bounds, entityCount: b.entityCount, skipped: [...b.skipped] },
+    packed: { pts, start, count, color, layer, closed, labels, layerNames, layouts: b.layouts, units: b.units, layers: [...b.layers], bounds: b.bounds, entityCount: b.entityCount, skipped: [...b.skipped] },
     transfer: [pts.buffer, start.buffer, count.buffer, color.buffer, layer.buffer, closed.buffer],
   };
 }
@@ -115,8 +122,9 @@ export function unpack(p: Packed): Built {
       continue;
     }
     const s = p.start[pi];
-    prims[order] = { kind: 'poly', pts: p.pts.subarray(s, s + p.count[pi]) as unknown as number[], closed: p.closed[pi] === 1, color: p.color[pi], layer: p.layerNames[p.layer[pi]] };
+    const f = p.closed[pi];
+    prims[order] = { kind: 'poly', pts: p.pts.subarray(s, s + p.count[pi]) as unknown as number[], closed: (f & 1) === 1, color: p.color[pi], layer: p.layerNames[p.layer[pi]], ...(f >> 1 ? { fill: (f >> 1) as 1 | 2 | 3 } : {}) };
     pi++;
   }
-  return { prims, layers: new Map(p.layers), bounds: p.bounds, entityCount: p.entityCount, skipped: new Map(p.skipped) };
+  return { prims, layouts: p.layouts, units: p.units, layers: new Map(p.layers), bounds: p.bounds, entityCount: p.entityCount, skipped: new Map(p.skipped) };
 }
