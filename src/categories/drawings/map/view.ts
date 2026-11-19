@@ -56,7 +56,8 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   const unproj = (x: number, y: number): [number, number] => (lonLat ? [x, (2 * Math.atan(Math.exp(y * toRad)) - Math.PI / 2) / toRad] : [x, y]);
 
   const groups = [...new Set(data.features.map((f) => f.group ?? ''))];
-  const colorOf = (f: Feature) => PALETTE[groups.indexOf(f.group ?? '') % PALETTE.length];
+  // The file's own colours (KML styles) first; otherwise one colour per folder / layer.
+  const colorOf = (f: Feature) => f.color ?? PALETTE[groups.indexOf(f.group ?? '') % PALETTE.length];
   const world = data.features.map((f) => f.parts.map((p) => {
     const out = new Array<number>(p.length);
     for (let i = 0; i < p.length; i += 2) [out[i], out[i + 1]] = proj(p[i], p[i + 1]);
@@ -67,6 +68,19 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
     minX = Math.min(minX, p[i]); maxX = Math.max(maxX, p[i]); minY = Math.min(minY, p[i + 1]); maxY = Math.max(maxY, p[i + 1]); // prettier-ignore
   }
   const hasData = Number.isFinite(minX);
+  // Lon/lat data: land and borders underneath (Natural Earth, bundled — no map server is contacted).
+  let land: number[][] = [];
+  let borders: number[][] = [];
+  if (lonLat && hasData) {
+    const world = (await import('./world.json')).default as { land: number[][]; borders: number[][] };
+    const projectAll = (rings: number[][]) => rings.map((p) => {
+      const out = new Array<number>(p.length);
+      for (let i = 0; i < p.length; i += 2) [out[i], out[i + 1]] = proj(p[i], p[i + 1]);
+      return out;
+    });
+    land = projectAll(world.land);
+    borders = projectAll(world.borders);
+  }
 
   const canvas = document.createElement('canvas');
   const scaleBar = h('div', { class: 'mp-scale' });
@@ -112,7 +126,6 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
     const dark = matchMedia('(prefers-color-scheme: dark)').matches;
     g.fillStyle = dark ? '#16181d' : '#f4f6f8';
     g.fillRect(0, 0, r.width, r.height);
-    drawGraticule(g, r.width, r.height, dark);
     const sx = (x: number) => (x - ox) * scale;
     const sy = (y: number) => (oy - y) * scale;
     const path = (p: number[], close: boolean) => {
@@ -120,8 +133,26 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
       for (let i = 2; i < p.length; i += 2) g.lineTo(sx(p[i]), sy(p[i + 1]));
       if (close) g.closePath();
     };
+    if (land.length) {
+      // Sea, land, borders: a quiet base map so places can be told apart.
+      g.fillStyle = dark ? '#121821' : '#e6eef5';
+      g.fillRect(0, 0, r.width, r.height);
+      g.beginPath();
+      for (const p of land) path(p, true);
+      g.fillStyle = dark ? '#252c36' : '#fbfaf6';
+      g.fill('evenodd');
+      g.lineWidth = 0.8;
+      g.strokeStyle = dark ? '#3a4352' : '#c9d2dc';
+      g.stroke();
+      g.beginPath();
+      for (const p of borders) path(p, false);
+      g.strokeStyle = dark ? '#3a4352' : '#d6dce3';
+      g.setLineDash([3, 3]);
+      g.stroke();
+      g.setLineDash([]);
+    }
+    drawGraticule(g, r.width, r.height, dark);
     const order = [...data.features.keys()].sort((a, b) => rank(data.features[a]) - rank(data.features[b]));
-    const pointCount = data.features.filter((f) => f.kind === 'point').length;
     const labels: Array<[number, number, string]> = [];
     for (const i of order) {
       const f = data.features[i];
@@ -132,8 +163,9 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
       if (f.kind === 'area') {
         g.beginPath();
         for (const p of world[i]) path(p, true);
-        g.globalAlpha = sel ? 0.45 : 0.22;
-        g.fillStyle = col;
+        // A fill colour from the file carries its own transparency.
+        g.globalAlpha = f.fill ? (sel ? 1 : 0.85) : sel ? 0.45 : 0.22;
+        g.fillStyle = f.fill ?? col;
         g.fill('evenodd');
         g.globalAlpha = 1;
         g.stroke();
@@ -152,7 +184,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
           g.lineWidth = 2;
           g.strokeStyle = sel ? '#ffd43b' : dark ? '#16181d' : '#fff';
           g.stroke();
-          if (f.name && (pointCount <= 300 || sel)) labels.push([x + 8, y + 4, f.name]);
+          if (f.name && (labels.length < 3000 || sel)) labels.push([x + 8, y + 4, f.name]);
         }
       }
     }
@@ -160,7 +192,13 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
     g.lineWidth = 3;
     g.strokeStyle = dark ? '#16181d' : '#fff';
     g.fillStyle = dark ? '#e9ecef' : '#212529';
+    // Labels that would overlap one already drawn are left out (zoom in to see them).
+    const taken: Array<[number, number, number, number]> = [];
     for (const [x, y, t] of labels) {
+      const w = g.measureText(t).width;
+      const box: [number, number, number, number] = [x - 2, y - 12, x + w + 2, y + 4];
+      if (taken.some((b) => box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1])) continue;
+      taken.push(box);
       g.strokeText(t, x, y);
       g.fillText(t, x, y);
     }
@@ -377,7 +415,10 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
     title: data.title,
     meta: () => [data.format, ...counts.map(([k, n]) => `${n.toLocaleString()} ${s(n === 1 ? (k === 'point' ? 'onePoint' : k === 'line' ? 'oneLine' : 'oneArea') : k === 'point' ? 'points' : k === 'line' ? 'lines' : 'areas')}`), lonLat ? s('wgs') : data.crs ?? s('units')],
     tools: () => tools,
-    notices: () => (missingDbf ? [h('div', { class: 'notice subtle' }, s('noDbf'))] : []),
+    notices: () => [
+      ...(data.legend ? [h('div', { class: 'notice subtle mp-legend' }, data.legend)] : []),
+      ...(missingDbf ? [h('div', { class: 'notice subtle' }, s('noDbf'))] : []),
+    ],
     destroy: () => {
       ro.disconnect();
       cancelAnimationFrame(pending);

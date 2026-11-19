@@ -18,6 +18,15 @@ const looksLikeSvg = (head: Uint8Array) => /<svg[\s>]/i.test(new TextDecoder().d
 
 export const imagesViewers: ViewerEntry[] = [
   {
+    // Windows metafiles (EMF, WMF): vector pictures from Office and engineering software.
+    id: 'images/metafile',
+    category: 'images',
+    layout: 'fill',
+    mimes: /x-emf|x-wmf|image\/(emf|wmf)/,
+    accepts: ({ format }) => format?.id === 'emf' || format?.id === 'wmf',
+    load: () => import('./metafile/view'),
+  },
+  {
     id: 'images/photo',
     category: 'images',
     layout: 'fill',

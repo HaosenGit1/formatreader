@@ -180,3 +180,7 @@
     border-top: 1px solid var(--line);
   }
 }
+
+.mp-legend {
+  white-space: pre-line;
+}

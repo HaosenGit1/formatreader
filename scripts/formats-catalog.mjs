@@ -40,6 +40,7 @@ const IMAGES = [
   { name: t('Phone photos: iPhone, Samsung, Huawei, Pixel, Xiaomi (incl. motion photos, ProRAW/DNG)', '手机照片：iPhone、三星、华为、Pixel、小米（含动态照片、ProRAW/DNG）'), viewer: 'images/photo', ext: ['jpg', 'heic', 'heif', 'dng', 'avif'] },
   { name: t('Camera RAW (preview): Canon, Nikon, Sony, Fujifilm, Olympus/OM, Panasonic, Leica, Pentax, Hasselblad, Phase One, Sigma, Kodak, GoPro…', '相机 RAW（预览）：佳能、尼康、索尼、富士、奥林巴斯/OM、松下、徕卡、宾得、哈苏、飞思、适马、柯达、GoPro…'), viewer: 'images/photo', ext: ['cr2', 'cr3', 'crw', 'nef', 'nrw', 'arw', 'arq', 'srf', 'sr2', 'raf', 'orf', 'ori', 'rw2', 'raw', 'rwl', 'pef', 'srw', 'x3f', '3fr', 'fff', 'iiq', 'cap', 'eip', 'erf', 'kdc', 'dcr', 'dcs', 'mos', 'mef', 'mrw', 'gpr'] },
   { name: t('Animations: GIF, APNG, animated WebP, Lottie (.json/.lottie), Telegram stickers (.tgs), Flash (.swf)', '动画：GIF、APNG、动态 WebP、Lottie（.json/.lottie）、Telegram 贴纸（.tgs）、Flash（.swf）'), viewer: ['images/photo', 'images/anim', 'archives/gzip'], ext: ['gif', 'apng', 'webp', 'lottie', 'tgs', 'swf'] },
+  { name: t('Windows vector pictures (EMF, WMF): clip art, charts from Office and engineering software', 'Windows 矢量图（EMF、WMF）：剪贴画、Office 和工程软件中的图表'), viewer: 'images/metafile', ext: ['emf', 'wmf'] },
   { name: t('HDR & textures', 'HDR 和贴图'), viewer: 'images/photo', ext: ['exr', 'hdr', 'tga'] },
   { name: t('Medical scans (DICOM)', '医学影像（DICOM）'), viewer: 'images/photo', ext: ['dcm'] },
 ];

@@ -71,3 +71,23 @@ describe('maps', () => {
     expect(ringArea([0, 0, 0.01, 0, 0.01, 0.01, 0, 0.01]) / 1e6).toBeCloseTo(1.236, 2);
   });
 });
+
+test('KML styles: Google Earth pin colours via StyleMap → CascadingStyle, KML colours, and the legend', () => {
+  const kml = `<?xml version="1.0"?><kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2"><Document><name>Sites</name><description>Blue: building
+Green: running</description>
+  <gx:CascadingStyle kml:id="s_green"><Style><IconStyle><Icon><href>https://earth.google.com/earth/rpc/cc/icon?color=388e3c&amp;id=2000</href></Icon></IconStyle></Style></gx:CascadingStyle>
+  <StyleMap id="m_green"><Pair><key>normal</key><styleUrl>#s_green</styleUrl></Pair><Pair><key>highlight</key><styleUrl>#s_green</styleUrl></Pair></StyleMap>
+  <Style id="s_red_line"><LineStyle><color>ff0000ff</color></LineStyle><PolyStyle><color>4000ff00</color></PolyStyle></Style>
+  <Placemark><name>A</name><styleUrl>#m_green</styleUrl><Point><coordinates>10,20,0</coordinates></Point></Placemark>
+  <Placemark><name>B</name><styleUrl>#s_red_line</styleUrl><LineString><coordinates>0,0 1,1</coordinates></LineString></Placemark>
+  <Placemark><name>C</name><styleUrl>#s_red_line</styleUrl><Polygon><outerBoundaryIs><LinearRing><coordinates>0,0 1,0 1,1 0,0</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>
+  <Placemark><name>D</name><Style><IconStyle><color>ffd27619</color></IconStyle></Style><Point><coordinates>1,2</coordinates></Point></Placemark>
+</Document></kml>`;
+  const m = parseKml(kml);
+  const by = (n: string) => m.features.find((f) => f.name === n)!;
+  expect(by('A').color).toBe('#388e3c');
+  expect(by('B').color).toBe('#ff0000'); // KML is aabbggrr
+  expect(by('C').fill).toBe('#00ff0040');
+  expect(by('D').color).toBe('#1976d2');
+  expect(m.legend).toBe('Blue: building\nGreen: running');
+});

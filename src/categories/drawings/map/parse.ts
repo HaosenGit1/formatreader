@@ -14,6 +14,10 @@ export interface Feature {
   /** Folder / layer / track the feature belongs to (for colours). */
   group?: string;
   props: Record<string, string>;
+  /** Colour from the file's own style (KML), CSS. */
+  color?: string;
+  /** Area fill from the file's style (KML PolyStyle), CSS with alpha. */
+  fill?: string;
 }
 
 export interface MapData {
@@ -24,6 +28,8 @@ export interface MapData {
   /** Coordinate system name for projected data (from .prj / GeoJSON crs). */
   crs?: string;
   title?: string;
+  /** The document's own description (often a colour legend). */
+  legend?: string;
 }
 
 const xml = (text: string) => {
@@ -54,9 +60,60 @@ export { isGeoJson, isShp } from './sniff';
 
 // ------------------------------------------------------------------ KML
 
+/** KML colour aabbggrr → CSS. */
+const kmlColor = (c: string | undefined, keepAlpha = false): string | undefined => {
+  const m = /^\s*([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})\s*$/i.exec(c ?? '');
+  if (!m) return undefined;
+  const [, a, b, g, r] = m;
+  return keepAlpha ? `#${r}${g}${b}${a}` : `#${r}${g}${b}`;
+};
+
+interface KmlStyle {
+  icon?: string;
+  line?: string;
+  poly?: string;
+}
+
+/** Styles by id: <Style id>, Google Earth's <gx:CascadingStyle kml:id>, and <StyleMap> (its "normal" style). */
+function kmlStyles(doc: Document) {
+  const styles = new Map<string, KmlStyle>();
+  const maps = new Map<string, string>();
+  const read = (st: Element): KmlStyle => {
+    const icon = kids(st, 'IconStyle')[0];
+    const href = textOf(icon && kids(icon, 'href')[0]);
+    const iconColor = kmlColor(textOf(icon && child(icon, 'color')));
+    // Google Earth (web) puts the pin colour in the icon address: …/icon?color=388e3c…
+    const hrefColor = /[?&]color=([0-9a-f]{6})\b/i.exec(href)?.[1];
+    const line = kids(st, 'LineStyle')[0];
+    const poly = kids(st, 'PolyStyle')[0];
+    return {
+      icon: iconColor && iconColor !== '#ffffff' ? iconColor : hrefColor ? `#${hrefColor}` : undefined,
+      line: kmlColor(textOf(line && child(line, 'color'))),
+      poly: kmlColor(textOf(poly && child(poly, 'color')), true),
+    };
+  };
+  for (const st of kids(doc, 'Style')) {
+    const owner = st.parentElement?.localName === 'CascadingStyle' ? st.parentElement : st;
+    const id = owner.getAttribute('id') ?? owner.getAttribute('kml:id');
+    if (id) styles.set(id, read(st));
+  }
+  for (const sm of kids(doc, 'StyleMap')) {
+    const id = sm.getAttribute('id') ?? sm.getAttribute('kml:id');
+    const normal = kids(sm, 'Pair').find((p) => textOf(child(p, 'key')) === 'normal');
+    const url = textOf(normal && child(normal, 'styleUrl'));
+    if (id && url) maps.set(id, url.replace(/^.*#/, ''));
+  }
+  return (url: string): KmlStyle | undefined => {
+    let id = url.replace(/^.*#/, '');
+    for (let i = 0; i < 4 && maps.has(id); i++) id = maps.get(id)!;
+    return styles.get(id);
+  };
+}
+
 export function parseKml(text: string): MapData {
   const doc = xml(text);
   const features: Feature[] = [];
+  const styleOf = kmlStyles(doc);
   for (const pm of kids(doc, 'Placemark')) {
     const props: Record<string, string> = {};
     const desc = stripHtml(textOf(child(pm, 'description')));
@@ -71,9 +128,16 @@ export function parseKml(text: string): MapData {
         group = textOf(child(p, 'name')) || undefined;
         break;
       }
+    // The placemark's own style, or the shared one it points to.
+    const own = child(pm, 'Style');
+    const st = own ? undefined : styleOf(textOf(child(pm, 'styleUrl')));
+    const ownIcon = own && kmlColor(textOf(kids(own, 'IconStyle')[0] && child(kids(own, 'IconStyle')[0], 'color')));
+    const ownLine = own && kmlColor(textOf(kids(own, 'LineStyle')[0] && child(kids(own, 'LineStyle')[0], 'color')));
     const add = (kind: Kind, parts: number[][]) => {
       const ok = parts.filter((q) => q.length >= 2);
-      if (ok.length) features.push({ kind, parts: ok, name, group, props });
+      if (!ok.length) return;
+      const color = kind === 'point' ? (ownIcon ?? st?.icon) : (ownLine ?? st?.line);
+      features.push({ kind, parts: ok, name, group, props, ...(color ? { color } : {}), ...(kind === 'area' && st?.poly ? { fill: st.poly } : {}) });
     };
     for (const g of kids(pm, 'Point')) add('point', [kmlCoords(textOf(child(g, 'coordinates')))]);
     for (const g of kids(pm, 'LineString')) add('line', [kmlCoords(textOf(child(g, 'coordinates')))]);
@@ -88,8 +152,10 @@ export function parseKml(text: string): MapData {
       add('line', [pts]);
     }
   }
-  const title = textOf(kids(doc, 'Document')[0] ? child(kids(doc, 'Document')[0], 'name') : undefined) || undefined;
-  return { format: 'KML', features, lonLat: true, title };
+  const docEl = kids(doc, 'Document')[0];
+  const title = textOf(docEl ? child(docEl, 'name') : undefined) || undefined;
+  const legend = stripHtml(textOf(docEl ? child(docEl, 'description') : undefined)) || undefined;
+  return { format: 'KML', features, lonLat: true, title, legend };
 }
 
 /** KMZ: the zipped KML (doc.kml, or the first .kml inside). */

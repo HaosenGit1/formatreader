@@ -1,0 +1,21 @@
+.view-metafile {
+  height: 100%;
+  overflow: auto;
+  background: repeating-conic-gradient(#f1f3f5 0 25%, #fff 0 50%) 0 0 / 20px 20px;
+}
+
+.mf-stage {
+  display: grid;
+  place-items: center;
+  min-height: 100%;
+  padding: 16px;
+}
+
+.mf-fit {
+  height: 100%;
+}
+
+.mf-fit .mf-svg {
+  max-width: 100%;
+  max-height: 100%;
+}

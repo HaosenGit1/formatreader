@@ -12,3 +12,4 @@ All made for FormatReader (no third-party content):
   `scripts/make-image-samples.py` (HDR sky with a 40× "sun", a TGA test pattern, a synthetic CT
   chest phantom in Hounsfield units, uncompressed and RLE).
 - `motion-photo.jpg`: `wind-farm.jpg` with `../videos/turbine.mp4` appended, the way Samsung/Pixel/Huawei motion photos store their video.
+- turbine-diagram.emf/.wmf — written by scripts/make-metafile-samples.py (hand-encoded EMF and placeable WMF records).

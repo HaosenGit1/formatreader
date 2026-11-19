@@ -191,6 +191,8 @@ export const FORMAT_GUIDES: Record<string, FormatGuide> = {
   mpg: video(['MPEG-1/2 video (VCD, DVD, TV recordings).', 'MPEG-1/2 视频（VCD、DVD、电视录像）。']),
   ts: video(['MPEG transport stream: TV, camcorders (.mts/.m2ts), recorded streams.', 'MPEG 传输流：电视、摄像机（.mts/.m2ts）、录制的直播。']),
   ogv: video(['Ogg video (Theora).', 'Ogg 视频（Theora）。']),
+  emf: { from: ['EMF: a Windows vector picture — clip art, charts and diagrams copied out of Word, Excel, Visio and engineering programs.', 'EMF：Windows 矢量图——剪贴画、从 Word、Excel、Visio 和工程软件中复制出的图表和示意图。'], open: [way(WIN, 'Photos, Paint, or insert into Word / PowerPoint', '照片、画图，或插入到 Word / PowerPoint'), way(ANY, 'LibreOffice Draw, Inkscape (free)', 'LibreOffice Draw、Inkscape（免费）')] },
+  wmf: { from: ['WMF: the older Windows vector picture format (Office clip art, 1990s–2000s documents).', 'WMF：较早的 Windows 矢量图格式（Office 剪贴画、1990–2000 年代的文档）。'], open: [way(WIN, 'Photos, Paint, or insert into Word / PowerPoint', '照片、画图，或插入到 Word / PowerPoint'), way(ANY, 'LibreOffice Draw, Inkscape (free)', 'LibreOffice Draw、Inkscape（免费）')] },
   '3gp': video(['3GP: phone video — older phones, and WhatsApp / MMS videos sent over slow networks (common in India, Latin America, Africa). Old ones use H.263 picture and AMR sound, which browsers can’t play.', '3GP：手机视频——旧手机，以及在慢速网络下通过 WhatsApp / 彩信发送的视频（印度、拉美、非洲常见）。较老的使用 H.263 画面和 AMR 声音，浏览器无法播放。']),
   exo: { from: ['EXO: an encrypted offline download inside an Android app (YouTube and other ExoPlayer apps). Only that app, on that phone, can play it.', 'EXO：安卓 App 内的加密离线下载（YouTube 等基于 ExoPlayer 的 App）。只有那台手机上的该 App 能播放。'], open: [way(['Android phone', '安卓手机'], 'The app that downloaded it (YouTube: Library → Downloads)', '下载它的 App（YouTube：媒体库 → 下载内容）')] },
 

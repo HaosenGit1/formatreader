@@ -184,6 +184,10 @@ function fromMagic(h: Uint8Array, ext: string): FormatInfo | null {
   if (startsWith(h, [0x30, 0x26, 0xb2, 0x75, 0x8e, 0x66, 0xcf, 0x11])) {
     return ext === 'wma' ? F('wma', 'Windows Media audio', 'sounds') : F('wmv', 'Windows Media video', 'videos');
   }
+  // Windows metafiles: EMF (EMR_HEADER + " EMF"), placeable WMF, plain WMF by name.
+  if (h[0] === 1 && h[1] === 0 && h[2] === 0 && h[3] === 0 && ascii(h, 40, 4) === ' EMF') return F('emf', 'Windows enhanced metafile (EMF)', 'images');
+  if (h[0] === 0xd7 && h[1] === 0xcd && h[2] === 0xc6 && h[3] === 0x9a) return F('wmf', 'Windows metafile (WMF)', 'images');
+  if (ext === 'wmf' && (h[0] === 1 || h[0] === 2) && h[1] === 0 && h[2] === 9 && h[3] === 0) return F('wmf', 'Windows metafile (WMF)', 'images');
   if (ascii(h, 0, 3) === 'FLV') return F('flv', 'Flash video', 'videos');
   if (ascii(h, 0, 4) === '.RMF') return ext === 'ra' ? F('ra', 'RealAudio', 'sounds') : F('rmvb', 'RealMedia video', 'videos');
   if (startsWith(h, [0, 0, 1, 0xba]) || startsWith(h, [0, 0, 1, 0xb3])) return F('mpg', 'MPEG video', 'videos');
