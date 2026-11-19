@@ -60,7 +60,7 @@ const RIGHT_EXT: Record<string, string[]> = {
   jpg: ['jpg', 'jpeg', 'jpe', 'jfif'], tiff: ['tif', 'tiff'], heic: ['heic', 'heif'], mid: ['mid', 'midi'], aiff: ['aif', 'aiff'], mpg: ['mpg', 'mpeg', 'vob'],
   ts: ['ts', 'mts', 'm2ts'], step: ['step', 'stp', 'p21'], iges: ['iges', 'igs'], ole: [], lotus: ['wk1', 'wk3', 'wk4', 'wks', '123'], iwork: ['pages', 'numbers', 'key'],
   mov: ['mov', 'qt'], mp4: ['mp4', 'm4v', 'm4a', 'm4b', 'm4p', '3gp'], m4a: ['m4a', 'm4b', 'm4p', 'aac', 'mp4'], ogg: ['ogg', 'oga', 'ogv', 'opus', 'spx'], mkv: ['mkv', 'mka', 'mks', 'webm'],
-  html: ['html', 'htm', 'xhtml'], gz: ['gz', 'tgz'], tar: ['tar'], glb: ['glb', 'gltf'], dcm: ['dcm', 'dicom'], comtrade: ['cff', 'cfg', 'dat', 'zip'], pcap: ['pcap', 'pcapng', 'cap', 'dmp'],
+  html: ['html', 'htm', 'xhtml'], gz: ['gz', 'tgz'], tar: ['tar'], glb: ['glb', 'gltf'], dcm: ['dcm', 'dicom'], comtrade: ['cff', 'cfg', 'dat', 'zip'], pcap: ['pcap', 'pcapng', 'cap', 'dmp'], bplist: ['plist', 'webloc', 'strings', 'nib'],
   zip: ['zip', 'zipx'], doc: ['doc', 'dot', 'wps'], xls: ['xls', 'xlt', 'et'], ppt: ['ppt', 'pps', 'pot', 'dps'], docx: ['docx', 'docm', 'dotx', 'dotm'], xlsx: ['xlsx', 'xlsm', 'xltx', 'xltm'], pptx: ['pptx', 'pptm', 'ppsx', 'potx'],
   cr3: ['cr3'], dng: ['dng'], raf: ['raf'], exe: ['exe', 'dll', 'sys', 'scr', 'com', 'msi'], macho: ['', 'dylib', 'app'], elf: ['', 'so', 'o'], jar: ['jar', 'war', 'ear', 'aar'], apk: ['apk', 'aab'],
   sqlite: ['sqlite', 'sqlite3', 'db', 'db3'], woff: ['woff'], woff2: ['woff2'], svgz: ['svgz'], fbz: ['fbz', 'fb2.zip'],

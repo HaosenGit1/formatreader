@@ -54,6 +54,14 @@ export const wordsViewers: ViewerEntry[] = [
     load: () => import('./locked/view'),
   },
   {
+    // Apple binary property lists (bplist00), shown as XML.
+    id: 'words/plist',
+    category: 'words',
+    mimes: /x-bplist|x-plist/,
+    accepts: ({ format }) => format?.id === 'bplist',
+    load: () => import('./plist/view'),
+  },
+  {
     id: 'words/rtf',
     category: 'words',
     mimes: /rtf/,

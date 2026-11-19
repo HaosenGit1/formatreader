@@ -91,7 +91,7 @@ const COMING = [
   { name: t('More images', '更多图片'), ext: ['jxl', 'jp2', 'dds', 'ktx2'] },
   { name: t('More audio & video, DivX/Xvid AVI (details only for now)', '更多音视频、DivX/Xvid 的 AVI（暂只显示信息）'), ext: ['wma', 'ape', 'amr', 'mid', 'wmv', 'rmvb', 'mpg'] },
 
-  { name: t('System logs', '系统日志'), ext: ['evtx', 'plist', 'journal'] },
+  { name: t('System logs', '系统日志'), ext: ['evtx', 'journal'] },
   { name: t('More documents & data', '更多文档和数据'), ext: ['chm', 'djvu', 'parquet', 'h5', 'mat', 'pst'] },
 ];
 
@@ -130,7 +130,8 @@ function codeGroups(root) {
     }
   }
   groups.get('Data & settings')?.ext.unshift(...json.filter((e) => e !== 'fb2' && !MAP_EXT.has(e)));
-  return [...groups.values()].map((g) => ({ ...g, ext: [...new Set(g.ext)] }));
+  // .plist can be XML (code viewer) or binary (bplist viewer, shown as XML).
+  return [...groups.values()].map((g) => ({ ...g, ...(g.ext.includes('plist') ? { viewer: ['words/code', 'words/plist'] } : {}), ext: [...new Set(g.ext)] }));
 }
 
 export function formatsCatalog(root = process.cwd()) {

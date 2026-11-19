@@ -97,6 +97,7 @@ export const FORMAT_GUIDES: Record<string, FormatGuide> = {
   pages: iwork, numbers: iwork, key: iwork, iwork,
   wps, et: wps, dps: wps,
   pdf,
+  bplist: { from: ['An Apple property list in binary form: settings of Mac and iPhone apps, Info.plist inside built apps, iOS backup files.', 'Apple 二进制属性列表：Mac 和 iPhone 应用的设置、已打包应用里的 Info.plist、iOS 备份文件。'], open: [way(MAC, 'Xcode, or Terminal: plutil -convert xml1 -o - file.plist', 'Xcode，或终端：plutil -convert xml1 -o - 文件.plist'), way(ANY, 'Python: plistlib', 'Python：plistlib')], tip: ['Shown here as the equivalent XML text.', '这里以等价的 XML 文本显示。'] },
   rtf: { from: ['Rich Text Format: simple formatted text, readable by almost every word processor.', 'RTF 富文本：简单的带格式文本，几乎所有文字处理软件都能读。'], open: [way(WIN, 'Word, WordPad', 'Word、写字板'), way(MAC, 'TextEdit, Pages', '文本编辑、Pages'), LIBRE('Writer', 'Writer')] },
   ofd: { from: ['OFD: China’s national fixed-layout document standard (e-invoices, government documents).', 'OFD：中国国家版式文档标准（电子发票、公文）。'], open: [way(WIN, 'An OFD reader such as Suwell OFD Reader or Foxit OFD', 'OFD 阅读器，例如数科 OFD 阅读器或福昕 OFD'), way(ONLINE, 'The e-invoice platform where it was issued can also give a PDF', '开票平台通常也能下载 PDF 版本')] },
   xps: { from: ['XPS: Microsoft’s fixed-layout document (from “Print to XPS”).', 'XPS：微软的版式文档（来自“打印到 XPS”）。'], open: [way(WIN, 'XPS Viewer (Windows optional feature)', 'XPS 查看器（Windows 可选功能）'), way(ANY, 'SumatraPDF (free)', 'SumatraPDF（免费）')] },
