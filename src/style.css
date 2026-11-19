@@ -1090,15 +1090,31 @@ html.fr-immersive .site-header {
 }
 
 .promo-on .circle {
-  border-color: rgb(255 255 255 / 0.75);
-  /* A nearly solid disc: the video's own captions never show through the words. */
-  background: rgb(12 16 22 / 0.86);
-  backdrop-filter: blur(10px);
-  color: #fff;
+  /* Midnight-blue glass with a fine gold ring: the video blurs away behind the words. */
+  border: 1.5px solid #c9a96e;
+  background: radial-gradient(circle at 50% 35%, rgb(28 42 70 / 0.62), rgb(6 12 24 / 0.78));
+  backdrop-filter: blur(18px) saturate(1.2);
+  box-shadow:
+    0 0 0 8px rgb(201 169 110 / 0.12),
+    inset 0 0 60px rgb(201 169 110 / 0.1),
+    0 20px 60px rgb(0 0 0 / 0.45);
+  color: #f3e7cf;
+  transition: box-shadow 0.3s, transform 0.3s;
 }
 
 .promo-on .circle:hover {
-  background: rgb(20 26 34 / 0.9);
+  background: radial-gradient(circle at 50% 35%, rgb(34 50 82 / 0.66), rgb(8 15 30 / 0.8));
+  box-shadow:
+    0 0 0 10px rgb(201 169 110 / 0.2),
+    inset 0 0 70px rgb(201 169 110 / 0.16),
+    0 24px 70px rgb(0 0 0 / 0.5);
+}
+
+.promo-on .circle-text {
+  font-family: 'Cormorant Garamond', Didot, 'Songti SC', 'Times New Roman', serif;
+  font-weight: 500;
+  font-size: clamp(20px, 4vmin, 32px);
+  letter-spacing: 0.06em;
 }
 
 .promo-on .foot-link {
