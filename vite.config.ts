@@ -86,6 +86,8 @@ function offlinePlugin(): Plugin {
       const walk = (dir: string): string[] =>
         readdirSync(dir).flatMap((f) => (statSync(join(dir, f)).isDirectory() ? walk(join(dir, f)) : [relative(outDir, join(dir, f)).split('\\').join('/')]));
       const files = walk(outDir).filter((f) => f !== 'sw.js' && !f.startsWith('.')).sort();
+      // Vite drops chunks that only carried CSS after the bundle is generated: keep real files only.
+      for (const v of Object.values(viewers)) for (const k of ['base', 'all'] as const) v[k] = v[k].filter((f) => files.includes(f));
       const html = readFileSync(join(outDir, 'index.html'), 'utf8');
       // The page plus everything it links directly (entry script, styles, icons, manifest).
       const linked = [...html.matchAll(/(?:src|href)="\.?\/?([^"#?]+)"/g)].map((m) => m[1]).filter((f) => files.includes(f));
