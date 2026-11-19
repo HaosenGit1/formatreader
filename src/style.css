@@ -1090,13 +1090,15 @@ html.fr-immersive .site-header {
 }
 
 .promo-on .circle {
-  border-color: rgb(255 255 255 / 0.7);
+  border-color: rgb(255 255 255 / 0.75);
+  /* A nearly solid disc: the video's own captions never show through the words. */
+  background: rgb(12 16 22 / 0.86);
+  backdrop-filter: blur(10px);
   color: #fff;
-  text-shadow: 0 1px 8px rgb(0 0 0 / 0.5);
 }
 
 .promo-on .circle:hover {
-  background: rgb(255 255 255 / 0.08);
+  background: rgb(20 26 34 / 0.9);
 }
 
 .promo-on .foot-link {
