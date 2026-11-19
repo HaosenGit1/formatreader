@@ -1099,7 +1099,7 @@ html.fr-immersive .site-header {
     inset 0 0 60px rgb(201 169 110 / 0.1),
     0 20px 60px rgb(0 0 0 / 0.45);
   color: #f3e7cf;
-  transition: box-shadow 0.3s, transform 0.3s;
+  transition: box-shadow 0.3s, background 0.3s;
 }
 
 .promo-on .circle:hover {
@@ -1143,3 +1143,24 @@ html.fr-immersive .site-header {
   white-space: nowrap;
 }
 
+
+/* The upload circle as a small drifting ball over the Goldwind video. */
+.promo-ball .circle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: clamp(130px, 22vmin, 190px);
+  transition: box-shadow 0.3s, background 0.3s; /* moved every frame: no transform transition */
+  will-change: transform;
+}
+
+.promo-ball .circle-text {
+  max-width: 82%;
+  font-size: clamp(14px, 2.4vmin, 19px);
+  line-height: 1.35;
+}
+
+.promo-on .circle:hover,
+.promo-on .circle:focus-visible {
+  border-color: #e0c48a;
+}
