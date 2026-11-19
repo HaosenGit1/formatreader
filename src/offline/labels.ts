@@ -24,6 +24,7 @@ export const VIEWER_LABELS: Record<string, { en: string; zh: string; ext: string
   'words/slides': { en: 'PowerPoint', zh: 'PowerPoint', ext: '.pptx' },
   'words/legacy': { en: 'Old Office & WPS', zh: '旧版 Office 和 WPS', ext: '.doc .ppt .wps .dps' },
   'words/books': { en: 'Ebooks & comics', zh: '电子书和漫画', ext: '.epub .mobi .azw3 .fb2 .cbz' },
+  'words/parquet': { en: 'Parquet tables', zh: 'Parquet 数据表', ext: '.parquet' },
   'words/plist': { en: 'Apple property lists (binary)', zh: 'Apple 属性列表（二进制）', ext: '.plist' },
   'words/rtf': { en: 'Rich text', zh: '富文本', ext: '.rtf' },
   'words/odf': { en: 'OpenDocument', zh: 'OpenDocument', ext: '.odt .odp' },

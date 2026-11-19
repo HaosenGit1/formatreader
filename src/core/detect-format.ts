@@ -220,6 +220,7 @@ function fromMagic(h: Uint8Array, ext: string): FormatInfo | null {
   if (ascii(h, 0, 18) === 'Kaydara FBX Binary') return F('fbx', 'FBX 3D model', 'drawings');
 
   // Other
+  if (ascii(h, 0, 4) === 'PAR1') return F('parquet', 'Apache Parquet table', 'words');
   if (ascii(h, 0, 16) === 'SQLite format 3\0') return F('sqlite', 'SQLite database', 'words');
   if (ascii(h, 4, 15) === 'Standard Jet DB') return F('mdb', 'Access database (MDB)', 'words');
   if (ascii(h, 4, 15) === 'Standard ACE DB') return F('accdb', 'Access database (ACCDB)', 'words');

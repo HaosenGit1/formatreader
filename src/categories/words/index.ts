@@ -37,6 +37,14 @@ export const wordsViewers: ViewerEntry[] = [
     load: () => import('./docs/view'),
   },
   {
+    // Apache Parquet: only the needed byte ranges are read, so size hardly matters.
+    id: 'words/parquet',
+    category: 'words',
+    mimes: /parquet/,
+    accepts: ({ format }) => format?.id === 'parquet',
+    load: () => import('./parquet/view'),
+  },
+  {
     id: 'words/db',
     // Measured: an 800 MB SQLite (9 million rows) opened in 1 s; Access files are read whole.
     heavyAbove: () => 1024 * 1024 * 1024,

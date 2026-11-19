@@ -31,6 +31,7 @@ const WORDS = [
 const TABLES = [
   { name: t('Spreadsheets', '表格'), viewer: 'words/sheets', ext: ['csv', 'tsv', 'tab', 'xlsx', 'xlsm', 'xltx', 'xlsb', 'xls', 'ods', 'fods', 'numbers', 'et', 'dif', 'slk', 'prn', 'dbf', 'wk1', 'qpw'] },
   { name: t('Databases', '数据库'), viewer: 'words/db', ext: ['mdb', 'accdb', 'sqlite', 'sqlite3', 'db'] },
+  { name: t('Parquet data tables (pandas, Spark, data lakes)', 'Parquet 数据表（pandas、Spark、数据湖）'), viewer: 'words/parquet', ext: ['parquet'] },
 ];
 
 const IMAGES = [
@@ -92,7 +93,7 @@ const COMING = [
   { name: t('More audio & video, DivX/Xvid AVI (details only for now)', '更多音视频、DivX/Xvid 的 AVI（暂只显示信息）'), ext: ['wma', 'ape', 'amr', 'mid', 'wmv', 'rmvb', 'mpg'] },
 
   { name: t('System logs', '系统日志'), ext: ['evtx', 'journal'] },
-  { name: t('More documents & data', '更多文档和数据'), ext: ['chm', 'djvu', 'parquet', 'h5', 'mat', 'pst'] },
+  { name: t('More documents & data', '更多文档和数据'), ext: ['chm', 'djvu', 'h5', 'mat', 'pst'] },
 ];
 
 /** Map formats open in the map viewer, not as code (they're also in the code table, as XML/JSON). */

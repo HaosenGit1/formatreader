@@ -33,6 +33,9 @@ export const LIMITS = {
   /** …how many rows that is. */
   sheetPreviewRows: { low: 5000, mid: 20000, high: 0 },
 
+  /** Parquet tables: rows read at first, and each time "Load more" is pressed. */
+  parquetRows: { low: 2000, mid: 10000, high: 50000 },
+
   /** Each viewer names the size where its files get heavy (on a computer); scaled per tier. */
   heavyScale: { low: 0.25, mid: 0.5, high: 1 },
 } satisfies Record<string, PerTier<number>>;
