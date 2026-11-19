@@ -1603,7 +1603,6 @@ html.fr-immersive .site-header {
   border-radius: 50%;
   background: conic-gradient(from 0deg, transparent 0 8%, rgb(222 196 140 / 0.42) 17%, transparent 30%, rgb(120 165 255 / 0.32) 46%, transparent 60%, rgb(190 150 255 / 0.26) 74%, transparent 88%);
   filter: blur(16px);
-  mix-blend-mode: screen;
   pointer-events: none;
 }
 
@@ -1651,5 +1650,73 @@ html.fr-immersive .site-header {
 @keyframes crystal-swirl {
   to {
     transform: rotate(1turn);
+  }
+}
+
+/* Liquid light: two soft pools that drift and fold into each other inside the glass.
+   Only transforms move (cheap for the graphics chip); the blur is drawn once. */
+.crystal-flow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.crystal-flow::before,
+.crystal-flow::after {
+  content: '';
+  position: absolute;
+  width: 70%;
+  height: 55%;
+  border-radius: 50%;
+  filter: blur(14px);
+  will-change: transform;
+}
+
+.crystal-flow::before {
+  left: 8%;
+  top: 40%;
+  background: radial-gradient(circle, rgb(232 200 130 / 0.55), rgb(232 200 130 / 0) 70%);
+}
+
+.crystal-flow::after {
+  right: 6%;
+  top: 14%;
+  background: radial-gradient(circle, rgb(110 160 255 / 0.45), rgb(110 160 255 / 0) 70%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .crystal-flow::before {
+    animation: crystal-pool-a 11s ease-in-out infinite alternate;
+  }
+
+  .crystal-flow::after {
+    animation: crystal-pool-b 14s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes crystal-pool-a {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1, 0.8);
+  }
+  50% {
+    transform: translate(28%, -22%) rotate(40deg) scale(0.85, 1.1);
+  }
+  100% {
+    transform: translate(10%, -45%) rotate(80deg) scale(1.1, 0.9);
+  }
+}
+
+@keyframes crystal-pool-b {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(0.9, 1.1);
+  }
+  50% {
+    transform: translate(-30%, 30%) rotate(-50deg) scale(1.15, 0.85);
+  }
+  100% {
+    transform: translate(-12%, 55%) rotate(-90deg) scale(0.95, 1);
   }
 }
