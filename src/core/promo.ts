@@ -51,50 +51,28 @@ export function startPromoVideo(landing: HTMLElement): void {
   else setTimeout(go, 800);
 }
 
-/** Smooth 1-D gradient noise (−1…1): gentle, never-repeating variation over time. */
-function noise1(seed: number) {
-  const grad = new Map<number, number>();
-  const g = (i: number) => {
-    let v = grad.get(i);
-    if (v === undefined) {
-      const x = Math.sin(i * 127.1 + seed * 311.7) * 43758.5453;
-      grad.set(i, (v = (x - Math.floor(x)) * 2 - 1));
-      if (grad.size > 512) grad.delete(grad.keys().next().value!);
-    }
-    return v;
-  };
-  return (t: number) => {
-    const i = Math.floor(t);
-    const f = t - i;
-    const u = f * f * f * (f * (f * 6 - 15) + 10); // smootherstep
-    // Blend the two neighbouring gradients (Perlin-style), scaled to about −1…1.
-    return ((1 - u) * g(i) * f + u * g(i + 1) * (f - 1)) * 2;
-  };
-}
-
 /**
- * The upload circle becomes a small ball gliding slowly over the video, like a bubble on
- * a breeze: its heading turns in smooth curves (layered noise), its speed rises and falls,
- * it eases away from the edges instead of bouncing, and it breathes softly. It glides to a
- * stop under the pointer so it's easy to click; reduced-motion visitors get a still ball.
+ * The upload circle becomes a small ball that falls and bounces as if under gentle
+ * gravity — slow arcs, each bounce a slightly different height — and rebounds off the
+ * sides and top, squashing a little at each impact. It eases to a stop under
+ * the pointer so it's easy to click; reduced-motion visitors get a still ball.
  */
 function wander(landing: HTMLElement): void {
   const ball = landing.querySelector<HTMLElement>('.circle');
   if (!ball) return;
   landing.classList.add('promo-ball');
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const seed = Math.random() * 1000;
-  const turnA = noise1(seed);
-  const turnB = noise1(seed + 17);
-  const pace = noise1(seed + 41);
   const r0 = landing.getBoundingClientRect();
   const size0 = ball.offsetWidth;
+  const G = 260; // px/s²: a slow, floaty fall
   let x = (r0.width - size0) / 2;
-  let y = (r0.height - size0) / 2 - 20;
-  let heading = Math.random() * Math.PI * 2;
-  let speedScale = still ? 0 : 1;
-  let target = speedScale;
-  let t = 0;
+  let y = 24; // starts near the top and drops in
+  let vx = (Math.random() < 0.5 ? -1 : 1) * (70 + Math.random() * 40);
+  let vy = 0;
+  let squash = 0; // 0…1 after a landing (flattens), decays
+  let squashSide = 0; // 0…1 after a side bounce (narrows), decays
+  let timeScale = still ? 0 : 1;
+  let target = timeScale;
   let last = performance.now();
   ball.addEventListener('pointerenter', () => (target = 0));
   ball.addEventListener('pointerleave', () => (target = still ? 0 : 1));
@@ -102,32 +80,49 @@ function wander(landing: HTMLElement): void {
   ball.addEventListener('blur', () => (target = still ? 0 : 1));
   const frame = (now: number) => {
     if (!ball.isConnected) return;
-    const dt = Math.min(0.05, (now - last) / 1000);
+    const real = Math.min(0.05, (now - last) / 1000);
     last = now;
-    t += dt;
-    speedScale += (target - speedScale) * Math.min(1, dt * 2.2); // glide to a stop / back
+    timeScale += (target - timeScale) * Math.min(1, real * 3);
+    const dt = real * timeScale;
     const r = landing.getBoundingClientRect();
     const size = ball.offsetWidth;
-    const pad = 20;
-    const maxX = Math.max(pad, r.width - size - pad);
-    const maxY = Math.max(pad, r.height - size - pad - 44); // clear of the footer link
-    // Wander: the heading drifts by layered slow noise (big lazy curves + small sways).
-    heading += (turnA(t * 0.09) * 0.55 + turnB(t * 0.31) * 0.18) * dt;
-    // Near an edge, turn gently back toward the middle (stronger the closer it gets).
-    const cx = (maxX + pad) / 2;
-    const cy = (maxY + pad) / 2;
-    const edge = Math.max(0, 1 - Math.min(x - pad, maxX - x, y - pad, maxY - y) / Math.max(60, size * 0.9));
-    if (edge > 0) {
-      const toCentre = Math.atan2(cy - y, cx - x);
-      let d = toCentre - heading;
-      d = Math.atan2(Math.sin(d), Math.cos(d));
-      heading += d * Math.min(1, edge * edge * dt * 2.5);
+    const pad = 16;
+    const floor = Math.max(pad, r.height - size - 48); // just above the footer links
+    const right = Math.max(pad, r.width - size - pad);
+    if (still) {
+      x = (r.width - size) / 2;
+      y = floor * 0.45;
+    } else {
+      vy += G * dt;
+      x += vx * dt;
+      y += vy * dt;
+      if (y >= floor) {
+        // Bounce to a fresh height (50–85 % of the room), so the rhythm never repeats.
+        y = floor;
+        const height = (floor - pad) * (0.5 + Math.random() * 0.35);
+        squash = Math.min(1, Math.abs(vy) / 260);
+        vy = -Math.sqrt(2 * G * height);
+        vx += (Math.random() - 0.5) * 24; // a small change of drift with each bounce
+        vx = Math.sign(vx || 1) * Math.min(130, Math.max(60, Math.abs(vx)));
+      }
+      // Top edge: bounce back down.
+      if (y < pad) {
+        y = pad;
+        vy = Math.abs(vy) * 0.9;
+        squash = 0.5;
+      }
+      // Side edges: rebound like a real ball.
+      if (x < pad || x > right) {
+        x = x < pad ? pad : right;
+        vx = -vx * 0.95;
+        squashSide = Math.min(1, Math.abs(vx) / 110);
+      }
+      squash *= Math.pow(0.02, dt); // springs back round within ~half a second
+      squashSide *= Math.pow(0.02, dt);
     }
-    const speed = (24 + 10 * pace(t * 0.12)) * speedScale; // px per second, breathing pace
-    x = Math.min(maxX, Math.max(pad, x + Math.cos(heading) * speed * dt));
-    y = Math.min(maxY, Math.max(pad, y + Math.sin(heading) * speed * dt));
-    const breathe = 1 + 0.022 * Math.sin(t * 0.9) * (still ? 0 : 1);
-    ball.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) scale(${breathe.toFixed(4)})`;
+    const sq = 0.12 * squash - 0.1 * squashSide; // > 0: flattened (floor), < 0: narrowed (wall)
+    ball.style.transformOrigin = squashSide > squash ? (vx > 0 ? '0% 50%' : '100% 50%') : '50% 100%';
+    ball.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) scale(${(1 + sq).toFixed(4)}, ${(1 - sq).toFixed(4)})`;
     requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);
