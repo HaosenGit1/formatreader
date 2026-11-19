@@ -102,3 +102,19 @@
   background: var(--surface);
   font-size: 12px;
 }
+
+/* Windows event logs (same layout): errors and warnings marked with a coloured edge. */
+.pc-table tr.ev-l1 td:first-child,
+.pc-table tr.ev-l2 td:first-child {
+  box-shadow: inset 3px 0 0 #e03131;
+}
+
+.pc-table tr.ev-l3 td:first-child {
+  box-shadow: inset 3px 0 0 #f08c00;
+}
+
+.pc-table td.ev-detail {
+  max-width: 640px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

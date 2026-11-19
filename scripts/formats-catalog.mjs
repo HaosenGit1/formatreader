@@ -81,6 +81,7 @@ const VIDEOS = [
 
 const DATA = [
   { name: t('COMTRADE fault records', 'COMTRADE 故障录波'), viewer: 'data/comtrade', ext: ['cfg', 'dat', 'cff'] },
+  { name: t('Windows event logs (Event Viewer) — System, Application, Security, HMI servers', 'Windows 事件日志（事件查看器）——系统、应用程序、安全、HMI 服务器'), viewer: 'data/evtx', ext: ['evtx'] },
   { name: t('Network captures (Wireshark, tcpdump) — Modbus, IEC 104, DNP3, GOOSE named', '网络抓包（Wireshark、tcpdump）——标出 Modbus、IEC 104、DNP3、GOOSE'), viewer: 'data/pcap', ext: ['pcap', 'pcapng'] },
 ];
 
@@ -93,7 +94,7 @@ const COMING = [
   { name: t('More images', '更多图片'), ext: ['jxl', 'jp2', 'dds', 'ktx2'] },
   { name: t('More audio & video, DivX/Xvid AVI (details only for now)', '更多音视频、DivX/Xvid 的 AVI（暂只显示信息）'), ext: ['wma', 'ape', 'amr', 'wmv', 'rmvb', 'mpg'] },
 
-  { name: t('System logs', '系统日志'), ext: ['evtx', 'journal'] },
+  { name: t('System logs', '系统日志'), ext: ['journal'] },
   { name: t('More documents & data', '更多文档和数据'), ext: ['chm', 'djvu', 'h5', 'mat', 'pst'] },
 ];
 

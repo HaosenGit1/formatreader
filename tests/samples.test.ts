@@ -24,6 +24,7 @@ const FOLDER_VIEWER: Record<string, string> = {
   plist: 'words/plist',
   parquet: 'words/parquet',
   midi: 'sounds/midi',
+  evtx: 'data/evtx',
   code: 'words/code',
   sheets: 'words/sheets',
   invoices: 'words/invoice',
@@ -66,7 +67,7 @@ const EXPECT: Record<string, string> = {
   'double-encoded.txt': '这是一段被错误编码后又保存了的中文',
 };
 
-const BINARY_EXT = new Set(['epub', 'cbz', 'pptx', 'xlsx', 'xls', 'ods', 'docx', 'mdb', 'accdb', 'sqlite', 'rtf', 'odt', 'odp', 'eml', 'mbox', 'msg', 'mhtml', 'xps', 'ofd', 'hwpx', 'pages', 'key', 'pdb', 'gz', 'doc', 'ppt', 'hwp', 'zip', '7z', 'tar', 'rar', 'cb7', 'cfg', 'cff', 'pdf', 'jpg', 'png', 'gif', 'webp', 'bmp', 'ico', 'heic', 'tiff', 'psd', 'dng', 'svgz', 'svg', 'exr', 'hdr', 'tga', 'dcm', 'stl', 'obj', 'ply', 'glb', '3mf', 'dxf', 'dwg', 'odg', 'vsdx', 'xmind', 'step', 'ifc', 'wav', 'm4a', 'flac', 'aiff', 'weba', 'mp4', '3gp', '3g2', 'webm', 'flv', 'avi', 'lottie', 'tgs', 'swf', 'kmz', 'shp', '3ds', 'usdz', 'las', 'rvt', 'skp', '3dm', 'sldprt', 'plt', 'emf', 'wmf', 'dwf', 'dwfx', 'pcap', 'pcapng', 'plist', 'parquet', 'mid', 'midi']);
+const BINARY_EXT = new Set(['epub', 'cbz', 'pptx', 'xlsx', 'xls', 'ods', 'docx', 'mdb', 'accdb', 'sqlite', 'rtf', 'odt', 'odp', 'eml', 'mbox', 'msg', 'mhtml', 'xps', 'ofd', 'hwpx', 'pages', 'key', 'pdb', 'gz', 'doc', 'ppt', 'hwp', 'zip', '7z', 'tar', 'rar', 'cb7', 'cfg', 'cff', 'pdf', 'jpg', 'png', 'gif', 'webp', 'bmp', 'ico', 'heic', 'tiff', 'psd', 'dng', 'svgz', 'svg', 'exr', 'hdr', 'tga', 'dcm', 'stl', 'obj', 'ply', 'glb', '3mf', 'dxf', 'dwg', 'odg', 'vsdx', 'xmind', 'step', 'ifc', 'wav', 'm4a', 'flac', 'aiff', 'weba', 'mp4', '3gp', '3g2', 'webm', 'flv', 'avi', 'lottie', 'tgs', 'swf', 'kmz', 'shp', '3ds', 'usdz', 'las', 'rvt', 'skp', '3dm', 'sldprt', 'plt', 'emf', 'wmf', 'dwf', 'dwfx', 'pcap', 'pcapng', 'plist', 'parquet', 'mid', 'midi', 'evtx']);
 // locked.zip is password-protected: still routed to the archive viewer.
 
 for (const folder of Object.keys(FOLDER_VIEWER)) {

@@ -7,6 +7,15 @@ import { looksLikeCfg } from './comtrade/detect';
 
 export const dataViewers: ViewerEntry[] = [
   {
+    // Windows event logs (Event Viewer .evtx).
+    id: 'data/evtx',
+    category: 'data',
+    layout: 'fill',
+    mimes: /evtx/,
+    accepts: ({ format }) => format?.id === 'evtx',
+    load: () => import('./evtx/view'),
+  },
+  {
     // Network captures (Wireshark / tcpdump): pcap and pcapng.
     id: 'data/pcap',
     category: 'data',

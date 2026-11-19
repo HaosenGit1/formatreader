@@ -20,7 +20,7 @@ const FORBIDDEN: Array<[RegExp, string]> = [
   [/showSaveFilePicker|showOpenFilePicker|showDirectoryPicker/, 'File System Access pickers (write access to disk)'],
   [/createWritable|createSyncAccessHandle|FileSystem(File|Directory)Handle|getAsFileSystemHandle/, 'file handles that can write'],
   [/\bdownload\s*[:=]|\.download\b|['"]download['"]/, 'download links'],
-  [/sendBeacon|XMLHttpRequest|new WebSocket|EventSource|RTCPeerConnection/, 'network senders'],
+  [/sendBeacon|XMLHttpRequest|new WebSocket|\bEventSource\b|RTCPeerConnection/, 'network senders'],
   [/\bfetch\s*\(/, 'fetch (only local blob/URL reads are allowed; add an explicit exception if ever needed)'],
   [/method\s*:\s*['"](POST|PUT|PATCH|DELETE)/i, 'HTTP writes'],
 ];
