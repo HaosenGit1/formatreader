@@ -34,6 +34,9 @@ const EXCEPTIONS: Record<string, string[]> = {
   // Basic editing of simple text formats: "Save a copy" offers a NEW file as a download;
   // the original is never written (tests/words/edit.test.ts).
   'src/categories/words/shared/edit/save.ts': ['download links'],
+  // The feedback form: sends the visitor's message (and a file they attach) only when they press
+  // Send, to formatreader.com/api/feedback — the one network write, stated on the form.
+  'src/core/feedback.ts': ['fetch (only local blob/URL reads are allowed; add an explicit exception if ever needed)', 'HTTP writes'],
   'src/categories/archives/archive/extract-all.ts': ['File System Access pickers (write access to disk)', 'file handles that can write', 'download links'],
 };
 

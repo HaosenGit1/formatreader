@@ -1413,3 +1413,101 @@ html.fr-immersive .site-header {
 .promo-on .foot-button:hover {
   color: rgb(255 255 255 / 0.9);
 }
+
+/* Feedback form (same panel style as the advertiser panel). */
+.fb-card {
+  display: grid;
+  gap: 10px;
+  text-align: left;
+}
+
+.fb-card .ad-kicker,
+.fb-card h2 {
+  text-align: center;
+}
+
+.fb-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgb(201 169 110 / 0.45);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 0.06);
+  color: #f3e7cf;
+  font: inherit;
+  font-size: 14px;
+}
+
+.fb-input::placeholder {
+  color: rgb(243 231 207 / 0.5);
+}
+
+.fb-input:focus {
+  border-color: #d8bd85;
+  outline: none;
+}
+
+.fb-message {
+  resize: vertical;
+  min-height: 110px;
+}
+
+.fb-trap {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.fb-file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+
+.fb-attach {
+  position: relative;
+  font-size: 13px;
+}
+
+.fb-file-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.fb-file-name {
+  overflow: hidden;
+  max-width: 180px;
+  color: #d8bd85;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fb-remove {
+  border: 0;
+  background: none;
+  color: rgb(243 231 207 / 0.6);
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.fb-privacy,
+.fb-status {
+  margin: 0;
+  color: rgb(243 231 207 / 0.65);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.fb-status:empty {
+  display: none;
+}
+
+.fb-status {
+  color: #f0d9a8;
+}

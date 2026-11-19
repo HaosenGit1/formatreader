@@ -151,7 +151,7 @@ function wander(landing: HTMLElement): void {
 
 /** The footer "Feedback" link (same panel as advertising, worded for suggestions). */
 export function feedbackLink(): HTMLElement {
-  return h('button', { type: 'button', class: 'foot-link foot-button', onclick: () => openContactPanel('feedback') }, s('feedback'));
+  return h('button', { type: 'button', class: 'foot-link foot-button', onclick: () => void import('./feedback').then((m) => m.openFeedback()) }, s('feedback'));
 }
 
 /**
