@@ -50,6 +50,7 @@ const DRAWINGS = [
   { name: t('Point clouds: laser scans, drone and survey (LAS, PCD, XYZ)', '点云：激光扫描、无人机和测量（LAS、PCD、XYZ）'), viewer: 'drawings/model', ext: ['las', 'pcd', 'xyz'] },
   { name: t('CAD & BIM models', 'CAD 和 BIM 模型'), viewer: 'drawings/model', ext: ['step', 'stp', 'iges', 'igs', 'brep', 'ifc'] },
   { name: t('Maps: Google Earth (KML, KMZ), GPS tracks (GPX), GeoJSON, Shapefiles', '地图：Google Earth（KML、KMZ）、GPS 轨迹（GPX）、GeoJSON、Shapefile'), viewer: 'drawings/map', ext: ['kml', 'kmz', 'gpx', 'geojson', 'shp'] },
+  { name: t('CAD programs (preview picture + how to open): SolidWorks, Inventor, Revit, SketchUp, Rhino, MicroStation, CATIA, 3ds Max, Visio 2003–2010', 'CAD 软件（预览图 + 打开方式）：SolidWorks、Inventor、Revit、SketchUp、Rhino、MicroStation、CATIA、3ds Max、Visio 2003–2010'), viewer: 'drawings/cadinfo', ext: ['sldprt', 'sldasm', 'slddrw', 'ipt', 'iam', 'idw', 'rvt', 'rfa', 'skp', '3dm', 'dgn', 'catpart', 'catproduct', 'max', 'vsd'] },
   { name: t('Diagrams', '图表'), viewer: ['drawings/preview', 'drawings/mindmap'], ext: ['vsdx', 'odg', 'xmind'] },
 ];
 
@@ -82,7 +83,7 @@ const ARCHIVES = [
 const COMING = [
   { name: t('More images', '更多图片'), ext: ['jxl', 'jp2', 'dds', 'ktx2'] },
   { name: t('More audio & video, DivX/Xvid AVI (details only for now)', '更多音视频、DivX/Xvid 的 AVI（暂只显示信息）'), ext: ['wma', 'ape', 'amr', 'mid', 'wmv', 'rmvb', 'mpg'] },
-  { name: t('More drawings', '更多图纸'), ext: ['vsd', 'skp'] },
+
   { name: t('System logs', '系统日志'), ext: ['evtx', 'plist', 'journal', 'pcap'] },
   { name: t('More documents & data', '更多文档和数据'), ext: ['chm', 'djvu', 'parquet', 'h5', 'mat', 'pst'] },
 ];

@@ -1,0 +1,61 @@
+.view-cadinfo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  min-height: 420px;
+  padding: 16px;
+}
+
+.ci-picture {
+  display: grid;
+  place-items: center;
+  min-height: 300px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.ci-picture img {
+  max-width: 100%;
+  max-height: 70vh;
+  border-radius: 6px;
+  box-shadow: 0 1px 8px rgb(0 0 0 / 0.12);
+  image-rendering: auto;
+}
+
+.ci-none {
+  color: var(--muted);
+}
+
+.ci-card h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.ci-why {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ci-card dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.ci-card dt {
+  color: var(--muted);
+}
+
+.ci-card dd {
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .view-cadinfo {
+    grid-template-columns: 1fr;
+  }
+}

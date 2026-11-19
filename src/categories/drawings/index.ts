@@ -6,6 +6,9 @@
 import type { ViewerEntry } from '../../core/viewer';
 import { isGeoJson, isShp } from './map/sniff';
 
+/** Kept in step with cadinfo/formats.ts (the table itself loads only with the viewer). */
+const CAD_EXT = new Set(['skp', 'sldprt', 'sldasm', 'slddrw', 'ipt', 'iam', 'idw', 'ipn', 'rvt', 'rfa', 'rte', 'rft', '3dm', 'dgn', 'catpart', 'catproduct', 'catdrawing', 'max', 'vsd']);
+
 const text = (head: Uint8Array, n = 4096) => new TextDecoder('latin1').decode(head.subarray(0, n));
 
 export const drawingsViewers: ViewerEntry[] = [
@@ -73,6 +76,14 @@ export const drawingsViewers: ViewerEntry[] = [
       return false;
     },
     load: () => import('./map/view'),
+  },
+  {
+    // Paid CAD / design programs: the preview picture inside, and how to open the file.
+    id: 'drawings/cadinfo',
+    category: 'drawings',
+    heavyAbove: () => 400 * 1024 * 1024,
+    accepts: ({ ext, head }) => CAD_EXT.has(ext) && (ext !== 'prt' || text(head, 4) === '#UGC'),
+    load: () => import('./cadinfo/view'),
   },
   {
     id: 'drawings/preview',

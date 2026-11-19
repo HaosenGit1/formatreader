@@ -1199,8 +1199,22 @@ html.fr-immersive .site-header {
   text-transform: uppercase;
   text-shadow: 0 1px 8px rgb(0 0 0 / 0.55);
   opacity: 0;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
   pointer-events: none;
-  transition: opacity 1.2s 0.4s;
+  transition: opacity 1.2s 0.4s, color 0.3s;
+}
+
+.promo-on .promo-tag {
+  pointer-events: auto;
+}
+
+.promo-tag:hover,
+.promo-tag:focus-visible {
+  color: #f0d9a8;
+  outline: none;
 }
 
 .promo-tag::before {
@@ -1257,4 +1271,114 @@ html.fr-immersive .site-header {
 
 .promo-ball .circle {
   gap: 0;
+}
+
+/* "Advertise on FormatReader" panel: midnight glass and gold, like the ball. */
+.ad-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(0 0 0 / 0.45);
+  backdrop-filter: blur(4px);
+  animation: ad-in 0.3s ease-out;
+}
+
+.ad-card {
+  position: relative;
+  width: min(420px, 100%);
+  padding: 30px 30px 26px;
+  border: 1px solid #c9a96e;
+  border-radius: 18px;
+  background: radial-gradient(circle at 50% 0%, rgb(30 46 76 / 0.96), rgb(8 14 26 / 0.97));
+  box-shadow: 0 0 0 6px rgb(201 169 110 / 0.1), 0 30px 80px rgb(0 0 0 / 0.5);
+  color: #f3e7cf;
+  text-align: center;
+}
+
+.ad-kicker {
+  margin: 0 0 6px;
+  color: #d8bd85;
+  font-family: 'Cormorant Garamond', Didot, 'Bodoni 72', serif;
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.ad-card h2 {
+  margin: 0 0 12px;
+  font-family: 'Cormorant Garamond', Didot, 'Songti SC', 'Times New Roman', serif;
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.ad-text {
+  margin: 0 0 18px;
+  color: rgb(243 231 207 / 0.8);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.ad-address {
+  margin: 0 0 18px;
+  color: #d8bd85;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  user-select: all;
+}
+
+.ad-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ad-btn {
+  padding: 9px 18px;
+  border: 1px solid rgb(201 169 110 / 0.7);
+  border-radius: 999px;
+  background: transparent;
+  color: #f3e7cf;
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ad-btn:hover,
+.ad-btn:focus-visible {
+  background: rgb(201 169 110 / 0.14);
+  outline: none;
+}
+
+.ad-primary {
+  border-color: #c9a96e;
+  background: linear-gradient(180deg, #d8bd85, #b8955a);
+  color: #10182a;
+  font-weight: 600;
+}
+
+.ad-primary:hover,
+.ad-primary:focus-visible {
+  background: linear-gradient(180deg, #e4cb96, #c4a166);
+}
+
+.ad-x {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  border: 0;
+  background: none;
+  color: rgb(243 231 207 / 0.6);
+  font-size: 22px;
+  cursor: pointer;
+}
+
+@keyframes ad-in {
+  from {
+    opacity: 0;
+  }
 }

@@ -6,6 +6,7 @@ export const VIEWER_LABELS: Record<string, { en: string; zh: string; ext: string
   'drawings/model': { en: '3D models, CAD & point clouds', zh: '3D 模型、CAD 和点云', ext: '.stl .obj .glb .3mf .3ds .dae .usdz .step .ifc .las …' },
   'drawings/preview': { en: 'ODG & Visio', zh: 'ODG 和 Visio', ext: '.odg .vsdx' },
   'drawings/map': { en: 'Maps (Google Earth, GPS, GIS)', zh: '地图（Google Earth、GPS、GIS）', ext: '.kml .kmz .gpx .geojson .shp' },
+  'drawings/cadinfo': { en: 'SolidWorks, Inventor, Revit, SketchUp… (preview)', zh: 'SolidWorks、Inventor、Revit、SketchUp…（预览图）', ext: '.sldprt .ipt .rvt .skp .3dm .dgn …' },
   'drawings/mindmap': { en: 'Mind maps', zh: '思维导图', ext: '.xmind' },
   'sounds/audio': { en: 'Music & sound', zh: '音乐和音频', ext: '.mp3 .m4a .wav .flac .ogg .opus …' },
   'videos/video': { en: 'Videos', zh: '视频', ext: '.mp4 .webm .mov .mkv …' },

@@ -7,6 +7,8 @@
 import { h } from './dom';
 import { strings } from './i18n';
 
+export const AD_EMAIL = 'ads@formatreader.com';
+
 export const PROMO = {
   link: 'https://www.goldwindamericas.com/',
   video: '/promo/goldwind-americas-v2.mp4',
@@ -19,6 +21,14 @@ const s = strings({
   more: { en: 'Learn more', zh: '了解更多' },
   label: { en: 'Goldwind Americas website (opens in a new tab)', zh: '金风科技美洲官网（在新标签页打开）' },
   tag: { en: 'Ad space available', zh: 'Ad space available' }, // 广告招租 — English for everyone, like the slogan
+  adTitle: { en: 'Advertise on FormatReader', zh: '在 FormatReader 投放广告' },
+  adText: { en: 'Your brand behind the page every visitor sees first. Tell us about your company and what you’d like to show — we’ll get back to you.', zh: '您的品牌将出现在每位访客打开的第一个页面。告诉我们您的公司和想展示的内容，我们会尽快回复。' },
+  adEmail: { en: 'Email us', zh: '发邮件联系' },
+  adCopy: { en: 'Copy address', zh: '复制邮箱' },
+  adCopied: { en: 'Copied', zh: '已复制' },
+  adClose: { en: 'Close', zh: '关闭' },
+  adSubject: { en: 'Advertising on FormatReader', zh: '在 FormatReader 投放广告' },
+  adBody: { en: 'Company:\nWebsite:\nWhat you would like to show:\nTiming / budget:\n', zh: '公司：\n网站：\n想展示的内容：\n时间 / 预算：\n' },
 });
 
 /** No visible button: a link only screen readers see (the video itself is the visible link). */
@@ -44,7 +54,7 @@ export function startPromoVideo(landing: HTMLElement): void {
     video.addEventListener('error', () => bg.remove(), { once: true });
     video.poster = PROMO.poster;
     video.src = PROMO.video;
-    landing.prepend(bg, h('div', { class: 'promo-tag', 'aria-hidden': 'true' }, s('tag')));
+    landing.prepend(bg, h('button', { type: 'button', class: 'promo-tag', onclick: openAdPanel }, s('tag')));
     void video.play().catch(() => {});
   };
   const idle = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => void }).requestIdleCallback;
@@ -130,4 +140,32 @@ function wander(landing: HTMLElement): void {
     requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);
+}
+
+/** "Ad space available" → a small panel: email the advertising address (no form, nothing sent by the site). */
+function openAdPanel(): void {
+  document.querySelector('.ad-panel')?.remove();
+  const mailto = `mailto:${AD_EMAIL}?subject=${encodeURIComponent(s('adSubject'))}&body=${encodeURIComponent(s('adBody'))}`;
+  const copy = h('button', { type: 'button', class: 'ad-btn' }, s('adCopy')) as HTMLButtonElement;
+  copy.addEventListener('click', () => void navigator.clipboard?.writeText(AD_EMAIL).then(() => ((copy.textContent = s('adCopied')), setTimeout(() => (copy.textContent = s('adCopy')), 1500))));
+  const close = () => {
+    panel.remove();
+    removeEventListener('keydown', esc);
+  };
+  const esc = (e: KeyboardEvent) => e.key === 'Escape' && close();
+  const panel: HTMLElement = h(
+    'div',
+    { class: 'ad-panel', role: 'dialog', 'aria-modal': 'true', 'aria-label': s('adTitle'), onclick: (e: Event) => e.target === panel && close() },
+    h('div', { class: 'ad-card' },
+      h('button', { type: 'button', class: 'ad-x', 'aria-label': s('adClose'), onclick: close }, '×'),
+      h('p', { class: 'ad-kicker' }, s('tag')),
+      h('h2', {}, s('adTitle')),
+      h('p', { class: 'ad-text' }, s('adText')),
+      h('p', { class: 'ad-address' }, AD_EMAIL),
+      h('div', { class: 'ad-actions' }, h('a', { class: 'ad-btn ad-primary', href: mailto }, s('adEmail')), copy),
+    ), // prettier-ignore
+  );
+  document.body.append(panel);
+  addEventListener('keydown', esc);
+  (panel.querySelector('.ad-primary') as HTMLElement).focus();
 }
