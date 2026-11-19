@@ -42,6 +42,7 @@ export function startPromoVideo(landing: HTMLElement): void {
     video.addEventListener('playing', () => landing.classList.add('promo-on'), { once: true });
     // No video on the server yet (or it can't play here): quietly keep the plain page.
     video.addEventListener('error', () => bg.remove(), { once: true });
+    video.poster = PROMO.poster;
     video.src = PROMO.video;
     landing.prepend(bg);
     void video.play().catch(() => {});
