@@ -1,0 +1,5 @@
+sep=;
+Turbine;Power kW;Status
+T-01;4500;Running
+T-02;4480,5;Running
+T-03;0;Fault

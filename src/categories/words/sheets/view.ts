@@ -50,8 +50,10 @@ async function openDelimited(file: File, ctx: OpenContext): Promise<OpenedView> 
 
   const draw = () => {
     const text = src.text;
-    delimiter = ext === 'tsv' || ext === 'tab' ? '\t' : ext === 'psv' ? '|' : sniffDelimiter(text.slice(0, 20000));
-    rows = parseDelimited(text, delimiter, 1_000_000);
+    // Excel writes "sep=;" as the first line to name the delimiter: honour it, don't show it.
+    const sep = /^\uFEFF?sep=(.)\s*(?:\r?\n|$)/i.exec(text.slice(0, 20));
+    delimiter = sep ? sep[1] : ext === 'tsv' || ext === 'tab' ? '\t' : ext === 'psv' ? '|' : sniffDelimiter(text.slice(0, 20000));
+    rows = parseDelimited(sep ? text.slice(sep[0].length) : text, delimiter, 1_000_000);
     while (rows.length && rows[rows.length - 1].every((c) => c === '')) rows.pop();
     const cols = Math.max(0, ...rows.slice(0, 2000).map((r) => r.length));
     ctx.mount.replaceChildren(
@@ -250,5 +252,21 @@ export const preload = () => (import.meta.env.MODE === 'portable' ? import('xlsx
 export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   const ext = extOf(file.name);
   if (DELIMITED_EXT.has(ext)) return openDelimited(file, ctx);
+  // Many systems (banks, ERPs) save tab-separated text and call it .xls: read it as text, with
+  // encoding detection (GBK, Big5, Shift-JIS…), instead of guessing Western encoding.
+  if (/^xls[xmb]?$/.test(ext) && isPlainTable(new Uint8Array(await file.slice(0, 4096).arrayBuffer()))) return openDelimited(file, ctx);
   return openWorkbook(file, ctx);
+}
+
+/** Text that is not Excel binary, ZIP, XML or HTML: a delimited table saved under an Excel name. */
+export function isPlainTable(b: Uint8Array): boolean {
+  if (b.length < 4) return false;
+  if ((b[0] === 0xd0 && b[1] === 0xcf) || (b[0] === 0x50 && b[1] === 0x4b) || (b[0] === 0x09 && b[1] === 0x08)) return false; // OLE, ZIP, BIFF
+  const utf16 = (b[0] === 0xff && b[1] === 0xfe) || (b[0] === 0xfe && b[1] === 0xff);
+  const text = utf16 ? new TextDecoder(b[0] === 0xff ? 'utf-16le' : 'utf-16be').decode(b) : new TextDecoder('latin1').decode(b);
+  const t = text.replace(/^\uFEFF/, '').trimStart();
+  if (/^</.test(t)) return false; // HTML / SpreadsheetML: the workbook reader handles those
+  if (!utf16 && b.subarray(0, 2048).includes(0)) return false;
+  const lines = t.split(/\r?\n/).filter((l) => l.trim()).slice(0, 10);
+  return lines.length >= 1 && lines.filter((l) => /[\t,;|]/.test(l)).length >= Math.min(2, lines.length);
 }
