@@ -164,3 +164,8 @@
   background: color-mix(in srgb, var(--accent) 12%, var(--surface-2));
   color: var(--fg);
 }
+
+.fmt-notes {
+  padding-left: 18px;
+  line-height: 1.6;
+}
