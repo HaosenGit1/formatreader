@@ -160,6 +160,10 @@ export const FORMAT_GUIDES: Record<string, FormatGuide> = {
   vsd: { from: ['Microsoft Visio 2003–2010 diagram.', 'Microsoft Visio 2003–2010 图表。'], open: [way(WIN, 'Visio, Visio Viewer', 'Visio、Visio 查看器'), LIBRE('Draw', 'Draw')] },
   vsdx: { from: ['Microsoft Visio diagram (flowcharts, network and electrical diagrams).', 'Microsoft Visio 图表（流程图、网络图、电气图）。'], open: [way(WIN, 'Visio', 'Visio'), LIBRE('Draw', 'Draw'), way(ONLINE, 'draw.io / diagrams.net (free, imports VSDX)', 'draw.io / diagrams.net（免费，可导入 VSDX）')] },
   xmind: { from: ['XMind mind map.', 'XMind 思维导图。'], open: [way(ANY, 'XMind (free version)', 'XMind（有免费版）')] },
+  kml: { from: ['Google Earth places, routes and areas (KML, XML text).', 'Google Earth 地点、路线和区域（KML，XML 文本）。'], open: [way(ANY, 'Google Earth Pro (free), Google Earth web, QGIS', 'Google Earth 专业版（免费）、网页版 Google Earth、QGIS')] },
+  gpx: { from: ['GPS tracks and waypoints from GPS units, phones and sports apps.', '来自 GPS 设备、手机和运动 App 的轨迹和航点。'], open: [way(ANY, 'Google Earth Pro, QGIS, GPXSee (free)', 'Google Earth 专业版、QGIS、GPXSee（免费）')] },
+  geojson: { from: ['GeoJSON: map features as JSON (web maps, GIS exports).', 'GeoJSON：JSON 格式的地图要素（网页地图、GIS 导出）。'], open: [way(ANY, 'QGIS (free), geojson.io in a browser', 'QGIS（免费）、浏览器中的 geojson.io')] },
+  shp: { from: ['Esri Shapefile: GIS map data. The .shp holds shapes; the .dbf next to it holds the attributes, .prj the coordinate system — keep them together.', 'Esri Shapefile：GIS 地图数据。.shp 存图形，旁边的 .dbf 存属性，.prj 存坐标系——请放在一起。'], open: [way(ANY, 'QGIS (free), ArcGIS', 'QGIS（免费）、ArcGIS')] },
   kmz: { from: ['Google Earth places and routes (zipped KML).', 'Google Earth 地点和路线（压缩的 KML）。'], open: [way(ANY, 'Google Earth Pro (free), Google Earth web', 'Google Earth 专业版（免费）、网页版 Google Earth')] },
 
   mp3: audio(['MP3 audio.', 'MP3 音频。'], [way(ANY, 'Every music player', '所有音乐播放器')]),

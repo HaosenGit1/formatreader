@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="FormatReader sample" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata><name>Site survey 现场踏勘</name></metadata>
+  <wpt lat="40.4840424" lon="-89.0276790"><name>Substation gate</name><ele>221</ele></wpt>
+  <wpt lat="40.4800000" lon="-89.0500000"><name>Met mast 测风塔</name><desc>80 m mast</desc></wpt>
+  <trk><name>Survey drive</name><trkseg>
+      <trkpt lat="40.4800000" lon="-89.0500000"><ele>220</ele><time>2026-10-02T09:00:00Z</time></trkpt>
+      <trkpt lat="40.4800000" lon="-89.0446855"><ele>221</ele><time>2026-10-02T09:04:00Z</time></trkpt>
+      <trkpt lat="40.4800000" lon="-89.0393710"><ele>222</ele><time>2026-10-02T09:08:00Z</time></trkpt>
+      <trkpt lat="40.4800000" lon="-89.0340564"><ele>223</ele><time>2026-10-02T09:12:00Z</time></trkpt>
+      <trkpt lat="40.4840424" lon="-89.0500000"><ele>224</ele><time>2026-10-02T09:16:00Z</time></trkpt>
+      <trkpt lat="40.4840424" lon="-89.0446855"><ele>225</ele><time>2026-10-02T09:20:00Z</time></trkpt>
+      <trkpt lat="40.4840424" lon="-89.0393710"><ele>226</ele><time>2026-10-02T09:24:00Z</time></trkpt>
+      <trkpt lat="40.4840424" lon="-89.0340564"><ele>227</ele><time>2026-10-02T09:28:00Z</time></trkpt>
+      <trkpt lat="40.4880848" lon="-89.0500000"><ele>228</ele><time>2026-10-02T09:32:00Z</time></trkpt>
+      <trkpt lat="40.4880848" lon="-89.0446855"><ele>229</ele><time>2026-10-02T09:36:00Z</time></trkpt>
+      <trkpt lat="40.4880848" lon="-89.0393710"><ele>230</ele><time>2026-10-02T09:40:00Z</time></trkpt>
+      <trkpt lat="40.4880848" lon="-89.0340564"><ele>231</ele><time>2026-10-02T09:44:00Z</time></trkpt>
+  </trkseg></trk>
+</gpx>

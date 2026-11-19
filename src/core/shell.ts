@@ -18,6 +18,7 @@ import { formatBytes, h } from './dom';
 import { lang, onLangChange, setLang, strings } from './i18n';
 import { infoEntry } from './info-entry';
 import { promoBar, startPromoVideo } from './promo';
+import { pickFromMany } from './companions';
 import { messageView } from './info-view';
 import { assertUniqueIds, pickViewer, withTrials } from './registry';
 import type { OpenContext, OpenedView, ViewerEntry, ViewerModule } from './viewer';
@@ -117,7 +118,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
   const viewers = withTrials([...categoryViewers, infoEntry], location.search);
 
   const app = document.getElementById('app')!;
-  const fileInput = h('input', { type: 'file', hidden: true }) as HTMLInputElement;
+  const fileInput = h('input', { type: 'file', multiple: true, hidden: true }) as HTMLInputElement;
   document.body.append(fileInput);
 
   let current: Current | null = null;
@@ -693,13 +694,15 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     // A folder dropped (perhaps by accident): browse it like an archive.
     const entry = e.dataTransfer?.items?.[0]?.webkitGetAsEntry?.();
     if (entry?.isDirectory) return void openFolder(new FolderSource(entry as FileSystemDirectoryEntry));
-    const file = e.dataTransfer?.files?.[0];
-    if (file) void openFile(file);
+    const files = [...(e.dataTransfer?.files ?? [])];
+    if (files.length > 1) return void pickFromMany(files).then(openFile);
+    if (files[0]) void openFile(files[0]);
   });
 
   fileInput.addEventListener('change', () => {
-    const file = fileInput.files?.[0];
-    if (file) void openFile(file);
+    const files = [...(fileInput.files ?? [])];
+    if (files.length > 1) void pickFromMany(files).then(openFile);
+    else if (files[0]) void openFile(files[0]);
     fileInput.value = '';
   });
 

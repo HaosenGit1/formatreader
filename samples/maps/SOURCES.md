@@ -1,0 +1,1 @@
+Written by scripts/make-map-samples.py: a fictional wind farm (12 turbines, boundary, collector cable, substation) as KML, KMZ, GPX, GeoJSON and a Shapefile set (shapefile/: .shp .shx .dbf in GBK .prj .cpg, and the same zipped). turbines.shp is the .shp alone.

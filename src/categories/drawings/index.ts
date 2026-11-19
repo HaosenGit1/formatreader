@@ -4,6 +4,7 @@
  * through what the file carries (preview picture, pages and texts); XMind as an outline.
  */
 import type { ViewerEntry } from '../../core/viewer';
+import { isGeoJson, isShp } from './map/sniff';
 
 const text = (head: Uint8Array, n = 4096) => new TextDecoder('latin1').decode(head.subarray(0, n));
 
@@ -41,6 +42,24 @@ export const drawingsViewers: ViewerEntry[] = [
       return false;
     },
     load: () => import('./model/view'),
+  },
+  {
+    // Maps: Google Earth KML/KMZ, GPS tracks (GPX), GeoJSON, Shapefiles. Ahead of the code viewer.
+    id: 'drawings/map',
+    category: 'drawings',
+    layout: 'fill',
+    priority: 60,
+    mimes: /vnd\.google-earth|gpx|geo\+json/,
+    accepts: ({ format, ext, head }) => {
+      if (format?.id === 'kmz') return true;
+      const t = text(head, 8192);
+      if (ext === 'kml') return /<kml[\s>]/.test(t);
+      if (ext === 'gpx') return /<gpx[\s>]/.test(t);
+      if (ext === 'geojson' || ext === 'json' || ext === 'topojson') return isGeoJson(t);
+      if (ext === 'shp') return isShp(head);
+      return false;
+    },
+    load: () => import('./map/view'),
   },
   {
     id: 'drawings/preview',

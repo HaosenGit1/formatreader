@@ -1,0 +1,231 @@
+{
+ "type": "FeatureCollection",
+ "name": "turbines",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "风机 T-01",
+    "id": "T-01",
+    "model": "GW 155-4.5",
+    "hub_m": 100
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -89.05,
+     40.48
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "风机 T-02",
+    "id": "T-02",
+    "model": "GW 155-4.5",
+    "hub_m": 120
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -89.0446855,
+     40.48
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "风机 T-03",
+    "id": "T-03",
+    "model": "GW 155-4.5",
+    "hub_m": 100
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -89.039371,
+     40.48
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "风机 T-04",
+    "id": "T-04",
+    "model": "GW 155-4.5",
+    "hub_m": 120
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -89.0340564,
+     40.48
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "风机 T-05",
+    "id": "T-05",
+    "model": "GW 155-4.5",
+    "hub_m": 100
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -89.05,
+     40.4840424
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "风机 T-06",
+    "id": "T-06",
+    "model": "GW 155-4.5",
+    "hub_m": 120
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -89.0446855,
+     40.4840424
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "风机 T-07",
+    "id": "T-07",
+    "model": "GW 155-4.5",
+    "hub_m": 100
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -89.039371,
+     40.4840424
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "风机 T-08",
+    "id": "T-08",
+    "model": "GW 155-4.5",
+    "hub_m": 120
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -89.0340564,
+     40.4840424
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "风机 T-09",
+    "id": "T-09",
+    "model": "GW 155-4.5",
+    "hub_m": 100
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -89.05,
+     40.4880848
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "风机 T-10",
+    "id": "T-10",
+    "model": "GW 155-4.5",
+    "hub_m": 120
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -89.0446855,
+     40.4880848
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "风机 T-11",
+    "id": "T-11",
+    "model": "GW 155-4.5",
+    "hub_m": 100
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -89.039371,
+     40.4880848
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "风机 T-12",
+    "id": "T-12",
+    "model": "GW 155-4.5",
+    "hub_m": 120
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -89.0340564,
+     40.4880848
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Site boundary"
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -89.0526573,
+       40.4779788
+      ],
+      [
+       -89.0313992,
+       40.4779788
+      ],
+      [
+       -89.0313992,
+       40.490106
+      ],
+      [
+       -89.0526573,
+       40.490106
+      ],
+      [
+       -89.0526573,
+       40.4779788
+      ]
+     ]
+    ]
+   }
+  }
+ ]
+}

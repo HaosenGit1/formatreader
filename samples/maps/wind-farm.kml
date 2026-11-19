@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Prairie Wind 风电场 (sample)</name>
+    <Folder><name>Turbines 风机</name>
+      <Placemark><name>风机 T-01</name><ExtendedData><Data name="ID"><value>T-01</value></Data><Data name="Model"><value>GW 155-4.5</value></Data><Data name="Hub height (m)"><value>100</value></Data></ExtendedData><Point><coordinates>-89.0500000,40.4800000,0</coordinates></Point></Placemark>
+      <Placemark><name>风机 T-02</name><ExtendedData><Data name="ID"><value>T-02</value></Data><Data name="Model"><value>GW 155-4.5</value></Data><Data name="Hub height (m)"><value>120</value></Data></ExtendedData><Point><coordinates>-89.0446855,40.4800000,0</coordinates></Point></Placemark>
+      <Placemark><name>风机 T-03</name><ExtendedData><Data name="ID"><value>T-03</value></Data><Data name="Model"><value>GW 155-4.5</value></Data><Data name="Hub height (m)"><value>100</value></Data></ExtendedData><Point><coordinates>-89.0393710,40.4800000,0</coordinates></Point></Placemark>
+      <Placemark><name>风机 T-04</name><ExtendedData><Data name="ID"><value>T-04</value></Data><Data name="Model"><value>GW 155-4.5</value></Data><Data name="Hub height (m)"><value>120</value></Data></ExtendedData><Point><coordinates>-89.0340564,40.4800000,0</coordinates></Point></Placemark>
+      <Placemark><name>风机 T-05</name><ExtendedData><Data name="ID"><value>T-05</value></Data><Data name="Model"><value>GW 155-4.5</value></Data><Data name="Hub height (m)"><value>100</value></Data></ExtendedData><Point><coordinates>-89.0500000,40.4840424,0</coordinates></Point></Placemark>
+      <Placemark><name>风机 T-06</name><ExtendedData><Data name="ID"><value>T-06</value></Data><Data name="Model"><value>GW 155-4.5</value></Data><Data name="Hub height (m)"><value>120</value></Data></ExtendedData><Point><coordinates>-89.0446855,40.4840424,0</coordinates></Point></Placemark>
+      <Placemark><name>风机 T-07</name><ExtendedData><Data name="ID"><value>T-07</value></Data><Data name="Model"><value>GW 155-4.5</value></Data><Data name="Hub height (m)"><value>100</value></Data></ExtendedData><Point><coordinates>-89.0393710,40.4840424,0</coordinates></Point></Placemark>
+      <Placemark><name>风机 T-08</name><ExtendedData><Data name="ID"><value>T-08</value></Data><Data name="Model"><value>GW 155-4.5</value></Data><Data name="Hub height (m)"><value>120</value></Data></ExtendedData><Point><coordinates>-89.0340564,40.4840424,0</coordinates></Point></Placemark>
+      <Placemark><name>风机 T-09</name><ExtendedData><Data name="ID"><value>T-09</value></Data><Data name="Model"><value>GW 155-4.5</value></Data><Data name="Hub height (m)"><value>100</value></Data></ExtendedData><Point><coordinates>-89.0500000,40.4880848,0</coordinates></Point></Placemark>
+      <Placemark><name>风机 T-10</name><ExtendedData><Data name="ID"><value>T-10</value></Data><Data name="Model"><value>GW 155-4.5</value></Data><Data name="Hub height (m)"><value>120</value></Data></ExtendedData><Point><coordinates>-89.0446855,40.4880848,0</coordinates></Point></Placemark>
+      <Placemark><name>风机 T-11</name><ExtendedData><Data name="ID"><value>T-11</value></Data><Data name="Model"><value>GW 155-4.5</value></Data><Data name="Hub height (m)"><value>100</value></Data></ExtendedData><Point><coordinates>-89.0393710,40.4880848,0</coordinates></Point></Placemark>
+      <Placemark><name>风机 T-12</name><ExtendedData><Data name="ID"><value>T-12</value></Data><Data name="Model"><value>GW 155-4.5</value></Data><Data name="Hub height (m)"><value>120</value></Data></ExtendedData><Point><coordinates>-89.0340564,40.4880848,0</coordinates></Point></Placemark>
+    </Folder>
+    <Folder><name>Site</name>
+      <Placemark><name>Site boundary 场址边界</name><description><![CDATA[Lease area<br/>Fictional sample]]></description><Polygon><outerBoundaryIs><LinearRing><coordinates>-89.0526573,40.4779788,0 -89.0313992,40.4779788,0 -89.0313992,40.4901060,0 -89.0526573,40.4901060,0 -89.0526573,40.4779788,0</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>
+      <Placemark><name>Collector cable 集电线路 2</name><LineString><coordinates>-89.0500000,40.4840424,0 -89.0446855,40.4840424,0 -89.0393710,40.4840424,0 -89.0340564,40.4840424,0 -89.0276790,40.4840424,0</coordinates></LineString></Placemark>
+      <Placemark><name>Substation 升压站</name><Point><coordinates>-89.0276790,40.4840424,0</coordinates></Point></Placemark>
+    </Folder>
+  </Document>
+</kml>

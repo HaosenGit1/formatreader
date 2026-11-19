@@ -48,6 +48,7 @@ const DRAWINGS = [
   { name: t('CAD drawings: layers, layouts, hatches, measure, find text, print', 'CAD 图纸：图层、布局、填充、测量、查找文字、打印'), viewer: 'drawings/dxf', ext: ['dwg', 'dxf'] },
   { name: t('3D models', '3D 模型'), viewer: 'drawings/model', ext: ['stl', 'obj', 'ply', 'glb', 'gltf', '3mf', 'fbx'] },
   { name: t('CAD & BIM models', 'CAD 和 BIM 模型'), viewer: 'drawings/model', ext: ['step', 'stp', 'iges', 'igs', 'brep', 'ifc'] },
+  { name: t('Maps: Google Earth (KML, KMZ), GPS tracks (GPX), GeoJSON, Shapefiles', '地图：Google Earth（KML、KMZ）、GPS 轨迹（GPX）、GeoJSON、Shapefile'), viewer: 'drawings/map', ext: ['kml', 'kmz', 'gpx', 'geojson', 'shp'] },
   { name: t('Diagrams', '图表'), viewer: ['drawings/preview', 'drawings/mindmap'], ext: ['vsdx', 'odg', 'xmind'] },
 ];
 
@@ -80,10 +81,13 @@ const ARCHIVES = [
 const COMING = [
   { name: t('More images', '更多图片'), ext: ['jxl', 'jp2', 'dds', 'ktx2'] },
   { name: t('More audio & video, DivX/Xvid AVI (details only for now)', '更多音视频、DivX/Xvid 的 AVI（暂只显示信息）'), ext: ['wma', 'ape', 'amr', 'mid', 'wmv', 'rmvb', 'mpg'] },
-  { name: t('More drawings', '更多图纸'), ext: ['vsd', 'kmz', 'skp'] },
+  { name: t('More drawings', '更多图纸'), ext: ['vsd', 'skp'] },
   { name: t('System logs', '系统日志'), ext: ['evtx', 'plist', 'journal', 'pcap'] },
   { name: t('More documents & data', '更多文档和数据'), ext: ['chm', 'djvu', 'parquet', 'h5', 'mat', 'pst'] },
 ];
+
+/** Map formats open in the map viewer, not as code (they're also in the code table, as XML/JSON). */
+const MAP_EXT = new Set(['kml', 'gpx', 'geojson']);
 
 /** Code & settings, read from the code viewer's extension table (grouped by its section comments). */
 function codeGroups(root) {
@@ -113,10 +117,10 @@ function codeGroups(root) {
       if (elsewhere.has(m[1])) continue;
       const key = section.en;
       if (!groups.has(key)) groups.set(key, { name: section, viewer: 'words/code', ext: [] });
-      groups.get(key).ext.push(m[1]);
+      if (!MAP_EXT.has(m[1])) groups.get(key).ext.push(m[1]);
     }
   }
-  groups.get('Data & settings')?.ext.unshift(...json.filter((e) => e !== 'fb2'));
+  groups.get('Data & settings')?.ext.unshift(...json.filter((e) => e !== 'fb2' && !MAP_EXT.has(e)));
   return [...groups.values()].map((g) => ({ ...g, ext: [...new Set(g.ext)] }));
 }
 

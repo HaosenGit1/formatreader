@@ -3,6 +3,7 @@
  * background worker: a file list where any file opens in FormatReader.
  * CBR/CB7 comics: the pages are repacked as CBZ and open in the book reader.
  */
+import { attachShapeParts } from '../../../core/companions';
 import './archive.css';
 import { formatBytes, h } from '../../../core/dom';
 import { strings } from '../../../core/i18n';
@@ -101,7 +102,10 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   const openEntry = async (e: Entry) => {
     error.textContent = '';
     try {
-      ctx.openFile(await e.extract());
+      // A Shapefile's .dbf / .prj / .cpg next to it come along.
+      const dir = e.path.slice(0, e.path.lastIndexOf('/') + 1);
+      const near = entries.filter((x) => x.path.slice(0, x.path.lastIndexOf('/') + 1) === dir);
+      ctx.openFile(await attachShapeParts(await e.extract(), e.path, near.map((x) => x.path), (p) => near.find((x) => x.path === p)!.extract()));
     } catch (err) {
       const msg = String((err as Error)?.message ?? err);
       error.textContent = `${s('cannot')} ${e.name}. ${/encrypt|password|block header|passphrase/i.test(msg) ? s('encrypted') : msg}`;

@@ -43,6 +43,8 @@ async function readAll(dir: FileSystemDirectoryEntry): Promise<FileSystemEntry[]
   return out.filter((e) => !isJunkPath(e.fullPath)).sort((a, b) => Number(b.isDirectory) - Number(a.isDirectory) || natural(a.name, b.name));
 }
 
+import { attachShapeParts } from './companions';
+
 const fileOf = (e: FileSystemFileEntry) => new Promise<File>((resolve, reject) => e.file(resolve, reject));
 
 /** Remembered per folder while the visitor goes in and out (which subfolders were open). */
@@ -73,6 +75,10 @@ export async function openEntry(fe: FileSystemFileEntry, siblings: FileSystemEnt
     const parts = await Promise.all([...(init ? [init] : []), ...pieces].map((p) => fileAt(dir, decodeURIComponent(p.split('?')[0]))));
     const mp4 = !!init || /\.(m4s|mp4|m4v)$/i.test(pieces[0]);
     return new File(parts, fe.name.replace(/\.m3u8?$/i, mp4 ? '.mp4' : '.ts'), { type: mp4 ? 'video/mp4' : 'video/mp2t' });
+  }
+  if (/\.shp$/i.test(fe.name)) {
+    const files = siblings.filter((e) => e.isFile);
+    return attachShapeParts(file, fe.name, files.map((e) => e.name), async (n) => fileOf(files.find((e) => e.name === n) as FileSystemFileEntry));
   }
   if (/\.m4s$/i.test(fe.name) && /video/i.test(fe.name)) {
     const audio = siblings.find((e) => e.isFile && /\.m4s$/i.test(e.name) && /audio/i.test(e.name));

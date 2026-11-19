@@ -1,0 +1,182 @@
+/* Map viewer (KML, KMZ, GPX, GeoJSON, Shapefile) */
+.view-map {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.mp-main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.mp-stage {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  outline: none;
+  cursor: grab;
+  touch-action: none;
+}
+
+.mp-stage:active {
+  cursor: grabbing;
+}
+
+.mp-stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.mp-hint,
+.mp-empty {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  color: var(--muted);
+  font-size: 12px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.mp-hint {
+  bottom: 10px;
+}
+
+.mp-empty {
+  top: 45%;
+  font-size: 14px;
+}
+
+.mp-scale {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  padding-bottom: 2px;
+  border: 2px solid var(--fg);
+  border-top: 0;
+  color: var(--fg);
+  font-size: 11px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.mp-side {
+  flex: none;
+  width: 280px;
+  padding: 10px 12px;
+  overflow: auto;
+  border-left: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 13px;
+}
+
+.mp-side-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  overflow-wrap: anywhere;
+}
+
+.mp-props {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  margin: 0 0 12px;
+}
+
+.mp-props dt {
+  color: var(--muted);
+}
+
+.mp-props dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.mp-table {
+  flex: none;
+  max-height: 42%;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.mp-table-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+}
+
+.mp-filter {
+  width: 200px;
+  min-width: 0;
+}
+
+.mp-count {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.mp-table-wrap {
+  overflow: auto;
+  font-size: 12px;
+}
+
+.mp-table table {
+  border-collapse: collapse;
+  min-width: 100%;
+}
+
+.mp-table th,
+.mp-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.mp-table th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-2);
+}
+
+.mp-table tbody tr {
+  cursor: pointer;
+}
+
+.mp-table tbody tr:hover,
+.mp-table tr.sel {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.mp-more {
+  margin: 6px 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .mp-main {
+    flex-direction: column;
+  }
+
+  .mp-side {
+    width: auto;
+    max-height: 40%;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+}
