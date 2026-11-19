@@ -1182,3 +1182,34 @@ html.fr-immersive .site-header {
       0 24px 70px rgb(0 0 0 / 0.5);
   }
 }
+
+/* "Sponsored / 广告植入" — a quiet gold label in the top-left corner over the video. */
+.promo-tag {
+  position: absolute;
+  top: 22px;
+  left: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #d8bd85;
+  font-family: 'Cormorant Garamond', Didot, 'Bodoni 72', 'Times New Roman', serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.2s 0.4s;
+}
+
+.promo-tag::before {
+  content: '';
+  width: 28px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #d8bd85);
+}
+
+.promo-on .promo-tag {
+  opacity: 0.9;
+}
