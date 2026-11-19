@@ -1117,10 +1117,6 @@ html.fr-immersive .site-header {
   letter-spacing: 0.06em;
 }
 
-.promo-on .foot-link {
-  color: rgb(255 255 255 / 0.85);
-}
-
 .promo-on {
   cursor: pointer;
 }
@@ -1163,4 +1159,26 @@ html.fr-immersive .site-header {
 .promo-on .circle:hover,
 .promo-on .circle:focus-visible {
   border-color: #e0c48a;
+}
+
+/* The gold halo glows softly in and out while the ball drifts. */
+@media (prefers-reduced-motion: no-preference) {
+  .promo-ball .circle {
+    animation: promo-glow 7s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes promo-glow {
+  from {
+    box-shadow:
+      0 0 0 6px rgb(201 169 110 / 0.08),
+      inset 0 0 50px rgb(201 169 110 / 0.08),
+      0 18px 50px rgb(0 0 0 / 0.42);
+  }
+  to {
+    box-shadow:
+      0 0 0 12px rgb(201 169 110 / 0.18),
+      inset 0 0 70px rgb(201 169 110 / 0.15),
+      0 24px 70px rgb(0 0 0 / 0.5);
+  }
 }

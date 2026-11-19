@@ -51,40 +51,84 @@ export function startPromoVideo(landing: HTMLElement): void {
   else setTimeout(go, 800);
 }
 
+/** Smooth 1-D gradient noise (−1…1): gentle, never-repeating variation over time. */
+function noise1(seed: number) {
+  const grad = new Map<number, number>();
+  const g = (i: number) => {
+    let v = grad.get(i);
+    if (v === undefined) {
+      const x = Math.sin(i * 127.1 + seed * 311.7) * 43758.5453;
+      grad.set(i, (v = (x - Math.floor(x)) * 2 - 1));
+      if (grad.size > 512) grad.delete(grad.keys().next().value!);
+    }
+    return v;
+  };
+  return (t: number) => {
+    const i = Math.floor(t);
+    const f = t - i;
+    const u = f * f * f * (f * (f * 6 - 15) + 10); // smootherstep
+    // Blend the two neighbouring gradients (Perlin-style), scaled to about −1…1.
+    return ((1 - u) * g(i) * f + u * g(i + 1) * (f - 1)) * 2;
+  };
+}
+
 /**
- * The upload circle becomes a small ball drifting slowly and irregularly over the video
- * (two slow waves per axis with unrelated periods, so the path never repeats visibly).
- * It pauses under the pointer so it's easy to click; still for reduced-motion visitors.
+ * The upload circle becomes a small ball gliding slowly over the video, like a bubble on
+ * a breeze: its heading turns in smooth curves (layered noise), its speed rises and falls,
+ * it eases away from the edges instead of bouncing, and it breathes softly. It glides to a
+ * stop under the pointer so it's easy to click; reduced-motion visitors get a still ball.
  */
 function wander(landing: HTMLElement): void {
   const ball = landing.querySelector<HTMLElement>('.circle');
   if (!ball) return;
   landing.classList.add('promo-ball');
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const seed = Math.random() * 100;
-  let t = seed;
-  let speed = 1;
-  let target = 1;
+  const seed = Math.random() * 1000;
+  const turnA = noise1(seed);
+  const turnB = noise1(seed + 17);
+  const pace = noise1(seed + 41);
+  const r0 = landing.getBoundingClientRect();
+  const size0 = ball.offsetWidth;
+  let x = (r0.width - size0) / 2;
+  let y = (r0.height - size0) / 2 - 20;
+  let heading = Math.random() * Math.PI * 2;
+  let speedScale = still ? 0 : 1;
+  let target = speedScale;
+  let t = 0;
   let last = performance.now();
   ball.addEventListener('pointerenter', () => (target = 0));
-  ball.addEventListener('pointerleave', () => (target = 1));
+  ball.addEventListener('pointerleave', () => (target = still ? 0 : 1));
   ball.addEventListener('focus', () => (target = 0));
-  ball.addEventListener('blur', () => (target = 1));
+  ball.addEventListener('blur', () => (target = still ? 0 : 1));
   const frame = (now: number) => {
     if (!ball.isConnected) return;
-    const dt = Math.min(0.1, (now - last) / 1000);
+    const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
-    speed += (target - speed) * Math.min(1, dt * 3); // ease to a stop / back into motion
-    t += dt * speed;
+    t += dt;
+    speedScale += (target - speedScale) * Math.min(1, dt * 2.2); // glide to a stop / back
     const r = landing.getBoundingClientRect();
     const size = ball.offsetWidth;
-    const pad = 16;
-    const w = Math.max(0, r.width - size - pad * 2);
-    const h = Math.max(0, r.height - size - pad * 2 - 40); // keep clear of the footer links
-    const u = still ? 0.5 : 0.5 + 0.32 * Math.sin(t * 0.053 + 1.3) + 0.18 * Math.sin(t * 0.131 + seed);
-    const v = still ? 0.45 : 0.5 + 0.3 * Math.sin(t * 0.041 + seed * 0.7) + 0.2 * Math.sin(t * 0.097 + 2.1);
-    ball.style.transform = `translate(${pad + u * w}px, ${pad + v * h}px)`;
-    if (!still) requestAnimationFrame(frame);
+    const pad = 20;
+    const maxX = Math.max(pad, r.width - size - pad);
+    const maxY = Math.max(pad, r.height - size - pad - 44); // clear of the footer link
+    // Wander: the heading drifts by layered slow noise (big lazy curves + small sways).
+    heading += (turnA(t * 0.09) * 0.55 + turnB(t * 0.31) * 0.18) * dt;
+    // Near an edge, turn gently back toward the middle (stronger the closer it gets).
+    const cx = (maxX + pad) / 2;
+    const cy = (maxY + pad) / 2;
+    const edge = Math.max(0, 1 - Math.min(x - pad, maxX - x, y - pad, maxY - y) / Math.max(60, size * 0.9));
+    if (edge > 0) {
+      const toCentre = Math.atan2(cy - y, cx - x);
+      let d = toCentre - heading;
+      d = Math.atan2(Math.sin(d), Math.cos(d));
+      heading += d * Math.min(1, edge * edge * dt * 2.5);
+    }
+    const speed = (24 + 10 * pace(t * 0.12)) * speedScale; // px per second, breathing pace
+    x = Math.min(maxX, Math.max(pad, x + Math.cos(heading) * speed * dt));
+    y = Math.min(maxY, Math.max(pad, y + Math.sin(heading) * speed * dt));
+    const breathe = 1 + 0.022 * Math.sin(t * 0.9) * (still ? 0 : 1);
+    ball.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) scale(${breathe.toFixed(4)})`;
+    requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);
 }
