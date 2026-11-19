@@ -1382,3 +1382,21 @@ html.fr-immersive .site-header {
     opacity: 0;
   }
 }
+
+.foot-button {
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.foot-button:hover,
+.foot-button:focus-visible {
+  color: var(--fg);
+  outline: none;
+}
+
+.promo-on .foot-button:hover {
+  color: rgb(255 255 255 / 0.9);
+}

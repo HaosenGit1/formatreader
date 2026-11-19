@@ -7,7 +7,8 @@
 import { h } from './dom';
 import { strings } from './i18n';
 
-export const AD_EMAIL = 'ads@formatreader.com';
+/** One address for everything: advertising, suggestions, problems (the subject tells them apart). */
+export const CONTACT_EMAIL = 'info@formatreader.com';
 
 export const PROMO = {
   link: 'https://www.goldwindamericas.com/',
@@ -28,6 +29,12 @@ const s = strings({
   adCopied: { en: 'Copied', zh: '已复制' },
   adClose: { en: 'Close', zh: '关闭' },
   adSubject: { en: 'Advertising on FormatReader', zh: '在 FormatReader 投放广告' },
+  fbKicker: { en: 'Feedback', zh: 'Feedback' },
+  fbTitle: { en: 'Tell us what you think', zh: '告诉我们您的想法' },
+  fbText: { en: 'A suggestion, a file that didn’t open right, a format you need — we read every message. Please describe the file rather than attaching anything private.', zh: '建议、没能正确打开的文件、需要支持的格式——每条消息我们都会认真阅读。请描述文件情况，不要附上隐私文件。' },
+  fbSubject: { en: 'FormatReader feedback', zh: 'FormatReader 反馈' },
+  fbBody: { en: 'Your suggestion or what happened:\n\nFile type (e.g. .dwg, .xlsx):\nBrowser and device:\n', zh: '您的建议或遇到的问题：\n\n文件类型（如 .dwg、.xlsx）：\n浏览器和设备：\n' },
+  feedback: { en: 'Feedback', zh: '反馈' },
   adBody: { en: 'Company:\nWebsite:\nWhat you would like to show:\nTiming / budget:\n', zh: '公司：\n网站：\n想展示的内容：\n时间 / 预算：\n' },
 });
 
@@ -54,7 +61,7 @@ export function startPromoVideo(landing: HTMLElement): void {
     video.addEventListener('error', () => bg.remove(), { once: true });
     video.poster = PROMO.poster;
     video.src = PROMO.video;
-    landing.prepend(bg, h('button', { type: 'button', class: 'promo-tag', onclick: openAdPanel }, s('tag')));
+    landing.prepend(bg, h('button', { type: 'button', class: 'promo-tag', onclick: () => openContactPanel('ads') }, s('tag')));
     void video.play().catch(() => {});
   };
   const idle = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => void }).requestIdleCallback;
@@ -142,12 +149,21 @@ function wander(landing: HTMLElement): void {
   requestAnimationFrame(frame);
 }
 
-/** "Ad space available" → a small panel: email the advertising address (no form, nothing sent by the site). */
-function openAdPanel(): void {
+/** The footer "Feedback" link (same panel as advertising, worded for suggestions). */
+export function feedbackLink(): HTMLElement {
+  return h('button', { type: 'button', class: 'foot-link foot-button', onclick: () => openContactPanel('feedback') }, s('feedback'));
+}
+
+/**
+ * A small panel to email info@formatreader.com — for advertisers ("Ad space available") or
+ * feedback (footer). No form: the visitor's own email app sends it; the site sends nothing.
+ */
+function openContactPanel(kind: 'ads' | 'feedback'): void {
   document.querySelector('.ad-panel')?.remove();
-  const mailto = `mailto:${AD_EMAIL}?subject=${encodeURIComponent(s('adSubject'))}&body=${encodeURIComponent(s('adBody'))}`;
+  const ads = kind === 'ads';
+  const mailto = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(s(ads ? 'adSubject' : 'fbSubject'))}&body=${encodeURIComponent(s(ads ? 'adBody' : 'fbBody'))}`;
   const copy = h('button', { type: 'button', class: 'ad-btn' }, s('adCopy')) as HTMLButtonElement;
-  copy.addEventListener('click', () => void navigator.clipboard?.writeText(AD_EMAIL).then(() => ((copy.textContent = s('adCopied')), setTimeout(() => (copy.textContent = s('adCopy')), 1500))));
+  copy.addEventListener('click', () => void navigator.clipboard?.writeText(CONTACT_EMAIL).then(() => ((copy.textContent = s('adCopied')), setTimeout(() => (copy.textContent = s('adCopy')), 1500))));
   const close = () => {
     panel.remove();
     removeEventListener('keydown', esc);
@@ -155,13 +171,13 @@ function openAdPanel(): void {
   const esc = (e: KeyboardEvent) => e.key === 'Escape' && close();
   const panel: HTMLElement = h(
     'div',
-    { class: 'ad-panel', role: 'dialog', 'aria-modal': 'true', 'aria-label': s('adTitle'), onclick: (e: Event) => e.target === panel && close() },
+    { class: 'ad-panel', role: 'dialog', 'aria-modal': 'true', 'aria-label': s(ads ? 'adTitle' : 'fbTitle'), onclick: (e: Event) => e.target === panel && close() },
     h('div', { class: 'ad-card' },
       h('button', { type: 'button', class: 'ad-x', 'aria-label': s('adClose'), onclick: close }, '×'),
-      h('p', { class: 'ad-kicker' }, s('tag')),
-      h('h2', {}, s('adTitle')),
-      h('p', { class: 'ad-text' }, s('adText')),
-      h('p', { class: 'ad-address' }, AD_EMAIL),
+      h('p', { class: 'ad-kicker' }, s(ads ? 'tag' : 'fbKicker')),
+      h('h2', {}, s(ads ? 'adTitle' : 'fbTitle')),
+      h('p', { class: 'ad-text' }, s(ads ? 'adText' : 'fbText')),
+      h('p', { class: 'ad-address' }, CONTACT_EMAIL),
       h('div', { class: 'ad-actions' }, h('a', { class: 'ad-btn ad-primary', href: mailto }, s('adEmail')), copy),
     ), // prettier-ignore
   );
