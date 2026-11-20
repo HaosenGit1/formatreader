@@ -21,8 +21,8 @@ const s = strings({
     zh: '只保存在本机，离线也能用。',
   },
   empty: {
-    en: 'Files you open will show here.',
-    zh: '打开的文件会显示在这里。',
+    en: 'Your usual files, one click away.',
+    zh: '常用文件，一键打开。',
   },
   remove: { en: 'Remove from Recent', zh: '从最近列表中移除' },
   open: { en: 'Open {name} again', zh: '再次打开 {name}' },
