@@ -17,9 +17,34 @@
   font-weight: 500;
 }
 
-.formats-lead {
-  margin: 0 0 20px;
+.formats-points {
+  display: grid;
+  gap: 6px;
+  margin: 4px 0 20px;
+  padding: 0;
+  list-style: none;
   color: var(--muted);
+}
+
+.formats-points strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.formats-points a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+}
+
+.formats-points a:hover {
+  color: var(--accent);
+}
+
+.fmt-point-icon {
+  display: inline-block;
+  width: 1.4em;
 }
 
 .fmt-search {
@@ -186,19 +211,3 @@ a.fmt-ext.fmt-edit:focus-visible {
   outline: none;
 }
 
-/* Open code: anyone can check that files stay on the device */
-.fmt-trust {
-  margin: 12px 0 16px;
-  padding: 10px 14px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--good-soft, #e5f4ec);
-  color: var(--fg);
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.fmt-trust a {
-  color: var(--accent);
-  white-space: nowrap;
-}
