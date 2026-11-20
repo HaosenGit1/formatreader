@@ -206,6 +206,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   const playable = song.tracks.filter((t) => t.notes > 0).length;
   return {
     meta: () => ['MIDI', fmt(song.duration), `${playable} ${s('tracks')}`, ...(song.bpm ? [`${song.bpm} BPM`] : []), ...(song.timeSignature ? [song.timeSignature] : [])],
+    onHide: () => stop(),
     destroy: () => {
       stop();
       ro.disconnect();

@@ -172,6 +172,7 @@ export async function openBook(file: File, mount: HTMLElement, fontScale: () => 
 
   // ---- keyboard: arrows / page keys / space, also while focus is inside the book
   const onKey = (e: KeyboardEvent) => {
+    if (!view.isConnected) return; // this file's tab is in the background
     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
     if (e.key === 'ArrowLeft' || e.key === 'PageUp') view.goLeft();
     else if (e.key === 'ArrowRight' || e.key === 'PageDown' || (e.key === ' ' && !e.shiftKey)) view.goRight();

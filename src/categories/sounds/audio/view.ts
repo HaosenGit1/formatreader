@@ -255,6 +255,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   });
   canvas.addEventListener('pointermove', (e) => e.buttons && seekTo(e));
   const onKey = (e: KeyboardEvent) => {
+    if (!playBtn.isConnected) return; // this file's tab is in the background
     const t = e.target as HTMLElement | null;
     if (t && /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(t.tagName)) return;
     if (e.key === ' ') toggle();

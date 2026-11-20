@@ -172,6 +172,7 @@ export async function openAviPlayer(file: File, mount: HTMLElement): Promise<Avi
   seek.addEventListener('change', () => (seeking = false));
 
   const onKey = (e: KeyboardEvent) => {
+    if (!seek.isConnected) return; // this file's tab is in the background
     if (e.target instanceof HTMLInputElement && e.target !== seek) return;
     if (e.key === ' ' || e.key === 'k') {
       e.preventDefault();

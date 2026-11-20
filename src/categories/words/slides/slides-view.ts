@@ -157,6 +157,7 @@ function presentSlides(slides: HTMLElement[]) {
     }
   };
   const onKey = (e: KeyboardEvent) => {
+    if (!show.isConnected) return; // this file's tab is in the background
     if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter', 'n'].includes(e.key)) go(1);
     else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace', 'p'].includes(e.key)) go(-1);
     else if (e.key === 'Home') { index = 0; render(); }

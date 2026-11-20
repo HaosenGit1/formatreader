@@ -36,6 +36,9 @@ export const LIMITS = {
   /** Parquet tables: rows read at first, and each time "Load more" is pressed. */
   parquetRows: { low: 2000, mid: 10000, high: 50000 },
 
+  /** Files up to this size stay open in a background tab; bigger ones are closed and reopened when their tab is chosen again. */
+  keepTab: { low: 2 * MB, mid: 25 * MB, high: 150 * MB },
+
   /** Each viewer names the size where its files get heavy (on a computer); scaled per tier. */
   heavyScale: { low: 0.25, mid: 0.5, high: 1 },
 } satisfies Record<string, PerTier<number>>;

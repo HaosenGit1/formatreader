@@ -82,6 +82,8 @@ export interface OpenedView {
   onLangChange?(): void;
   /** True while there are edits not saved as a copy: the shell asks before leaving. */
   unsaved?(): boolean;
+  /** The file's tab was put in the background (another tab chosen): stop sound, timers, animations. */
+  onHide?(): void;
   /** Release resources (object URLs, observers, listeners). */
   destroy?(): void;
 }

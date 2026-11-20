@@ -22,7 +22,7 @@ import { infoEntry } from './info-entry';
 import { feedbackLink, promoBar, startPromoVideo } from './promo';
 import { coffeeLink } from './coffee';
 import { newFileFromAddress } from './new-file';
-import { pickFromMany } from './companions';
+import { groupFiles } from './companions';
 import { messageView } from './info-view';
 import { assertUniqueIds, pickViewer, withTrials } from './registry';
 import type { OpenContext, OpenedView, ViewerEntry, ViewerModule } from './viewer';
@@ -59,6 +59,13 @@ const s = strings({
   dismiss: { en: 'OK', zh: '知道了' },
   cancel: { en: 'Cancel', zh: '取消' },
   trail: { en: 'Opened from', zh: '打开自' },
+  tabs: { en: 'Open files', zh: '已打开的文件' },
+  closeTab: { en: 'Close', zh: '关闭' },
+  newWindow: { en: 'Open in a new browser tab', zh: '在新的浏览器标签页中打开' },
+  tooMany: {
+    en: 'Opened {n} of {total} files. Up to {max} files can be open at once; close a tab to open more.',
+    zh: '已打开 {n} 个文件（共 {total} 个）。最多可同时打开 {max} 个，关闭一些标签后可以再打开。',
+  },
   offlineTitle: { en: 'Needs the internet', zh: '需要联网' },
   offlineText: {
     en: 'The reader for this kind of file could not be downloaded. Connect to the internet and open the file again: once downloaded, it also works offline.',
@@ -86,6 +93,27 @@ interface Current {
   view: OpenedView;
   format: OpenContext['format'];
 }
+
+/** At most this many files open side by side (one tab each). */
+export const MAX_TABS = 10;
+
+/** One open file in the tab strip. */
+interface Tab {
+  /** Same file dropped again → this tab is shown instead of a second one. */
+  key: string;
+  label: string;
+  /** What the tab was opened with: a file, a dropped folder, or pasted text. */
+  source: File | FolderSource | string;
+  /** What to open when the tab is next chosen (it was put away before it finished, or to save memory). */
+  pending: File | FolderSource | string | null;
+  /** While in the background: its viewer and page, kept as they were. */
+  current: Current | null;
+  page: HTMLElement | null;
+  trail: Array<File | FolderSource>;
+  scroll: number;
+}
+
+const fileKey = (f: File) => `${f.name}\u0000${f.size}\u0000${f.lastModified}`;
 
 
 /** A file whose opening never finished (the tab ran out of memory and was closed), from the last visit. */
@@ -135,6 +163,11 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
    * to it; dropping or choosing a file starts afresh.
    */
   let trail: Array<File | FolderSource> = [];
+
+  /** Every open file; `current` and `trail` above belong to the active one. */
+  const tabs: Tab[] = [];
+  let active: Tab | null = null;
+  let pastes = 0;
 
   // ---- reading size (A− / A+), remembered per browser
   let fontScale = 1;
@@ -297,6 +330,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
   function refreshChrome() {
     if (!current) return;
     app.querySelector('.site-header')?.replaceWith(header());
+    renderStrip();
     app.querySelector('.toolbar')?.replaceWith(toolbar(current));
     app.querySelector('.notices')?.replaceWith(notices(current));
     document.title = `${current.view.title ?? current.name} — FormatReader`;
@@ -327,11 +361,12 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     return !unsaved || confirm(s('unsavedLeave'));
   }
 
+  /** The front page. Open files stay in their tabs. */
   function goHome() {
-    if (!leaveOk()) return;
-    closeCurrent();
+    stash();
+    active = null;
     ++token;
-    app.replaceChildren(header(), landing());
+    app.replaceChildren(header(), tabStrip(), landing());
     document.title = 'FormatReader';
     prefetchCommonViewers();
   }
@@ -379,7 +414,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     const mount = h('div', { class: 'viewer-mount' });
     const page = h('main', { class: `doc${entry.layout === 'fill' ? ' doc-fill' : ''}` }, h('div', { class: 'toolbar' }), h('div', { class: 'about-slot' }), h('div', { class: 'notices', hidden: true }), mount);
     const cover = h('div', { class: 'loading-cover' }, loadingView());
-    app.replaceChildren(header(), page, cover);
+    app.replaceChildren(header(), tabStrip(), page, cover);
 
     // Beyond what this kind of file usually fits in a browser: warn first, the user may still try.
     // The viewer names its heavy size for a computer; limits.ts scales it for phones and tablets.
@@ -390,7 +425,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
       const kind = device().kind;
       const go = await heavyWarning(mount, name, size, limit, kind === 'phone' ? s('heavyPhone') : kind === 'tablet' ? s('heavyTablet') : '', format, entry.id);
       if (my !== token) return;
-      if (!go) return goHome();
+      if (!go) return closeActive();
       app.append(cover);
     }
 
@@ -398,7 +433,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     const loading = loadingInfo(cover, name, size, { slow: s('slow'), keepWaiting: s('keepWaiting'), stop: s('stop') }, () => {
       // Stop: end background work and go back to the front page.
       stopper.abort();
-      goHome();
+      closeActive();
     });
     const ctx: OpenContext = { mount, format, fontScale: () => fontScale, refreshChrome, openFile: (f, o) => openInside(f, o?.replace), progress: loading.set, signal: stopper.signal };
 
@@ -502,7 +537,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     if (!keepTrail) trail = [];
     closeCurrent();
     const my = ++token;
-    app.replaceChildren(loadingView());
+    app.replaceChildren(header(), tabStrip(), loadingView());
     shownFile = folder;
     await show(folderEntry, folder.name, -1, null, async (_mod, ctx) => (await import('./folder-view')).openFolder(folder, ctx), my);
   }
@@ -512,7 +547,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     if (!keepTrail) trail = [];
     closeCurrent();
     const my = ++token;
-    app.replaceChildren(loadingView());
+    app.replaceChildren(header(), tabStrip(), loadingView());
     warmForMime(file.type);
     const head = new Uint8Array(await file.slice(0, 8192).arrayBuffer());
     let format: OpenContext['format'] = null;
@@ -553,6 +588,258 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
         return;
       }
     }
+  }
+
+  // ---------------------------------------------------------------- tabs
+
+  /** Several files open at once, one tab each. The strip shows once there is more than one. */
+  function tabStrip(): HTMLElement {
+    const shown = tabs.length > 1 || (tabs.length === 1 && !active);
+    return h(
+      'nav',
+      { class: 'tab-strip', 'aria-label': s('tabs'), hidden: !shown },
+      h(
+        'div',
+        { class: 'tab-list', role: 'tablist', onkeydown: (e: Event) => tabKeys(e as KeyboardEvent) },
+        ...tabs.map((t, i) => {
+          const on = t === active;
+          const name = tabName(t);
+          return h(
+            'div',
+            { class: `tab${on ? ' tab-on' : ''}` },
+            h(
+              'button',
+              {
+                type: 'button',
+                role: 'tab',
+                class: 'tab-btn',
+                'aria-selected': on ? 'true' : 'false',
+                tabindex: on || (!active && i === 0) ? 0 : -1,
+                title: name,
+                'data-tab': i,
+                onclick: () => activate(t),
+                // Middle click: in a new browser tab, as for links.
+                onauxclick: (e: Event) => {
+                  if ((e as MouseEvent).button === 1) popOut(t);
+                },
+              },
+              h('span', { class: 'tab-name' }, name),
+            ),
+            on && canPopOut(t) ? h('button', { type: 'button', class: 'tab-act', title: s('newWindow'), 'aria-label': s('newWindow'), onclick: () => popOut(t) }, '↗') : null,
+            h('button', { type: 'button', class: 'tab-act tab-close', title: `${s('closeTab')} · ${name}`, 'aria-label': `${s('closeTab')} ${name}`, onclick: () => closeTab(t) }, '×'),
+          );
+        }),
+      ),
+    );
+  }
+  const renderStrip = () => {
+    app.querySelector('.tab-strip')?.replaceWith(tabStrip());
+    // The shown tab is always in view (the strip scrolls sideways on narrow screens).
+    const list = app.querySelector<HTMLElement>('.tab-list');
+    const on = list?.querySelector<HTMLElement>('.tab-on');
+    if (list && on && (on.offsetLeft < list.scrollLeft || on.offsetLeft + on.offsetWidth > list.scrollLeft + list.clientWidth)) list.scrollLeft = on.offsetLeft - 8;
+  };
+  const tabName = (t: Tab) => (t === active ? current : t.current)?.name ?? t.label;
+
+  /** ← → Home End move between tabs (the usual tab-list keys); Delete closes one. */
+  function tabKeys(e: KeyboardEvent) {
+    const i = Number((e.target as HTMLElement).closest<HTMLElement>('[data-tab]')?.dataset.tab);
+    if (!Number.isFinite(i) || !tabs[i]) return;
+    const to = { ArrowLeft: i - 1, ArrowRight: i + 1, Home: 0, End: tabs.length - 1 }[e.key];
+    if (e.key === 'Delete') {
+      e.preventDefault();
+      closeTab(tabs[i]);
+    } else if (to !== undefined && tabs[to]) {
+      e.preventDefault();
+      activate(tabs[to]);
+    } else return;
+    app.querySelector<HTMLElement>('.tab-btn[aria-selected="true"]')?.focus();
+  }
+
+  const newTab = (key: string, label: string, source: Tab['source']): Tab => ({ key, label, source, pending: null, current: null, page: null, trail: [], scroll: 0 });
+
+  /** Files dropped, picked or pasted: each opens in a tab of its own (added to those already open). */
+  async function addFiles(list: File[]) {
+    if (!list.length) return;
+    const files = await groupFiles(list);
+    let first: Tab | null = null;
+    let again: Tab | null = null;
+    let added = 0;
+    let dupes = 0;
+    for (const f of files) {
+      const key = fileKey(f);
+      const same = tabs.find((t) => t.key === key);
+      if (same) {
+        again ??= same;
+        dupes++;
+        continue;
+      }
+      if (tabs.length >= MAX_TABS) continue;
+      const t = newTab(key, f.name, f);
+      tabs.push(t);
+      first ??= t;
+      added++;
+    }
+    const target = first ?? again;
+    if (target) activate(target);
+    const wanted = files.length - dupes;
+    if (added < wanted) toast(s('tooMany').replace('{n}', String(added)).replace('{total}', String(wanted)).replace('{max}', String(MAX_TABS)));
+  }
+
+  function addFolder(folder: FolderSource) {
+    if (tabs.length >= MAX_TABS) return toast(s('tooMany').replace('{n}', '0').replace('{total}', '1').replace('{max}', String(MAX_TABS)));
+    const t = newTab(`folder:${folder.name}:${++pastes}`, folder.name, folder);
+    tabs.push(t);
+    activate(t);
+  }
+
+  function addText(text: string) {
+    if (tabs.length >= MAX_TABS) return toast(s('tooMany').replace('{n}', '0').replace('{total}', '1').replace('{max}', String(MAX_TABS)));
+    const t = newTab(`pasted:${++pastes}`, s('pasted'), text);
+    tabs.push(t);
+    activate(t);
+  }
+
+  /** Put the active tab in the background, keeping its viewer as it is (or closing a big one to save memory). */
+  function stash() {
+    const t = active;
+    if (!t) return;
+    ++token; // an opening still under way stops
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    if (immersive) setImmersive(false);
+    const page = app.querySelector<HTMLElement>('main.doc');
+    t.trail = trail;
+    t.scroll = window.scrollY;
+    if (current && page) {
+      const c = current;
+      let unsaved = false;
+      try {
+        unsaved = !!c.view.unsaved?.();
+      } catch {
+        /* keep it */
+      }
+      page.querySelectorAll('audio, video').forEach((m) => (m as HTMLMediaElement).pause());
+      try {
+        c.view.onHide?.();
+      } catch (err) {
+        console.error('Viewer failed to pause', err);
+      }
+      if (!unsaved && c.size > sizeLimit('keepTab') && c.file) {
+        // Big: free the memory now; it reopens when its tab is chosen again.
+        try {
+          c.view.destroy?.();
+        } catch (err) {
+          console.error('Viewer failed to clean up', err);
+        }
+        t.current = null;
+        t.page = null;
+        t.pending = c.file;
+      } else {
+        t.current = c;
+        t.page = page;
+      }
+    } else {
+      t.current = null;
+      t.page = null;
+      t.pending = shownFile ?? t.pending;
+    }
+    current = null;
+    shownFile = null;
+  }
+
+  /** Show a tab: as it was left, or open its file now if it has not been opened yet. */
+  function activate(t: Tab) {
+    if (t === active) return;
+    stash();
+    active = t;
+    trail = t.trail;
+    // The browser's Back button steps through this tab's trail from here on.
+    try {
+      history.replaceState({ ...(history.state ?? {}), formatreaderDepth: trail.length }, '');
+    } catch {
+      /* history unavailable (sandboxed) */
+    }
+    if (t.current && t.page) {
+      current = t.current;
+      const page = t.page;
+      t.current = null;
+      t.page = null;
+      app.replaceChildren(header(), tabStrip(), page);
+      refreshChrome();
+      dispatchEvent(new Event('resize')); // viewers that measure themselves re-layout
+      window.scrollTo(0, t.scroll);
+      return;
+    }
+    const what = t.pending ?? t.source;
+    t.pending = null;
+    if (typeof what === 'string') void openPasted(what);
+    else if (what instanceof FolderSource) void openFolder(what, true);
+    else void openFile(what, true);
+  }
+
+  /** Close a tab (its viewer is released). Closing the shown one shows its neighbour, or the front page. */
+  function closeTab(t: Tab) {
+    const i = tabs.indexOf(t);
+    if (i < 0) return;
+    if (t === active) {
+      if (!leaveOk()) return;
+      closeCurrent();
+      ++token;
+      shownFile = null;
+      tabs.splice(i, 1);
+      active = null;
+      trail = [];
+      const next = tabs[i] ?? tabs[i - 1];
+      if (next) activate(next);
+      else goHome();
+      return;
+    }
+    try {
+      if (t.current?.view.unsaved?.() && !confirm(s('unsavedLeave'))) return;
+    } catch {
+      /* a viewer error must not trap the user */
+    }
+    try {
+      t.current?.view.destroy?.();
+    } catch (err) {
+      console.error('Viewer failed to clean up', err);
+    }
+    t.current = null;
+    t.page = null;
+    tabs.splice(i, 1);
+    if (active) renderStrip();
+    else app.querySelector('.landing') ? app.replaceChildren(header(), tabStrip(), landing()) : renderStrip();
+  }
+
+  /** The shown file's tab closes (Stop, or "Cancel" on the big-file warning). */
+  function closeActive() {
+    if (active) closeTab(active);
+    else goHome();
+  }
+
+  /** What a tab would hand to a new browser tab: a file (with a map's partner files) or pasted text. */
+  function handoffOf(t: Tab): File[] | string | null {
+    const c = t === active ? current : t.current;
+    const what = c?.file ?? (t === active ? shownFile : t.pending) ?? t.source;
+    if (typeof what === 'string') return what;
+    if (!(what instanceof File)) return null;
+    const parts = (what as File & { shapeParts?: Record<string, File> }).shapeParts;
+    return [what, ...Object.values(parts ?? {})];
+  }
+  const canPopOut = (t: Tab) => handoffOf(t) !== null && typeof BroadcastChannel !== 'undefined';
+
+  /** "Open in a new browser tab": one per click; the file is passed over inside this browser, never uploaded. */
+  function popOut(t: Tab) {
+    const what = handoffOf(t);
+    if (what === null) return;
+    void import('./handoff').then((m) => m.sendToNewTab(what));
+  }
+
+  function toast(text: string) {
+    document.querySelector('.tab-toast')?.remove();
+    const el = h('div', { class: 'tab-toast', role: 'status' }, text);
+    document.body.append(el);
+    setTimeout(() => el.remove(), 7000);
   }
 
   // ---------------------------------------------------------- full screen
@@ -699,32 +986,28 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     overlay.classList.remove('show');
     // A folder dropped (perhaps by accident): browse it like an archive.
     const entry = e.dataTransfer?.items?.[0]?.webkitGetAsEntry?.();
-    if (entry?.isDirectory) return void openFolder(new FolderSource(entry as FileSystemDirectoryEntry));
-    const files = [...(e.dataTransfer?.files ?? [])];
-    if (files.length > 1) return void pickFromMany(files).then(openFile);
-    if (files[0]) void openFile(files[0]);
+    if (entry?.isDirectory) return void addFolder(new FolderSource(entry as FileSystemDirectoryEntry));
+    void addFiles([...(e.dataTransfer?.files ?? [])]);
   });
 
   fileInput.addEventListener('change', () => {
-    const files = [...(fileInput.files ?? [])];
-    if (files.length > 1) void pickFromMany(files).then(openFile);
-    else if (files[0]) void openFile(files[0]);
+    void addFiles([...(fileInput.files ?? [])]);
     fileInput.value = '';
   });
 
   document.addEventListener('paste', (e) => {
     const target = e.target as HTMLElement | null;
     if (target && (target.isContentEditable || /^(INPUT|TEXTAREA)$/.test(target.tagName))) return;
-    const file = e.clipboardData?.files?.[0];
-    if (file) {
+    const files = [...(e.clipboardData?.files ?? [])];
+    if (files.length) {
       e.preventDefault();
-      void openFile(file);
+      void addFiles(files);
       return;
     }
     const text = e.clipboardData?.getData('text/plain');
     if (text) {
       e.preventDefault();
-      void openPasted(text);
+      addText(text);
     }
   });
 
@@ -739,7 +1022,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
   onLangChange(() => {
     overlayText.textContent = s('readAny');
     if (!current) {
-      if (app.querySelector('.landing')) app.replaceChildren(header(), landing());
+      if (app.querySelector('.landing')) app.replaceChildren(header(), tabStrip(), landing());
       return;
     }
     try {
@@ -754,5 +1037,13 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
   goHome();
   // ?new=md (from the Formats page): start a new, empty file of that kind in the editor.
   const fresh = newFileFromAddress(s('untitled'));
-  if (fresh) void openFile(fresh);
+  if (fresh) void addFiles([fresh]);
+  // "Open in a new browser tab" from another FormatReader tab: the file arrives from it.
+  const handoff = new URLSearchParams(location.search).get('from-tab');
+  if (handoff && /^[a-z0-9]{8,32}$/.test(handoff)) {
+    const url = new URL(location.href);
+    url.searchParams.delete('from-tab');
+    history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+    void import('./handoff').then((m) => m.receiveFromTab(handoff, (files) => void addFiles(files), addText));
+  }
 }
