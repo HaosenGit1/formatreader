@@ -2158,17 +2158,17 @@ html.fr-immersive .tab-strip {
   transition: transform 0.3s cubic-bezier(0.3, 0.7, 0.2, 1.2), background 0.3s;
 }
 
-.recent-check:checked + .recent-knob {
+.recent-check:checked ~ .recent-knob {
   border-color: #b8995c;
   background: linear-gradient(180deg, #e6cd98, #b8995c);
 }
 
-.recent-check:checked + .recent-knob::after {
+.recent-check:checked ~ .recent-knob::after {
   background: radial-gradient(circle at 50% 35%, #1e2e4c, #070d1a);
   transform: translateX(14px);
 }
 
-.recent-check:focus-visible + .recent-knob {
+.recent-check:focus-visible ~ .recent-knob {
   outline: 2px solid #c9a96e;
   outline-offset: 2px;
 }
@@ -2200,4 +2200,54 @@ html.fr-immersive .tab-strip {
 .promo-on .recent-note,
 .promo-on .recent-empty {
   color: rgb(243 231 207 / 0.7);
+}
+
+/* The bookmark ribbon: lit gold when "Remember" is on, a faint outline when off. */
+.recent-ribbon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  line-height: 0;
+}
+
+.recent-ribbon svg {
+  filter: drop-shadow(0 1px 1.5px rgb(60 40 10 / 0.35));
+  transition: transform 0.35s cubic-bezier(0.3, 0.7, 0.2, 1.3), opacity 0.3s;
+}
+
+.recent-ribbon .ribbon-silk,
+.recent-ribbon .ribbon-sheen {
+  transition: fill-opacity 0.3s, stroke-opacity 0.3s;
+}
+
+.recent-switch:not(:has(.recent-check:checked)) .ribbon-silk {
+  fill-opacity: 0;
+}
+
+.recent-switch:not(:has(.recent-check:checked)) .ribbon-sheen {
+  stroke-opacity: 0;
+}
+
+.recent-switch:not(:has(.recent-check:checked)) .recent-ribbon svg {
+  filter: none;
+  opacity: 0.8;
+}
+
+.recent-switch:has(.recent-check:checked) .recent-ribbon svg {
+  transform: translateY(1px);
+}
+
+.recent-switch:hover .recent-ribbon svg {
+  transform: translateY(2px);
+}
+
+.recent-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.recent-ribbon-title svg {
+  width: 11px;
+  height: 16px;
 }

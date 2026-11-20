@@ -215,6 +215,7 @@ export async function recentShelf(landing: HTMLElement, open: (files: File[]) =>
         else void dropAll().then(refresh, refresh);
       },
     }),
+    ribbon('recent-ribbon-switch'),
     h('span', { class: 'recent-knob', 'aria-hidden': 'true' }),
     h('span', { class: 'recent-label' }, s('switchLabel')),
     h('span', { class: 'recent-note' }, s('switchNote')),
@@ -230,7 +231,7 @@ export async function recentShelf(landing: HTMLElement, open: (files: File[]) =>
           'div',
           { class: 'recent-head', title: s('privacy') },
           h('span', { class: 'recent-rule', 'aria-hidden': 'true' }),
-          h('h2', { class: 'recent-title' }, s('title')),
+          h('h2', { class: 'recent-title' }, ribbon('recent-ribbon-title'), s('title')),
           h('span', { class: 'recent-rule', 'aria-hidden': 'true' }),
         )
       : null,
@@ -291,6 +292,19 @@ export async function recentShelf(landing: HTMLElement, open: (files: File[]) =>
   if (old) old.replaceWith(shelf);
   else landing.append(shelf);
   changed();
+}
+
+/** The bookmark ribbon (a gold silk ribbon with a swallowtail end): "remember where it is". */
+let ribbons = 0;
+function ribbon(cls: string): HTMLElement {
+  const id = `fr-ribbon-${++ribbons}`;
+  const el = h('span', { class: `recent-ribbon ${cls}`, 'aria-hidden': 'true' });
+  el.innerHTML =
+    `<svg viewBox="0 0 14 20" width="14" height="20"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1">` +
+    '<stop offset="0" stop-color="#f6e3b4"/><stop offset=".5" stop-color="#c9a96e"/><stop offset="1" stop-color="#9c7c40"/></linearGradient></defs>' +
+    `<path class="ribbon-silk" d="M2 1.5h10a.5.5 0 0 1 .5.5v16.2l-5.5-4.1-5.5 4.1V2a.5.5 0 0 1 .5-.5z" fill="url(#${id})" stroke="#b8995c" stroke-width=".9" stroke-linejoin="round"/>` +
+    '<path class="ribbon-sheen" d="M4.2 2.6v11.6" stroke="#fff" stroke-opacity=".55" stroke-width="1" stroke-linecap="round"/></svg>';
+  return el;
 }
 
 function note(text: string) {
