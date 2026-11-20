@@ -191,3 +191,20 @@ a.fmt-ext.fmt-edit:focus-visible {
   color: var(--muted);
   font-size: 14px;
 }
+
+/* Open code: anyone can check that files stay on the device */
+.fmt-trust {
+  margin: 12px 0 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--good-soft, #e5f4ec);
+  color: var(--fg);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.fmt-trust a {
+  color: var(--accent);
+  white-space: nowrap;
+}
