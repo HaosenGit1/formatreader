@@ -21,6 +21,7 @@ import { lang, onLangChange, setLang, strings } from './i18n';
 import { infoEntry } from './info-entry';
 import { feedbackLink, promoBar, startPromoVideo } from './promo';
 import { crystalBall } from './ball';
+import { canRemember, chooseWithLinks, dropLinks, type FileLink } from './recent-capture';
 import { coffeeLink } from './coffee';
 import { newFileFromAddress } from './new-file';
 import { groupFiles } from './companions';
@@ -207,6 +208,8 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     }
     // The crystal ball, everywhere (it needs the page laid out to know where it can move).
     requestAnimationFrame(() => main.isConnected && crystalBall(main));
+    // Recent files to open again (Chrome / Edge on a computer), loaded after the page shows.
+    if (canRemember()) void import('./recent').then((m) => m.recentShelf(main, (files) => void addFiles(files))).catch(() => {});
     return main;
   };
   const landingMain = () =>
@@ -221,7 +224,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
             h('button', { type: 'button', class: 'btn', onclick: (e: Event) => ((crashNote = null), (e.currentTarget as HTMLElement).parentElement?.remove()) }, s('dismiss')),
           )
         : null,
-      h('button', { type: 'button', class: 'circle', onclick: () => fileInput.click() }, h('span', { class: 'circle-text' }, s('readAny'))),
+      h('button', { type: 'button', class: 'circle', onclick: () => void chooseFiles() }, h('span', { class: 'circle-text' }, s('readAny'))),
       import.meta.env.MODE === 'portable'
         ? h(
             'footer',
@@ -265,7 +268,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     }
     if (c.size >= 0) tools.push(h('button', { type: 'button', class: 'btn about-btn', title: s('about'), onclick: () => toggleAbout(c) }, 'ⓘ ', s('aboutShort')));
     tools.push(fullscreenButton(c.view));
-    tools.push(h('button', { type: 'button', class: 'btn', onclick: () => fileInput.click() }, s('openAnother')));
+    tools.push(h('button', { type: 'button', class: 'btn', onclick: () => void chooseFiles() }, s('openAnother')));
 
     let meta: string[] = [];
     try {
@@ -990,8 +993,24 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     // A folder dropped (perhaps by accident): browse it like an archive.
     const entry = e.dataTransfer?.items?.[0]?.webkitGetAsEntry?.();
     if (entry?.isDirectory) return void addFolder(new FolderSource(entry as FileSystemDirectoryEntry));
+    const links = dropLinks(e.dataTransfer); // asked now: the browser forgets dropped items right after
+    if (links) void links.then(rememberFiles);
     void addFiles([...(e.dataTransfer?.files ?? [])]);
   });
+
+  /** "Open a file": the browser's chooser that also lets the file be reopened later, where there is one. */
+  async function chooseFiles() {
+    const got = await chooseWithLinks();
+    if (got === 'plain') return fileInput.click();
+    if (!got) return;
+    rememberFiles(got.links);
+    void addFiles(got.files);
+  }
+
+  /** Into the "Recent" list on the front page (only the names and view-only links, in this browser). */
+  function rememberFiles(links: FileLink[]) {
+    if (links.length) void import('./recent').then((m) => m.remember(links)).catch(() => {});
+  }
 
   fileInput.addEventListener('change', () => {
     void addFiles([...(fileInput.files ?? [])]);

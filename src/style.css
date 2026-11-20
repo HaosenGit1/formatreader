@@ -1882,3 +1882,322 @@ html.fr-immersive .tab-strip {
   background:
     radial-gradient(circle at 50% 58%, rgb(36 54 92 / 0.88), rgb(16 28 52 / 0.93) 60%, rgb(6 10 22 / 0.97) 100%);
 }
+
+/* ---- Recent files: a quiet shelf under the crystal ball, in the same midnight glass and gold ---- */
+.recent-shelf {
+  position: fixed;
+  bottom: 58px;
+  left: 50%;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: min(92vw, 900px);
+  transform: translateX(-50%);
+}
+
+.recent-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 460px);
+  cursor: default;
+}
+
+.recent-rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(184 153 92 / 0.75), transparent);
+}
+
+.recent-title {
+  margin: 0;
+  color: #8f7034;
+  font-family: 'Cormorant Garamond', Didot, 'Bodoni 72', 'Songti SC', serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em; /* balances the trailing letter space */
+  text-transform: uppercase;
+}
+
+.promo-on .recent-title {
+  color: #e6cd98;
+  text-shadow: 0 1px 6px rgb(0 0 0 / 0.6);
+}
+
+.recent-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 10px;
+  max-height: 104px; /* two rows at most */
+  margin: 0 0 -8px;
+  padding: 4px 8px 14px; /* room for the soft shadows */
+  overflow: hidden;
+  list-style: none;
+}
+
+.recent-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1px solid rgb(201 169 110 / 0.55);
+  border-radius: 999px;
+  background: radial-gradient(120% 140% at 30% 0%, rgb(38 56 94 / 0.88), rgb(9 15 30 / 0.94) 70%);
+  backdrop-filter: blur(10px) saturate(1.3);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.14),
+    inset 0 -10px 18px rgb(214 180 110 / 0.12),
+    0 6px 18px rgb(10 18 36 / 0.22);
+  color: #f3e7cf;
+  transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+}
+
+.recent-item:hover,
+.recent-item:focus-within {
+  border-color: #e0c48a;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.18),
+    inset 0 -10px 20px rgb(224 190 120 / 0.2),
+    0 0 0 3px rgb(201 169 110 / 0.14),
+    0 10px 26px rgb(10 18 36 / 0.3);
+  transform: translateY(-1px);
+}
+
+.recent-open {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 6px 4px 6px 7px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.recent-ext {
+  display: grid;
+  flex: none;
+  place-items: center;
+  min-width: 36px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f0dcae, #c9a96e 55%, #a8884c);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5), 0 1px 2px rgb(0 0 0 / 0.3);
+  color: #14203a;
+  font: 700 10px/1 var(--font-ui);
+  letter-spacing: 0.08em;
+}
+
+.recent-name {
+  max-width: 210px;
+  overflow: hidden;
+  font-family: 'Cormorant Garamond', Didot, 'Bodoni 72', 'Songti SC', serif;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-when {
+  flex: none;
+  color: rgb(243 231 207 / 0.55);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.recent-x {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: rgb(243 231 207 / 0.55);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.35;
+  transition: opacity 0.2s, background 0.2s, color 0.2s;
+}
+
+.recent-item:hover .recent-x,
+.recent-x:focus-visible {
+  opacity: 1;
+}
+
+.recent-x:hover {
+  background: rgb(201 169 110 / 0.22);
+  color: #f3e7cf;
+}
+
+.recent-open:focus-visible,
+.recent-x:focus-visible,
+.recent-clear:focus-visible {
+  outline: 2px solid #e0c48a;
+  outline-offset: 2px;
+}
+
+.recent-clear {
+  padding: 2px 8px;
+  border: 0;
+  background: none;
+  color: #8f7034;
+  font: 500 11px/1 var(--font-ui);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.recent-clear:hover {
+  opacity: 1;
+}
+
+.promo-on .recent-clear {
+  color: #e6cd98;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .recent-item {
+    animation: recent-in 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: calc(var(--i, 0) * 60ms + 150ms);
+  }
+
+  .recent-head {
+    animation: recent-in 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+}
+
+@keyframes recent-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Short windows: the ball needs the room. */
+@media (max-height: 560px) {
+  .recent-shelf {
+    display: none;
+  }
+}
+
+/* The Recent switch: a small gold toggle with a short, plain note. */
+.recent-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 14px;
+}
+
+.recent-switch {
+  position: relative;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 10px;
+  padding: 6px 14px 6px 8px;
+  border: 1px solid rgb(201 169 110 / 0.45);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  backdrop-filter: blur(8px);
+  color: var(--fg);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.recent-switch:hover {
+  border-color: #c9a96e;
+  box-shadow: 0 0 0 3px rgb(201 169 110 / 0.12);
+}
+
+.recent-check {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.recent-knob {
+  position: relative;
+  flex: none;
+  width: 34px;
+  height: 20px;
+  border: 1px solid rgb(201 169 110 / 0.6);
+  border-radius: 999px;
+  background: rgb(120 120 130 / 0.18);
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.recent-knob::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ffffff, #e9e3d6);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  transition: transform 0.3s cubic-bezier(0.3, 0.7, 0.2, 1.2), background 0.3s;
+}
+
+.recent-check:checked + .recent-knob {
+  border-color: #b8995c;
+  background: linear-gradient(180deg, #e6cd98, #b8995c);
+}
+
+.recent-check:checked + .recent-knob::after {
+  background: radial-gradient(circle at 50% 35%, #1e2e4c, #070d1a);
+  transform: translateX(14px);
+}
+
+.recent-check:focus-visible + .recent-knob {
+  outline: 2px solid #c9a96e;
+  outline-offset: 2px;
+}
+
+.recent-label {
+  font-weight: 500;
+}
+
+.recent-note {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.recent-empty {
+  margin: 0;
+  color: var(--muted);
+  font-family: 'Cormorant Garamond', Didot, 'Bodoni 72', 'Songti SC', serif;
+  font-size: 15px;
+  font-style: italic;
+}
+
+/* Over the sponsor video: the same pieces in midnight glass. */
+.promo-on .recent-switch {
+  border-color: rgb(201 169 110 / 0.6);
+  background: rgb(9 15 30 / 0.72);
+  color: #f3e7cf;
+}
+
+.promo-on .recent-note,
+.promo-on .recent-empty {
+  color: rgb(243 231 207 / 0.7);
+}

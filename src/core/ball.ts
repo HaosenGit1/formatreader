@@ -51,7 +51,14 @@ export function crystalBall(landing: HTMLElement): void {
   // Sizes are measured when they change, not on every frame (no layout work while animating).
   let r = landing.getBoundingClientRect();
   let size = ball.offsetWidth;
-  const measure = () => ((r = landing.getBoundingClientRect()), (size = ball.offsetWidth));
+  let shelf = 0; // room taken by the "Recent" shelf above the footer
+  const measure = () => {
+    r = landing.getBoundingClientRect();
+    size = ball.offsetWidth;
+    const el = landing.querySelector<HTMLElement>('.recent-shelf');
+    shelf = el ? el.offsetHeight + 14 : 0;
+  };
+  landing.addEventListener('shelf', measure);
   const ro = new ResizeObserver(measure);
   ro.observe(landing);
   ro.observe(ball);
@@ -62,7 +69,7 @@ export function crystalBall(landing: HTMLElement): void {
     timeScale += (target - timeScale) * Math.min(1, real * 3);
     const dt = real * timeScale * PACE;
     const pad = 16;
-    const floor = Math.max(pad, r.height - size - 48); // just above the footer links
+    const floor = Math.max(pad, r.height - size - 48 - shelf); // just above the footer links (and Recent)
     const right = Math.max(pad, r.width - size - pad);
     if (still) {
       x = (r.width - size) / 2;

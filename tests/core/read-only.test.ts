@@ -37,6 +37,10 @@ const EXCEPTIONS: Record<string, string[]> = {
   // The feedback form: sends the visitor's message (and a file they attach) only when they press
   // Send, to formatreader.com/api/feedback — the one network write, stated on the form.
   'src/core/feedback.ts': ['fetch (only local blob/URL reads are allowed; add an explicit exception if ever needed)', 'HTTP writes'],
+  // "Recent" files on the front page: a VIEW-only link to each file opened (Chrome / Edge), so it
+  // can be opened again. Never write access: the test below checks every permission asked for.
+  'src/core/recent-capture.ts': ['File System Access pickers (write access to disk)', 'file handles that can write'],
+  'src/core/recent.ts': ['file handles that can write'],
   'src/categories/archives/archive/extract-all.ts': ['File System Access pickers (write access to disk)', 'file handles that can write', 'download links'],
 };
 
@@ -48,6 +52,17 @@ describe('read-only guarantee', () => {
       for (const [re, what] of FORBIDDEN) if (!EXCEPTIONS[rel]?.includes(what)) expect(re.test(code), `${rel} uses ${what}`).toBe(false);
     });
   }
+
+  test('Recent files: links to files are view-only, never write access', () => {
+    for (const rel of ['src/core/recent-capture.ts', 'src/core/recent.ts']) {
+      const code = readFileSync(join(root, rel), 'utf8').replace(/^\s*(\/\/|\*).*$/gm, '');
+      expect(code, rel).not.toMatch(/createWritable|createSyncAccessHandle|showSaveFilePicker|showDirectoryPicker|removeEntry|\.move\(|getDirectoryHandle|getFileHandle/);
+      // Every permission asked for is { mode: 'read' }.
+      const asks = code.match(/(query|request)Permission\([^)]*\)/g) ?? [];
+      for (const a of asks) expect(a, rel).toMatch(/\(\{ mode: 'read' \}\)|\(o: \{ mode: 'read' \}\)/);
+      expect(code, rel).not.toMatch(/mode:\s*'readwrite'/);
+    }
+  });
 
   test('CSP: data can only go to this site, never to another server or a form target', () => {
     const csp = /Content-Security-Policy"\s+content="([^"]+)"/.exec(readFileSync(join(root, 'index.html'), 'utf8'))?.[1] ?? '';
