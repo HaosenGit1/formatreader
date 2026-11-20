@@ -15,11 +15,8 @@ const s = strings({
     zh: '只保存在这个浏览器里：文件名和每个文件的只读链接，从不保存文件内容。',
   },
   clear: { en: 'Clear', zh: '清除' },
-  switchLabel: { en: 'Remember files I open', zh: '记住我打开的文件' },
-  switchNote: {
-    en: 'Saved only on this device. Works offline.',
-    zh: '只保存在本机，离线也能用。',
-  },
+  switchLabel: { en: 'Quick access', zh: '快捷打开' },
+  switchNote: { en: 'Paths only, on this device', zh: '仅记路径，存于本机' },
   empty: {
     en: 'Your usual files, one click away.',
     zh: '打开过的文件，下次一键直达。',
