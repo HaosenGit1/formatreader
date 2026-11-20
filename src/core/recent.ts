@@ -9,7 +9,7 @@ import { lang, strings } from './i18n';
 import type { FileLink } from './recent-capture';
 
 const s = strings({
-  title: { en: 'Recent', zh: '最近打开' },
+  title: { en: 'Frequent files', zh: '常用文件' },
   privacy: {
     en: 'Kept only in this browser: the names of the files and a view-only link to each, never their contents.',
     zh: '只保存在这个浏览器里：文件名和每个文件的只读链接，从不保存文件内容。',
@@ -22,13 +22,13 @@ const s = strings({
   },
   empty: {
     en: 'Your usual files, one click away.',
-    zh: '常用文件，一键打开。',
+    zh: '打开过的文件，下次一键直达。',
   },
-  remove: { en: 'Remove from Recent', zh: '从最近列表中移除' },
+  remove: { en: 'Remove from Frequent files', zh: '从常用文件中移除' },
   open: { en: 'Open {name} again', zh: '再次打开 {name}' },
   gone: {
-    en: '{name} was moved, renamed or deleted, so it has left Recent.',
-    zh: '{name} 已被移动、重命名或删除，已从最近列表中移除。',
+    en: '{name} was moved, renamed or deleted, so it has left Frequent files.',
+    zh: '{name} 已被移动、重命名或删除，已从常用文件中移除。',
   },
 });
 
