@@ -32,6 +32,10 @@
 }
 
 
+.formats-points a {
+  color: var(--accent);
+}
+
 .fmt-point-icon {
   display: inline-block;
   width: 1.4em;
