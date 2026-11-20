@@ -31,16 +31,6 @@
   font-weight: 600;
 }
 
-.formats-points a {
-  color: inherit;
-  text-decoration: underline;
-  text-decoration-color: var(--line);
-  text-underline-offset: 3px;
-}
-
-.formats-points a:hover {
-  color: var(--accent);
-}
 
 .fmt-point-icon {
   display: inline-block;
