@@ -186,12 +186,6 @@ a.fmt-ext.fmt-edit:focus-visible {
   outline: none;
 }
 
-.fmt-hint {
-  margin: -4px 0 14px;
-  color: var(--muted);
-  font-size: 14px;
-}
-
 /* Open code: anyone can check that files stay on the device */
 .fmt-trust {
   margin: 12px 0 16px;
