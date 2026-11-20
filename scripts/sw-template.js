@@ -85,10 +85,15 @@ self.addEventListener('fetch', (event) => {
         // The app is the site root (or index.html); other pages (formats.html) are kept under their own name.
         const path = req.url.split(/[?#]/)[0];
         const key = path === scope || path === PAGE ? PAGE : KNOWN.has(path) ? path : null;
-        try {
-          const res = await Promise.race([fetch(req), new Promise((_, no) => setTimeout(() => no(new Error('slow')), 4000))]);
+        // A slow network gets the stored page after 4 s, but the new one is still stored when it
+        // arrives, so the next visit is up to date (not stuck on an old version).
+        const fresh = fetch(req).then(async (res) => {
           if (res.ok && key) await cache.put(key, res.clone());
           return res;
+        });
+        event.waitUntil(fresh.catch(() => {}));
+        try {
+          return await Promise.race([fresh, new Promise((_, no) => setTimeout(() => no(new Error('slow')), 4000))]);
         } catch {
           return (key && (await cache.match(key))) ?? (await cache.match(PAGE)) ?? Response.error();
         }

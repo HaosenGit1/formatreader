@@ -1859,3 +1859,26 @@ html.fr-immersive .tab-strip {
     max-width: 110px;
   }
 }
+
+/* The crystal ball without the sponsor video behind it (no video yet, low-power mode, reduced
+   data, the portable file): the same glass, but deeper, so the light words stay readable. */
+.promo-ball .circle {
+  border: 1.5px solid #c9a96e;
+  color: #f3e7cf;
+}
+
+.promo-ball .circle-text {
+  font-family: 'Cormorant Garamond', Didot, 'Songti SC', 'Times New Roman', serif;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+
+.promo-crystal:not(.promo-on) .circle {
+  background:
+    radial-gradient(circle at 50% 58%, rgb(30 46 80 / 0.86), rgb(14 24 46 / 0.92) 60%, rgb(5 9 20 / 0.97) 100%);
+}
+
+.promo-crystal:not(.promo-on) .circle:hover {
+  background:
+    radial-gradient(circle at 50% 58%, rgb(36 54 92 / 0.88), rgb(16 28 52 / 0.93) 60%, rgb(6 10 22 / 0.97) 100%);
+}

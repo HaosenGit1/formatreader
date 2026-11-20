@@ -20,6 +20,7 @@ import { limit as sizeLimit } from './limits';
 import { lang, onLangChange, setLang, strings } from './i18n';
 import { infoEntry } from './info-entry';
 import { feedbackLink, promoBar, startPromoVideo } from './promo';
+import { crystalBall } from './ball';
 import { coffeeLink } from './coffee';
 import { newFileFromAddress } from './new-file';
 import { groupFiles } from './companions';
@@ -204,6 +205,8 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
       main.append(promoBar());
       startPromoVideo(main);
     }
+    // The crystal ball, everywhere (it needs the page laid out to know where it can move).
+    requestAnimationFrame(() => main.isConnected && crystalBall(main));
     return main;
   };
   const landingMain = () =>
