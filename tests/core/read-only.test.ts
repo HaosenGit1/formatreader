@@ -59,8 +59,8 @@ describe('read-only guarantee', () => {
       expect(code, rel).not.toMatch(/createWritable|createSyncAccessHandle|showSaveFilePicker|showDirectoryPicker|removeEntry|\.move\(|getDirectoryHandle|getFileHandle/);
       // Every permission asked for is { mode: 'read' }.
       const asks = code.match(/(query|request)Permission\([^)]*\)/g) ?? [];
-      for (const a of asks) expect(a, rel).toMatch(/\(\{ mode: 'read' \}\)|\(o: \{ mode: 'read' \}\)/);
-      expect(code, rel).not.toMatch(/mode:\s*'readwrite'/);
+      for (const a of asks) expect(a, rel).toMatch(/\((o: )?\{ mode: ['"]read['"] \}\)/);
+      expect(code, rel).not.toMatch(/mode:\s*['"]readwrite['"]/);
     }
   });
 
