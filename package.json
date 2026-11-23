@@ -18,7 +18,7 @@
   "dependencies": {
     "@kenjiuno/msgreader": "1.29.0",
     "@mlightcad/libredwg-web": "0.8.3",
-    "@ruffle-rs/ruffle": "0.7.1",
+    "@ruffle-rs/ruffle": "0.8.0",
     "ag-psd": "34.1.0",
     "buffer": "6.0.3",
     "cfb": "^1.2.2",
