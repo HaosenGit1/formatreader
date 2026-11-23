@@ -46,7 +46,7 @@
     "postal-mime": "4.2.1",
     "pptx-preview": "1.0.7",
     "rtf.js": "3.0.9",
-    "sql.js": "1.16.0",
+    "sql.js": "1.17.0",
     "three": "0.187.0",
     "utif": "3.1.0",
     "web-ifc": "0.0.78",
@@ -54,7 +54,7 @@
   },
   "devDependencies": {
     "@types/node": "24.19.2",
-    "@types/sql.js": "1.4.11",
+    "@types/sql.js": "1.16.0",
     "@types/three": "0.187.0",
     "happy-dom": "21.0.4",
     "typescript": "7.0.2",
