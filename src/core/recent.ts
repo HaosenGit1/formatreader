@@ -6,10 +6,11 @@
  */
 import { h } from './dom';
 import { lang, strings } from './i18n';
-import type { FileLink } from './recent-capture';
+import { FolderSource } from './folder-source';
+import type { FileLink, FolderLink } from './recent-capture';
 
 const s = strings({
-  title: { en: 'Frequent files', zh: '常用文件' },
+  title: { en: 'Frequent files & folders', zh: '常用文件和文件夹' },
   privacy: {
     en: 'Kept only in this browser: the names of the files and a view-only link to each, never their contents.',
     zh: '只保存在这个浏览器里：文件名和每个文件的只读链接，从不保存文件内容。',
@@ -18,14 +19,14 @@ const s = strings({
   switchLabel: { en: 'Quick access', zh: '快捷打开' },
   switchNote: { en: 'Paths only, on this device', zh: '仅记路径，存于本机' },
   empty: {
-    en: 'Your usual files, one click away.',
-    zh: '打开过的文件，下次一键直达。',
+    en: 'Your usual files and folders, one click away.',
+    zh: '打开过的文件和文件夹，下次一键直达。',
   },
-  remove: { en: 'Remove from Frequent files', zh: '从常用文件中移除' },
+  remove: { en: 'Remove from the list', zh: '从列表中移除' },
   open: { en: 'Open {name} again', zh: '再次打开 {name}' },
   gone: {
-    en: '{name} was moved, renamed or deleted, so it has left Frequent files.',
-    zh: '{name} 已被移动、重命名或删除，已从常用文件中移除。',
+    en: '{name} was moved, renamed or deleted, so it has left the list.',
+    zh: '{name} 已被移动、重命名或删除，已从列表中移除。',
   },
 });
 
@@ -38,7 +39,7 @@ export interface Entry {
   size: number;
   /** Last opened (ms). */
   at: number;
-  link: FileLink;
+  link: FileLink | FolderLink;
 }
 
 // ------------------------------------------------------------------ storage
@@ -118,7 +119,7 @@ function setOn(on: boolean) {
 const SHAPE_SIDECAR = /\.(dbf|prj|cpg|shx|sbn|sbx|qix|fix|qpj|shp\.xml)$/i;
 
 /** Remember files just opened (newest first; the same file moves to the front). */
-export async function remember(links: FileLink[]): Promise<void> {
+export async function remember(links: Array<FileLink | FolderLink>): Promise<void> {
   if (!isOn()) return;
   const shp = links.some((l) => /\.shp$/i.test(l.name));
   const wanted = links.filter((l) => !(shp && SHAPE_SIDECAR.test(l.name))).slice(0, MAX_RECENT);
@@ -129,12 +130,12 @@ export async function remember(links: FileLink[]): Promise<void> {
     for (const [i, link] of wanted.entries()) {
       let size = -1;
       try {
-        size = (await link.getFile()).size;
+        if (link.kind === 'file') size = (await link.getFile()).size;
       } catch {
         /* still worth remembering */
       }
       let same: Entry | undefined;
-      for (const e of list) if (e.name === link.name && (await e.link.isSameEntry(link).catch(() => false))) same = e;
+      for (const e of list) if (e.name === link.name && e.link.kind === link.kind && (await (e.link as FileLink).isSameEntry(link as FileLink).catch(() => false))) same = e;
       // The first file of a drop counts as the newest.
       const entry: Entry = {
         id: same?.id ?? newId(),
@@ -158,7 +159,7 @@ const newId = () => `${Date.now().toString(36)}${Math.random().toString(36).slic
 // ------------------------------------------------------------------- shelf
 
 /** Puts the "Recent" shelf on the front page (or refreshes it); nothing when the list is empty. */
-export async function recentShelf(landing: HTMLElement, open: (files: File[]) => void): Promise<void> {
+export async function recentShelf(landing: HTMLElement, open: (what: File[] | FolderSource) => void): Promise<void> {
   const on = isOn();
   void clearFolder();
   const list = on ? await listRecent() : [];
@@ -223,7 +224,7 @@ export async function recentShelf(landing: HTMLElement, open: (files: File[]) =>
                   'aria-label': s('open').replace('{name}', e.name),
                   onclick: () => void reopen(e),
                 },
-                h('span', { class: 'recent-ext', 'aria-hidden': 'true' }, ext(e.name)),
+                h('span', { class: `recent-ext${e.link.kind === 'directory' ? ' recent-ext-dir' : ''}`, 'aria-hidden': 'true' }, e.link.kind === 'directory' ? folderIcon() : ext(e.name)),
                 h('span', { class: 'recent-name' }, e.name),
                 h('span', { class: 'recent-when' }, ago(e.at)),
               ),
@@ -264,12 +265,23 @@ export async function recentShelf(landing: HTMLElement, open: (files: File[]) =>
 }
 
 /** Open a remembered file again (asking once for permission after a browser restart). */
-export async function reopenEntry(e: Entry, open: (files: File[]) => void, after: () => void): Promise<void> {
+export async function reopenEntry(e: Entry, open: (what: File[] | FolderSource) => void, after: () => void): Promise<void> {
   try {
     let ok = await e.link.queryPermission({ mode: 'read' });
     // After the browser restarts it asks once: "Let this site view <file>?"
     if (ok !== 'granted') ok = await e.link.requestPermission({ mode: 'read' });
     if (ok !== 'granted') return;
+    if (e.link.kind === 'directory') {
+      const link = e.link;
+      // Still there? (listing fails for a folder that was moved or deleted)
+      for await (const first of link.values()) {
+        void first;
+        break;
+      }
+      await put({ ...e, at: Date.now() });
+      open(new FolderSource(folderEntry(link, `/${link.name}`)));
+      return;
+    }
     const file = await e.link.getFile();
     await put({ ...e, size: file.size, at: Date.now() });
     open([file]);
@@ -322,4 +334,72 @@ export function note(text: string) {
   const el = h('div', { class: 'tab-toast', role: 'status' }, text);
   document.body.append(el);
   setTimeout(() => el.remove(), 7000);
+}
+
+/** A small gold-on-midnight folder for the badge of a remembered folder. */
+function folderIcon(): SVGSVGElement {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 20 16');
+  svg.setAttribute('width', '16');
+  svg.setAttribute('height', '13');
+  svg.innerHTML = '<path d="M1.5 3.2A1.7 1.7 0 0 1 3.2 1.5h4.2l1.9 2h7.5a1.7 1.7 0 0 1 1.7 1.7v7.6a1.7 1.7 0 0 1-1.7 1.7H3.2a1.7 1.7 0 0 1-1.7-1.7z" fill="#14203a"/><path d="M1.5 6h17" stroke="#c9a96e" stroke-width="1.1"/>';
+  return svg;
+}
+
+// ------------------------------------------------- a remembered folder, shown again
+
+/*
+ * The folder view reads folders the way a drop gives them (directory "entries"). A remembered
+ * folder is a view-only link instead, so it is presented the same way: listing its contents
+ * and reading its files, nothing else.
+ */
+type Ok<T> = (v: T) => void;
+type Fail = (e: unknown) => void;
+
+function fileEntry(link: FileLink, path: string) {
+  return { name: link.name, fullPath: path, isFile: true, isDirectory: false, file: (ok: Ok<File>, fail?: Fail) => void link.getFile().then(ok, fail) };
+}
+
+async function find(dir: FolderLink, parts: string[]): Promise<FileLink> {
+  let here: FileLink | FolderLink = dir;
+  for (const part of parts) {
+    if (here.kind !== 'directory') break;
+    let next: FileLink | FolderLink | null = null;
+    for await (const it of here.values())
+      if (it.name === part) {
+        next = it;
+        break;
+      }
+    if (!next) throw new Error(`Not found: ${parts.join('/')}`);
+    here = next;
+  }
+  if (here.kind !== 'file') throw new Error(`Not a file: ${parts.join('/')}`);
+  return here;
+}
+
+function folderEntry(link: FolderLink, path: string): FileSystemDirectoryEntry {
+  const entry = {
+    name: link.name,
+    fullPath: path,
+    isFile: false,
+    isDirectory: true,
+    createReader: () => {
+      let done = false;
+      return {
+        readEntries(ok: Ok<unknown[]>, fail?: Fail) {
+          if (done) return ok([]);
+          done = true;
+          void (async () => {
+            const out: unknown[] = [];
+            for await (const it of link.values()) out.push(it.kind === 'directory' ? folderEntry(it, `${path}/${it.name}`) : fileEntry(it, `${path}/${it.name}`));
+            return out;
+          })().then(ok, fail);
+        },
+      };
+    },
+    getFile(rel: string, _o: unknown, ok?: Ok<unknown>, fail?: Fail) {
+      void find(link, rel.split('/').filter(Boolean)).then((f) => ok?.(fileEntry(f, `${path}/${rel}`)), fail);
+    },
+  };
+  return entry as unknown as FileSystemDirectoryEntry;
 }

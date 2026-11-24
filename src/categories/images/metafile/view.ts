@@ -4,6 +4,7 @@
  * rtf.js's EMF/WMF renderers (MIT), loaded only when such a file is opened.
  */
 import './metafile.css';
+import { printPicture, svgSource } from '../../../core/print-picture';
 import { h } from '../../../core/dom';
 import { strings } from '../../../core/i18n';
 import type { OpenContext, OpenedView } from '../../../core/viewer';
@@ -55,5 +56,10 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   return {
     meta: () => [info.kind.toUpperCase(), `${Math.round(info.width)} × ${Math.round(info.height)}`],
     tools: () => [fitBtn],
+    // The drawing alone, centred and as large as fits (vector: sharp at any size).
+    print: () => {
+      const got = svgSource(svg as SVGSVGElement);
+      printPicture(got.src, got.wide);
+    },
   };
 }

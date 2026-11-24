@@ -9,10 +9,20 @@
 
 /** The parts of the File System Access API used here (read only). */
 export interface FileLink {
-  kind: 'file' | 'directory';
+  kind: 'file';
   name: string;
   getFile(): Promise<File>;
   isSameEntry(other: FileLink): Promise<boolean>;
+  queryPermission(o: { mode: 'read' }): Promise<PermissionState>;
+  requestPermission(o: { mode: 'read' }): Promise<PermissionState>;
+}
+
+/** A folder the visitor dropped (view only): listed and opened, never changed. */
+export interface FolderLink {
+  kind: 'directory';
+  name: string;
+  values(): AsyncIterable<FileLink | FolderLink>;
+  isSameEntry(other: FileLink | FolderLink): Promise<boolean>;
   queryPermission(o: { mode: 'read' }): Promise<PermissionState>;
   requestPermission(o: { mode: 'read' }): Promise<PermissionState>;
 }
@@ -28,14 +38,14 @@ export function canRemember(): boolean {
  * Links to the files in a drop. Must be called during the drop event itself (the browser
  * forgets the dropped items right after), before anything is awaited.
  */
-export function dropLinks(dt: DataTransfer | null | undefined): Promise<FileLink[]> | null {
+export function dropLinks(dt: DataTransfer | null | undefined): Promise<Array<FileLink | FolderLink>> | null {
   if (!dt?.items || !canRemember()) return null;
-  type LinkItem = DataTransferItem & { getAsFileSystemHandle?: () => Promise<FileLink | null> };
+  type LinkItem = DataTransferItem & { getAsFileSystemHandle?: () => Promise<FileLink | FolderLink | null> };
   const asks = [...(dt.items as unknown as Iterable<LinkItem>)]
     .filter((i) => i.kind === 'file' && typeof i.getAsFileSystemHandle === 'function')
     .map((i) => i.getAsFileSystemHandle!().catch(() => null));
   if (!asks.length) return null;
-  return Promise.all(asks).then((links) => links.filter((l): l is FileLink => l?.kind === 'file'));
+  return Promise.all(asks).then((links) => links.filter((l): l is FileLink | FolderLink => !!l));
 }
 
 /**

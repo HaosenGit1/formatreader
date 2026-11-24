@@ -14,6 +14,9 @@ export interface Stage {
   rotate(): void;
   /** Current zoom (1 = 100%). */
   readonly scale: number;
+  /** Quarter turns clockwise (0–3), and the picture shown: for printing it as seen. */
+  readonly turns: number;
+  readonly content: HTMLElement;
   /** Swap the picture (e.g. another page) and fit it. */
   replace(content: HTMLElement, width: number, height: number): void;
   destroy(): void;
@@ -153,6 +156,12 @@ export function createStage(content: HTMLElement, width: number, height: number,
     },
     get scale() {
       return scale;
+    },
+    get turns() {
+      return rotation;
+    },
+    get content() {
+      return inner.firstElementChild as HTMLElement;
     },
     replace(next, nw, nh) {
       inner.replaceChildren(next);

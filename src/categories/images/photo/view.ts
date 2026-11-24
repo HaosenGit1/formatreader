@@ -8,6 +8,7 @@ import { h } from '../../../core/dom';
 import { strings } from '../../../core/i18n';
 import type { OpenContext, OpenedView } from '../../../core/viewer';
 import { createStage } from '../shared/stage';
+import { pictureSource, printPicture } from '../../../core/print-picture';
 import { decodeImage, type Picture } from './decode';
 import { photoDetails } from './details';
 
@@ -204,6 +205,12 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   }
 
   return {
+    // Only the picture, as shown (turned), as large as fits on one page.
+    print: () => {
+      const got = pictureSource(stage.content, stage.turns);
+      if (got) printPicture(got.src, got.wide);
+      else window.print();
+    },
     meta: () => [decoded.label, `${pic.width} × ${pic.height}`, ...(decoded.pages > 1 ? [`${decoded.pages} ${s('images')}`] : []), ...(animMeta ? [animMeta] : [])],
     tools: () => tools,
     notices: () => (decoded.note && decoded.note !== 'heicDepth' ? [h('div', { class: 'notice subtle' }, s(decoded.note))] : []),

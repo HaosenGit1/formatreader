@@ -21,7 +21,7 @@ import { lang, onLangChange, setLang, strings } from './i18n';
 import { infoEntry } from './info-entry';
 import { feedbackLink, promoBar, startPromoVideo } from './promo';
 import { crystalBall } from './ball';
-import { canRemember, chooseWithLinks, dropLinks, type FileLink } from './recent-capture';
+import { canRemember, chooseWithLinks, dropLinks, type FileLink, type FolderLink } from './recent-capture';
 import { coffeeLink } from './coffee';
 import { newFileFromAddress } from './new-file';
 import { groupFiles } from './companions';
@@ -211,7 +211,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     // The crystal ball, everywhere (it needs the page laid out to know where it can move).
     requestAnimationFrame(() => main.isConnected && crystalBall(main));
     // Recent files to open again (Chrome / Edge on a computer), loaded after the page shows.
-    if (canRemember()) void import('./recent').then((m) => m.recentShelf(main, (files) => void addFiles(files))).catch(() => {});
+    if (canRemember()) void import('./recent').then((m) => m.recentShelf(main, (what) => (what instanceof FolderSource ? addFolder(what) : void addFiles(what)))).catch(() => {});
     return main;
   };
   const landingMain = () =>
@@ -1045,10 +1045,10 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     dragDepth = 0;
     overlay.classList.remove('show');
     // A folder dropped (perhaps by accident): browse it like an archive.
-    const entry = e.dataTransfer?.items?.[0]?.webkitGetAsEntry?.();
-    if (entry?.isDirectory) return void addFolder(new FolderSource(entry as FileSystemDirectoryEntry));
     const links = dropLinks(e.dataTransfer); // asked now: the browser forgets dropped items right after
     if (links) void links.then(rememberFiles);
+    const entry = e.dataTransfer?.items?.[0]?.webkitGetAsEntry?.();
+    if (entry?.isDirectory) return void addFolder(new FolderSource(entry as FileSystemDirectoryEntry));
     void addFiles([...(e.dataTransfer?.files ?? [])]);
   });
 
@@ -1062,7 +1062,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
   }
 
   /** Into the "Recent" list on the front page (only the names and view-only links, in this browser). */
-  function rememberFiles(links: FileLink[]) {
+  function rememberFiles(links: Array<FileLink | FolderLink>) {
     if (links.length) void import('./recent').then((m) => m.remember(links)).catch(() => {});
   }
 

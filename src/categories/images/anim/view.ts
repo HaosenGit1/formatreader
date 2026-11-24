@@ -8,6 +8,7 @@
  *    ~14 MB, kept out of the portable file).
  */
 import './anim.css';
+import { printPicture, svgSource } from '../../../core/print-picture';
 import { h } from '../../../core/dom';
 import { strings } from '../../../core/i18n';
 import type { OpenContext, OpenedView } from '../../../core/viewer';
@@ -90,6 +91,13 @@ async function openLottie(file: File, ctx: OpenContext): Promise<OpenedView> {
   return {
     meta: () => [s('lottie'), `${Number(data.w) || '?'} × ${Number(data.h) || '?'}`, `${total} ${s('frames')} · ${fps} fps · ${(total / fps).toFixed(1)} s`],
     tools: () => [speedGroup, loopBtn],
+    // The frame on screen now, alone on the page.
+    print: () => {
+      const svg = stage.querySelector('svg');
+      if (!svg) return window.print();
+      const got = svgSource(svg);
+      printPicture(got.src, got.wide);
+    },
     destroy: () => anim.destroy(),
   };
 }
@@ -133,6 +141,7 @@ async function openFlash(file: File, ctx: OpenContext): Promise<OpenedView> {
   const head = new Uint8Array(data, 0, 4);
   return {
     meta: () => [s('flash'), `SWF ${head[3]}`],
+    print: false, // a Flash animation or game: nothing to put on paper
     destroy: () => player.remove(),
   };
 }

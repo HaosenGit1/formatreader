@@ -2253,7 +2253,8 @@ html.fr-immersive .tab-strip {
 }
 
 /* ---- Printing (and "Save as PDF"): the file only, on white paper, nothing of the site around it ---- */
-.print-snap {
+.print-snap,
+.print-only {
   display: none;
 }
 
@@ -2411,5 +2412,29 @@ html.fr-immersive .tab-strip {
   .viewer-mount img {
     max-width: 100% !important;
     height: auto;
+  }
+
+  /* One picture alone on its page, centred, as large as fits. */
+  html.fr-print-picture #app {
+    display: none !important;
+  }
+
+  html.fr-print-picture .print-picture {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100vh;
+    break-inside: avoid;
+  }
+
+  .print-picture img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .print-picture img.print-pixels {
+    image-rendering: pixelated;
   }
 }
