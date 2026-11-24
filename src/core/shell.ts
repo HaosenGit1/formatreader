@@ -21,6 +21,7 @@ import { lang, onLangChange, setLang, strings } from './i18n';
 import { infoEntry } from './info-entry';
 import { feedbackLink, promoBar, startPromoVideo } from './promo';
 import { crystalBall } from './ball';
+import { inAppNotice } from './in-app';
 import { canRemember, chooseWithLinks, dropLinks, type FileLink, type FolderLink } from './recent-capture';
 import { coffeeLink } from './coffee';
 import { newFileFromAddress } from './new-file';
@@ -1111,6 +1112,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
 
   setLang(lang());
   goHome();
+  inAppNotice(); // WeChat / QQ: how to open the page in the phone's own browser
   // ?new=md (from the Formats page): start a new, empty file of that kind in the editor.
   const fresh = newFileFromAddress(s('untitled'));
   if (fresh) void addFiles([fresh]);

@@ -223,7 +223,8 @@ export default defineConfig(({ mode }) =>
         base: './',
         plugins: [formatsPagePlugin(), analyticsCspPlugin(loadEnv(mode, process.cwd(), 'VITE_').VITE_GA_ID), offlinePlugin()],
         build: {
-          target: 'es2022',
+          // Older in-app browsers too (WeChat / QQ / 腾讯 X5 on Android are often a few Chrome versions behind).
+          target: ['es2020', 'chrome87', 'safari14', 'firefox90'],
           sourcemap: false,
           rollupOptions: {
             input: { main: resolve('index.html'), formats: resolve('formats.html') },

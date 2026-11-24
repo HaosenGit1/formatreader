@@ -2438,3 +2438,88 @@ html.fr-immersive .tab-strip {
     image-rendering: pixelated;
   }
 }
+
+/* Inside WeChat / QQ: "open in your browser" card under the app's ··· button (top right). */
+.inapp-card {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  left: 10px;
+  z-index: 60;
+  display: grid;
+  gap: 6px;
+  max-width: 420px;
+  margin-left: auto;
+  padding: 14px 16px 12px;
+  border: 1px solid #c9a96e;
+  border-radius: 16px;
+  background: radial-gradient(140% 120% at 30% 0%, rgb(34 50 86 / 0.97), rgb(8 14 28 / 0.98) 70%);
+  box-shadow: 0 0 0 4px rgb(201 169 110 / 0.12), 0 18px 40px rgb(0 0 0 / 0.35);
+  color: #f3e7cf;
+}
+
+.inapp-arrow {
+  position: absolute;
+  top: -2px;
+  right: 18px;
+  color: #e6cd98;
+  font-size: 26px;
+  line-height: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .inapp-arrow {
+    animation: inapp-nudge 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes inapp-nudge {
+  50% {
+    transform: translate(3px, -3px);
+  }
+}
+
+.inapp-title {
+  color: #e6cd98;
+  font-family: 'Cormorant Garamond', Didot, 'Songti SC', serif;
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.inapp-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.inapp-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.inapp-copy {
+  padding: 5px 14px;
+  border: 1px solid #c9a96e;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #e6cd98, #b8995c);
+  color: #14203a;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: all;
+}
+
+.inapp-stay {
+  padding: 4px 12px;
+  border: 1px solid rgb(201 169 110 / 0.5);
+  border-radius: 999px;
+  background: none;
+  color: rgb(243 231 207 / 0.85);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
