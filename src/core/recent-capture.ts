@@ -17,20 +17,7 @@ export interface FileLink {
   requestPermission(o: { mode: 'read' }): Promise<PermissionState>;
 }
 
-/** A folder the visitor chose (view only): its files and folders can be listed and opened. */
-export interface FolderLink {
-  kind: 'directory';
-  name: string;
-  values(): AsyncIterable<FileLink | FolderLink>;
-  isSameEntry(other: FileLink | FolderLink): Promise<boolean>;
-  queryPermission(o: { mode: 'read' }): Promise<PermissionState>;
-  requestPermission(o: { mode: 'read' }): Promise<PermissionState>;
-}
-
-type PickerWindow = Window & {
-  showOpenFilePicker?: (o: { multiple: boolean; id?: string }) => Promise<FileLink[]>;
-  showDirectoryPicker?: (o: { mode: 'read'; id?: string }) => Promise<FolderLink>;
-};
+type PickerWindow = Window & { showOpenFilePicker?: (o: { multiple: boolean; id?: string }) => Promise<FileLink[]> };
 
 /** Whether this browser can remember files to reopen them (Chrome / Edge on a computer). */
 export function canRemember(): boolean {
@@ -65,16 +52,3 @@ export async function chooseWithLinks(): Promise<{ files: File[]; links: FileLin
   }
 }
 
-/**
- * The browser's folder chooser, view only. Must be called straight from a click (before
- * anything is awaited). `null`: closed, or not available here.
- */
-export async function chooseFolder(): Promise<FolderLink | null> {
-  const w = window as PickerWindow;
-  if (typeof w.showDirectoryPicker !== 'function') return null;
-  try {
-    return await w.showDirectoryPicker({ mode: 'read', id: 'formatreader-folder' });
-  } catch {
-    return null;
-  }
-}

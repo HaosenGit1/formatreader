@@ -6,7 +6,7 @@
  */
 import { h } from './dom';
 import { lang, strings } from './i18n';
-import { chooseFolder, type FileLink, type FolderLink } from './recent-capture';
+import type { FileLink } from './recent-capture';
 
 const s = strings({
   title: { en: 'Frequent files', zh: '常用文件' },
@@ -45,7 +45,7 @@ export interface Entry {
 
 const DB = 'formatreader-recent';
 const STORE = 'files';
-/** The usual folder (one at most), shown when the crystal ball is clicked. */
+/** No longer used (a folder chosen during a short trial); kept so the list opens, and emptied. */
 const FOLDER = 'folder';
 
 function db(): Promise<IDBDatabase> {
@@ -90,23 +90,8 @@ const put = (e: Entry) => run('readwrite', (st) => void st.put(e));
 const drop = (id: string) => run('readwrite', (st) => void st.delete(id));
 const dropAll = () => run('readwrite', (st) => void st.clear());
 
-/** The usual folder, if one was chosen. */
-export async function getFolder(): Promise<FolderLink | null> {
-  try {
-    return ((await run<{ link: FolderLink }>('readonly', (st) => st.get('main'), FOLDER)) as { link: FolderLink } | undefined)?.link ?? null;
-  } catch {
-    return null;
-  }
-}
-export const setFolder = (link: FolderLink) => run('readwrite', (st) => void st.put({ id: 'main', link }), FOLDER);
-export const clearFolder = () => run('readwrite', (st) => void st.clear(), FOLDER);
-
-/** Asks for the usual folder (from a click) and keeps it. True when one was chosen. */
-export async function pickFolder(): Promise<boolean> {
-  const link = await chooseFolder();
-  if (link) await setFolder(link);
-  return !!link;
-}
+/** Forget a folder kept during the short trial of a folder panel (nothing reads it now). */
+const clearFolder = () => run('readwrite', (st) => void st.clear(), FOLDER).catch(() => undefined);
 
 // ------------------------------------------------------------------ on / off
 
@@ -175,6 +160,7 @@ const newId = () => `${Date.now().toString(36)}${Math.random().toString(36).slic
 /** Puts the "Recent" shelf on the front page (or refreshes it); nothing when the list is empty. */
 export async function recentShelf(landing: HTMLElement, open: (files: File[]) => void): Promise<void> {
   const on = isOn();
+  void clearFolder();
   const list = on ? await listRecent() : [];
   if (!landing.isConnected) return;
   const old = landing.querySelector('.recent-shelf');
@@ -194,9 +180,8 @@ export async function recentShelf(landing: HTMLElement, open: (files: File[]) =>
       onchange: (e: Event) => {
         const want = (e.currentTarget as HTMLInputElement).checked;
         setOn(want);
-        // On: also pick a usual folder to browse from the ball (Cancel skips it).
-        if (want) void pickFolder().finally(refresh);
-        else void Promise.all([dropAll(), clearFolder()]).then(refresh, refresh);
+        if (want) refresh();
+        else void dropAll().then(refresh, refresh);
       },
     }),
     ribbon('recent-ribbon-switch'),

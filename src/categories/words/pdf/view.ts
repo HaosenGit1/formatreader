@@ -8,9 +8,19 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   // type, and the browser will not show an untyped blob as a PDF: label it.
   const blob = file.type === 'application/pdf' ? file : new Blob([file], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
-  ctx.mount.replaceChildren(h('div', { class: 'view view-pdf' }, h('iframe', { class: 'pdf-frame', src: url, title: file.name })));
+  const frame = h('iframe', { class: 'pdf-frame', src: url, title: file.name }) as HTMLIFrameElement;
+  ctx.mount.replaceChildren(h('div', { class: 'view view-pdf' }, frame));
   return {
     meta: () => ['PDF'],
+    // The PDF itself, every page as it is (not the page around it).
+    print: () => {
+      try {
+        frame.contentWindow!.focus();
+        frame.contentWindow!.print();
+      } catch {
+        window.print();
+      }
+    },
     destroy: () => URL.revokeObjectURL(url),
   };
 }

@@ -33,6 +33,8 @@ const s = strings({
   // Brand slogan: the same words for every visitor.
   readAny: { en: 'Any Format.\nOne Reader.', zh: '任何格式\n一处打开' },
   openAnother: { en: 'Open another', zh: '换个文件' },
+  print: { en: 'Print', zh: '打印' },
+  printTitle: { en: 'Print, or save as PDF', zh: '打印，或另存为 PDF' },
   about: { en: 'About this file: format, where it comes from, how to open it elsewhere', zh: '关于此文件：格式、来源、在其他软件中怎么打开' },
   aboutShort: { en: 'About', zh: '文件说明' },
   fullscreen: { en: 'Full screen', zh: '全屏' },
@@ -224,7 +226,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
             h('button', { type: 'button', class: 'btn', onclick: (e: Event) => ((crashNote = null), (e.currentTarget as HTMLElement).parentElement?.remove()) }, s('dismiss')),
           )
         : null,
-      h('button', { type: 'button', class: 'circle', onclick: () => void onBall() }, h('span', { class: 'circle-text' }, s('readAny'))),
+      h('button', { type: 'button', class: 'circle', onclick: () => void chooseFiles() }, h('span', { class: 'circle-text' }, s('readAny'))),
       import.meta.env.MODE === 'portable'
         ? h(
             'footer',
@@ -268,6 +270,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     }
     if (c.size >= 0) tools.push(h('button', { type: 'button', class: 'btn about-btn', title: s('about'), onclick: () => toggleAbout(c) }, 'ⓘ ', s('aboutShort')));
     tools.push(fullscreenButton(c.view));
+    if (canPrint(c)) tools.push(h('button', { type: 'button', class: 'btn print-btn', title: s('printTitle'), onclick: () => printFile() }, '🖨 ', s('print')));
     tools.push(h('button', { type: 'button', class: 'btn', onclick: () => void chooseFiles() }, s('openAnother')));
 
     let meta: string[] = [];
@@ -913,6 +916,57 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
   document.addEventListener('fullscreenchange', onFsChange);
   document.addEventListener('webkitfullscreenchange', onFsChange);
 
+  // -------------------------------------------------------------- printing
+
+  /** Sound, video, archives, folders and unknown files have nothing useful to put on paper. */
+  const canPrint = (c: Current) => c.view.print !== false && !['sounds', 'videos', 'archives'].includes(c.entry.category) && c.entry.id !== 'core/folder' && c.entry.id !== infoEntry.id;
+
+  /** The browser's print window (printers, and "Save as PDF"); the file only, not the site around it. */
+  function printFile() {
+    const p = current?.view.print;
+    if (typeof p === 'function') {
+      try {
+        return p();
+      } catch (err) {
+        console.error('Viewer failed to print', err);
+      }
+    }
+    window.print();
+  }
+
+  // Drawings, charts and maps are drawn on canvases: on paper they become pictures that fit the page.
+  window.addEventListener('beforeprint', () => {
+    // Word documents print on paper of their own page size (A4, Letter…), one sheet per page.
+    const page = app.querySelector<HTMLElement>('main.doc .docx-wrapper > section.docx');
+    if (page && !document.getElementById('fr-print-page')) {
+      const w = page.style.width || `${page.offsetWidth}px`;
+      const ht = page.style.minHeight || page.style.height || `${page.offsetHeight}px`;
+      document.head.append(h('style', { id: 'fr-print-page' }, `@page doc { size: ${w} ${ht}; margin: 0; } @media print { .docx-wrapper > section.docx { box-sizing: border-box !important; width: ${w} !important; height: ${ht} !important; max-height: ${ht} !important; } }`));
+    }
+    for (const canvas of app.querySelectorAll<HTMLCanvasElement>('main.doc .viewer-mount canvas')) {
+      if (!canvas.width || !canvas.height || !canvas.offsetParent || canvas.classList.contains('print-hide')) continue;
+      try {
+        const img = h('img', { class: 'print-snap', alt: '', src: canvas.toDataURL('image/png') });
+        canvas.classList.add('print-hide');
+        canvas.after(img);
+      } catch {
+        /* a canvas that cannot be read stays as it is */
+      }
+    }
+  });
+  window.addEventListener('afterprint', () => {
+    document.getElementById('fr-print-page')?.remove();
+    app.querySelectorAll('.print-snap').forEach((el) => el.remove());
+    app.querySelectorAll('.print-hide').forEach((el) => el.classList.remove('print-hide'));
+  });
+  // Ctrl/⌘+P: a viewer that prints in its own way (a PDF) does so here too.
+  document.addEventListener('keydown', (e) => {
+    if ((e.key === 'p' || e.key === 'P') && (e.metaKey || e.ctrlKey) && !e.altKey && typeof current?.view.print === 'function') {
+      e.preventDefault();
+      printFile();
+    }
+  });
+
   // --------------------------------------------------------- reading size
 
   function setFont(delta: number) {
@@ -997,20 +1051,6 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     if (links) void links.then(rememberFiles);
     void addFiles([...(e.dataTransfer?.files ?? [])]);
   });
-
-  /** The crystal ball: with Quick access on, the glass panel (frequent files and the usual folder); otherwise the chooser. */
-  function onBall() {
-    let quick = false;
-    try {
-      quick = canRemember() && localStorage.getItem('fr.recent') === 'on';
-    } catch {
-      /* storage unavailable */
-    }
-    if (!quick) return void chooseFiles();
-    void import('./folder-panel')
-      .then((m) => m.openQuickPanel({ open: (files) => void addFiles(files), elsewhere: () => void chooseFiles() }))
-      .catch(() => void chooseFiles());
-  }
 
   /** "Open a file": the browser's chooser that also lets the file be reopened later, where there is one. */
   async function chooseFiles() {

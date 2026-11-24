@@ -82,6 +82,12 @@ export interface OpenedView {
   onLangChange?(): void;
   /** True while there are edits not saved as a copy: the shell asks before leaving. */
   unsaved?(): boolean;
+  /**
+   * Printing (and "Save as PDF" in the print window). Leave out for the usual: the page prints
+   * the file without the site around it. A function prints in its own way (a PDF prints itself);
+   * false hides the Print button (nothing useful on paper).
+   */
+  print?: false | (() => void);
   /** The file's tab was put in the background (another tab chosen): stop sound, timers, animations. */
   onHide?(): void;
   /** Release resources (object URLs, observers, listeners). */

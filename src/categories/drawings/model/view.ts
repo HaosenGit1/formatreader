@@ -137,7 +137,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
   const canvas = document.createElement('canvas');
   let renderer: import('three').WebGLRenderer;
   try {
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true }) /* readable for printing */;
   } catch {
     throw new Error(s('noWebgl'));
   }
