@@ -54,9 +54,11 @@ describe('read-only guarantee', () => {
   }
 
   test('Recent files: links to files are view-only, never write access', () => {
-    for (const rel of ['src/core/recent-capture.ts', 'src/core/recent.ts']) {
+    for (const rel of ['src/core/recent-capture.ts', 'src/core/recent.ts', 'src/core/folder-panel.ts']) {
       const code = readFileSync(join(root, rel), 'utf8').replace(/^\s*(\/\/|\*).*$/gm, '');
-      expect(code, rel).not.toMatch(/createWritable|createSyncAccessHandle|showSaveFilePicker|showDirectoryPicker|removeEntry|\.move\(|getDirectoryHandle|getFileHandle/);
+      expect(code, rel).not.toMatch(/createWritable|createSyncAccessHandle|showSaveFilePicker|removeEntry|\.move\(|getDirectoryHandle|getFileHandle/);
+      // The folder chooser only ever with { mode: 'read' }.
+      for (const call of code.match(/showDirectoryPicker\(\{[^}]*\}\)/g) ?? []) expect(call, rel).toMatch(/mode: ['"]read['"]/);
       // Every permission asked for is { mode: 'read' }.
       const asks = code.match(/(query|request)Permission\([^)]*\)/g) ?? [];
       for (const a of asks) expect(a, rel).toMatch(/\((o: )?\{ mode: ['"]read['"] \}\)/);

@@ -224,7 +224,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
             h('button', { type: 'button', class: 'btn', onclick: (e: Event) => ((crashNote = null), (e.currentTarget as HTMLElement).parentElement?.remove()) }, s('dismiss')),
           )
         : null,
-      h('button', { type: 'button', class: 'circle', onclick: () => void chooseFiles() }, h('span', { class: 'circle-text' }, s('readAny'))),
+      h('button', { type: 'button', class: 'circle', onclick: () => void onBall() }, h('span', { class: 'circle-text' }, s('readAny'))),
       import.meta.env.MODE === 'portable'
         ? h(
             'footer',
@@ -997,6 +997,20 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     if (links) void links.then(rememberFiles);
     void addFiles([...(e.dataTransfer?.files ?? [])]);
   });
+
+  /** The crystal ball: with Quick access on, the glass panel (frequent files and the usual folder); otherwise the chooser. */
+  function onBall() {
+    let quick = false;
+    try {
+      quick = canRemember() && localStorage.getItem('fr.recent') === 'on';
+    } catch {
+      /* storage unavailable */
+    }
+    if (!quick) return void chooseFiles();
+    void import('./folder-panel')
+      .then((m) => m.openQuickPanel({ open: (files) => void addFiles(files), elsewhere: () => void chooseFiles() }))
+      .catch(() => void chooseFiles());
+  }
 
   /** "Open a file": the browser's chooser that also lets the file be reopened later, where there is one. */
   async function chooseFiles() {

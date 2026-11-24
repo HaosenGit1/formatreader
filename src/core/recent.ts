@@ -6,7 +6,7 @@
  */
 import { h } from './dom';
 import { lang, strings } from './i18n';
-import type { FileLink } from './recent-capture';
+import { chooseFolder, type FileLink, type FolderLink } from './recent-capture';
 
 const s = strings({
   title: { en: 'Frequent files', zh: '常用文件' },
@@ -32,7 +32,7 @@ const s = strings({
 /** At most this many files are remembered. */
 export const MAX_RECENT = 8;
 
-interface Entry {
+export interface Entry {
   id: string;
   name: string;
   size: number;
@@ -45,22 +45,28 @@ interface Entry {
 
 const DB = 'formatreader-recent';
 const STORE = 'files';
+/** The usual folder (one at most), shown when the crystal ball is clicked. */
+const FOLDER = 'folder';
 
 function db(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB, 1);
-    req.onupgradeneeded = () => req.result.createObjectStore(STORE, { keyPath: 'id' });
+    const req = indexedDB.open(DB, 2);
+    req.onupgradeneeded = () => {
+      const d = req.result;
+      if (!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE, { keyPath: 'id' });
+      if (!d.objectStoreNames.contains(FOLDER)) d.createObjectStore(FOLDER, { keyPath: 'id' });
+    };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
 }
 
-async function run<T>(mode: IDBTransactionMode, work: (store: IDBObjectStore) => IDBRequest<T> | void): Promise<T | undefined> {
+async function run<T>(mode: IDBTransactionMode, work: (store: IDBObjectStore) => IDBRequest<T> | void, name = STORE): Promise<T | undefined> {
   const d = await db();
   try {
     return await new Promise<T | undefined>((resolve, reject) => {
-      const tx = d.transaction(STORE, mode);
-      const req = work(tx.objectStore(STORE));
+      const tx = d.transaction(name, mode);
+      const req = work(tx.objectStore(name));
       tx.oncomplete = () => resolve(req ? req.result : undefined);
       tx.onerror = () => reject(tx.error);
       tx.onabort = () => reject(tx.error);
@@ -83,6 +89,24 @@ export async function listRecent(): Promise<Entry[]> {
 const put = (e: Entry) => run('readwrite', (st) => void st.put(e));
 const drop = (id: string) => run('readwrite', (st) => void st.delete(id));
 const dropAll = () => run('readwrite', (st) => void st.clear());
+
+/** The usual folder, if one was chosen. */
+export async function getFolder(): Promise<FolderLink | null> {
+  try {
+    return ((await run<{ link: FolderLink }>('readonly', (st) => st.get('main'), FOLDER)) as { link: FolderLink } | undefined)?.link ?? null;
+  } catch {
+    return null;
+  }
+}
+export const setFolder = (link: FolderLink) => run('readwrite', (st) => void st.put({ id: 'main', link }), FOLDER);
+export const clearFolder = () => run('readwrite', (st) => void st.clear(), FOLDER);
+
+/** Asks for the usual folder (from a click) and keeps it. True when one was chosen. */
+export async function pickFolder(): Promise<boolean> {
+  const link = await chooseFolder();
+  if (link) await setFolder(link);
+  return !!link;
+}
 
 // ------------------------------------------------------------------ on / off
 
@@ -156,46 +180,8 @@ export async function recentShelf(landing: HTMLElement, open: (files: File[]) =>
   const old = landing.querySelector('.recent-shelf');
   const changed = () => landing.dispatchEvent(new Event('shelf')); // the ball keeps clear of it
   const refresh = () => void recentShelf(landing, open);
-  const when = new Intl.RelativeTimeFormat(lang() === 'zh' ? 'zh-CN' : 'en', {
-    numeric: 'auto',
-    style: 'short',
-  });
-  const ago = (t: number) => {
-    const sec = (t - Date.now()) / 1000;
-    const steps: Array<[number, Intl.RelativeTimeFormatUnit]> = [
-      [60, 'second'],
-      [3600, 'minute'],
-      [86400, 'hour'],
-      [604800, 'day'],
-      [2629800, 'week'],
-      [31557600, 'month'],
-    ];
-    if (Math.abs(sec) < 60) return when.format(0, 'second');
-    for (let i = 1; i < steps.length; i++) if (Math.abs(sec) < steps[i][0]) return when.format(Math.round(sec / steps[i - 1][0]), steps[i - 1][1]);
-    return when.format(Math.round(sec / 31557600), 'year');
-  };
 
-  async function reopen(e: Entry) {
-    try {
-      let ok = await e.link.queryPermission({ mode: 'read' });
-      // After the browser restarts it asks once: "Let this site view <file>?"
-      if (ok !== 'granted') ok = await e.link.requestPermission({ mode: 'read' });
-      if (ok !== 'granted') return;
-      const file = await e.link.getFile();
-      await put({ ...e, size: file.size, at: Date.now() });
-      open([file]);
-    } catch {
-      // Not there any more (moved, renamed, deleted, or its drive is gone).
-      await drop(e.id).catch(() => {});
-      note(s('gone').replace('{name}', e.name));
-      refresh();
-    }
-  }
-
-  const ext = (name: string) => {
-    const dot = name.lastIndexOf('.');
-    return dot > 0 && name.length - dot <= 6 ? name.slice(dot + 1).toUpperCase() : '·';
-  };
+  const reopen = (e: Entry) => reopenEntry(e, open, refresh);
   // The switch: on records each file opened from now on; off forgets them all.
   const toggle = h(
     'label',
@@ -208,8 +194,9 @@ export async function recentShelf(landing: HTMLElement, open: (files: File[]) =>
       onchange: (e: Event) => {
         const want = (e.currentTarget as HTMLInputElement).checked;
         setOn(want);
-        if (want) refresh();
-        else void dropAll().then(refresh, refresh);
+        // On: also pick a usual folder to browse from the ball (Cancel skips it).
+        if (want) void pickFolder().finally(refresh);
+        else void Promise.all([dropAll(), clearFolder()]).then(refresh, refresh);
       },
     }),
     ribbon('recent-ribbon-switch'),
@@ -291,9 +278,50 @@ export async function recentShelf(landing: HTMLElement, open: (files: File[]) =>
   changed();
 }
 
+/** Open a remembered file again (asking once for permission after a browser restart). */
+export async function reopenEntry(e: Entry, open: (files: File[]) => void, after: () => void): Promise<void> {
+  try {
+    let ok = await e.link.queryPermission({ mode: 'read' });
+    // After the browser restarts it asks once: "Let this site view <file>?"
+    if (ok !== 'granted') ok = await e.link.requestPermission({ mode: 'read' });
+    if (ok !== 'granted') return;
+    const file = await e.link.getFile();
+    await put({ ...e, size: file.size, at: Date.now() });
+    open([file]);
+  } catch {
+    // Not there any more (moved, renamed, deleted, or its drive is gone).
+    await drop(e.id).catch(() => {});
+    note(s('gone').replace('{name}', e.name));
+    after();
+  }
+}
+
+/** "PDF", "CSV"… for the gold badge. */
+export function ext(name: string): string {
+  const dot = name.lastIndexOf('.');
+  return dot > 0 && name.length - dot <= 6 ? name.slice(dot + 1).toUpperCase() : '·';
+}
+
+/** "2 h ago", "yesterday"… */
+export function ago(t: number): string {
+  const when = new Intl.RelativeTimeFormat(lang() === 'zh' ? 'zh-CN' : 'en', { numeric: 'auto', style: 'short' });
+  const sec = (t - Date.now()) / 1000;
+  const steps: Array<[number, Intl.RelativeTimeFormatUnit]> = [
+    [60, 'second'],
+    [3600, 'minute'],
+    [86400, 'hour'],
+    [604800, 'day'],
+    [2629800, 'week'],
+    [31557600, 'month'],
+  ];
+  if (Math.abs(sec) < 60) return when.format(0, 'second');
+  for (let i = 1; i < steps.length; i++) if (Math.abs(sec) < steps[i][0]) return when.format(Math.round(sec / steps[i - 1][0]), steps[i - 1][1]);
+  return when.format(Math.round(sec / 31557600), 'year');
+}
+
 /** The bookmark ribbon (a gold silk ribbon with a swallowtail end): "remember where it is". */
 let ribbons = 0;
-function ribbon(cls: string): HTMLElement {
+export function ribbon(cls: string): HTMLElement {
   const id = `fr-ribbon-${++ribbons}`;
   const el = h('span', { class: `recent-ribbon ${cls}`, 'aria-hidden': 'true' });
   el.innerHTML =
@@ -304,7 +332,7 @@ function ribbon(cls: string): HTMLElement {
   return el;
 }
 
-function note(text: string) {
+export function note(text: string) {
   document.querySelector('.tab-toast')?.remove();
   const el = h('div', { class: 'tab-toast', role: 'status' }, text);
   document.body.append(el);
