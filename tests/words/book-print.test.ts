@@ -69,4 +69,29 @@ describe('whole-book printing', () => {
     const { html } = await buildPrintHtml({ sections: [section('a')], dir: 'rtl' }, 't', false, () => {});
     expect(html).toContain('<html dir="rtl">');
   });
+
+  it('prints just a part or one chapter, and releases only what it loaded', async () => {
+    for (const k of ['a', 'b', 'c', 'd']) pages[k] = xhtml(`<p>${k.toUpperCase()}-text</p>`);
+    const book = { sections: ['a', 'b', 'c', 'd'].map((k) => section(k)) };
+    const loaded: PrintSection[] = [];
+    const part = await buildPrintHtml(book, 't', false, () => {}, { from: 1, to: 3, loaded });
+    expect(part.pages).toBe(2);
+    expect(part.html).toContain('B-text');
+    expect(part.html).toContain('C-text');
+    expect(part.html).not.toMatch(/A-text|D-text/);
+    expect(loaded).toEqual([book.sections[1], book.sections[2]]);
+    // one chapter: printed even when the book marks it as a side note
+    book.sections[3].linear = 'no';
+    const one = await buildPrintHtml(book, 't', false, () => {}, { from: 3, to: 4 });
+    expect(one.html).toContain('D-text');
+  });
+
+  it('Cancel stops before the next chapter', async () => {
+    for (const k of ['a', 'b', 'c']) pages[k] = xhtml(`<p>${k}</p>`);
+    const ctrl = new AbortController();
+    const loaded: PrintSection[] = [];
+    const run = buildPrintHtml({ sections: ['a', 'b', 'c'].map((k) => section(k)) }, 't', false, (done) => { if (done === 1) ctrl.abort(); }, { signal: ctrl.signal, loaded });
+    await expect(run).rejects.toMatchObject({ name: 'AbortError' });
+    expect(loaded).toHaveLength(1);
+  });
 });

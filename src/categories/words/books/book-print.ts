@@ -80,8 +80,19 @@ export interface BuiltBook {
  * The whole book as one printable HTML page. `progress(done, total)` is called as chapters load.
  * `fixed`: comics / fixed-layout books (one sheet per page).
  */
-export async function buildPrintHtml(book: PrintableBook, title: string, fixed: boolean, progress: (done: number, total: number) => void): Promise<BuiltBook> {
-  const sections = (book.sections ?? []).filter((s) => s.linear !== 'no');
+export async function buildPrintHtml(
+  book: PrintableBook,
+  title: string,
+  fixed: boolean,
+  progress: (done: number, total: number) => void,
+  /** `loaded`: every chapter loaded here is added, to be released (unload) afterwards. */
+  opts: { from?: number; to?: number; signal?: AbortSignal; loaded?: PrintSection[] } = {},
+): Promise<BuiltBook> {
+  const all = book.sections ?? [];
+  const from = Math.max(0, opts.from ?? 0);
+  const to = Math.min(all.length, opts.to ?? all.length);
+  // A single chapter is printed even if the book marks it as a side note.
+  const sections = to - from === 1 ? all.slice(from, to) : all.slice(from, to).filter((s) => s.linear !== 'no');
   const styleLinks = new Set<string>();
   const styleTexts: string[] = [];
   const parts: string[] = [];
@@ -90,9 +101,11 @@ export async function buildPrintHtml(book: PrintableBook, title: string, fixed: 
 
   for (const section of sections) {
     progress(done, sections.length);
+    if (opts.signal?.aborted) throw new DOMException('Cancelled', 'AbortError');
     let url: string | null = null;
     try {
       url = await section.load();
+      opts.loaded?.push(section);
     } catch {
       url = null;
     }

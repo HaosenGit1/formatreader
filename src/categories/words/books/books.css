@@ -7,25 +7,110 @@
   height: 100%;
 }
 
-/* "Getting the whole book ready to print…" */
-.book-printing {
+/* Print or save as PDF: what to print, then progress with Cancel */
+.book-print {
   position: absolute;
   top: 14px;
   left: 50%;
   z-index: 6;
-  transform: translateX(-50%);
-  padding: 9px 16px;
+  display: grid;
+  gap: 10px;
+  width: min(400px, calc(100% - 32px));
+  box-sizing: border-box;
+  padding: 16px 18px;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: 14px;
   background: var(--surface);
   box-shadow: var(--shadow);
-  font-size: 13px;
+  font-size: 14px;
+  transform: translateX(-50%);
+}
+
+.book-print-title {
+  font-size: 15px;
+}
+
+.book-print-choices {
+  display: grid;
+  gap: 6px;
+}
+
+.book-print-choice {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.book-print-choice:has(input:checked) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
+}
+
+.book-print-choice input {
+  grid-row: span 2;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.book-print-label {
+  font-weight: 600;
+}
+
+.book-print-detail,
+.book-print-what,
+.book-print-status {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12.5px;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.book-printing-pct {
+.book-print-what,
+.book-print-status {
+  margin: 0;
+}
+
+.book-print-count {
   color: var(--accent);
   font-variant-numeric: tabular-nums;
+}
+
+.book-print-warn {
+  margin: 0;
+  color: var(--fg);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.book-print-warn[hidden] {
+  display: none;
+}
+
+.book-print-bar {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+
+.book-print-fill {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 0.2s;
+}
+
+.book-print-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .book-main {
