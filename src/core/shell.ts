@@ -34,7 +34,7 @@ const s = strings({
   // Brand slogan: the same words for every visitor.
   readAny: { en: 'Any Format.\nOne Reader.', zh: '任何格式\n一处打开' },
   openAnother: { en: 'Open another', zh: '换个文件' },
-  print: { en: 'Print', zh: '打印' },
+  print: { en: 'Print / PDF', zh: '打印 / PDF' },
   printTitle: { en: 'Print, or save as PDF', zh: '打印，或另存为 PDF' },
   about: { en: 'About this file: format, where it comes from, how to open it elsewhere', zh: '关于此文件：格式、来源、在其他软件中怎么打开' },
   aboutShort: { en: 'About', zh: '文件说明' },

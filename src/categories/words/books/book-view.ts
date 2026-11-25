@@ -5,6 +5,7 @@
  */
 import { h } from '../../../core/dom';
 import { strings } from '../../../core/i18n';
+import { buildPrintHtml, printHtml, type PrintableBook } from './book-print';
 
 const t = strings({
   contents: { en: 'Contents', zh: '目录' },
@@ -14,6 +15,8 @@ const t = strings({
   nextPage: { en: 'Next page', zh: '下一页' },
   pages: { en: 'Pages', zh: '翻页' },
   scroll: { en: 'Scroll', zh: '滚动' },
+  preparing: { en: 'Getting the whole book ready to print…', zh: '正在准备打印整本书……' },
+  printFailed: { en: 'This book could not be prepared for printing.', zh: '这本书无法准备打印。' },
 });
 
 interface TocItem {
@@ -55,6 +58,8 @@ export interface BookController {
   tools: () => HTMLElement[];
   title: string;
   author: string;
+  /** The whole book to the print window (and "Save as PDF"). */
+  print(): Promise<void>;
   destroy(): void;
 }
 
@@ -213,11 +218,41 @@ export async function openBook(file: File, mount: HTMLElement, fontScale: () => 
     return [tocBtn, flowSeg];
   };
 
+  // ---- printing: the whole book, not just the page on screen
+  let printing = false;
+  const print = async () => {
+    if (printing) return;
+    printing = true;
+    const note = h('div', { class: 'book-printing', role: 'status' }, h('span', { class: 'book-printing-text' }, t('preparing')), h('span', { class: 'book-printing-pct' }));
+    root.append(note);
+    const pct = note.lastElementChild as HTMLElement;
+    const pb = book as unknown as PrintableBook;
+    const loaded = (pb.sections ?? []).filter((s) => s.linear !== 'no');
+    const fixed = view.isFixedLayout || book.rendition?.layout === 'pre-paginated';
+    try {
+      const built = await buildPrintHtml(pb, title, fixed, (done, total) => {
+        pct.textContent = total ? ` ${Math.round((done / total) * 100)}%` : '';
+      });
+      if (!built.pages) throw new Error('no pages');
+      note.remove();
+      // Release the extra copies of the chapters once the print window has closed.
+      await printHtml(built.html, () => loaded.forEach((s) => { try { s.unload?.(); } catch { /* already gone */ } }));
+    } catch (err) {
+      console.error('Book print failed', err);
+      note.replaceChildren(t('printFailed'));
+      setTimeout(() => note.remove(), 4000);
+    } finally {
+      printing = false;
+      if (note.isConnected && note.textContent === t('preparing')) note.remove();
+    }
+  };
+
   return {
     el,
     tools,
     title,
     author,
+    print,
     destroy() {
       document.removeEventListener('keydown', onKey);
       mq.removeEventListener('change', applyStyles);

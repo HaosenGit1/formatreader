@@ -13,6 +13,7 @@ export async function open(file: File, ctx: OpenContext): Promise<OpenedView> {
     meta: () => [book.author, ctx.format?.name ?? 'FictionBook'].filter(Boolean),
     tools: () => book.tools(),
     onFontScale: () => book.restyle(),
+    print: () => void book.print(),
     destroy: () => book.destroy(),
   };
 }

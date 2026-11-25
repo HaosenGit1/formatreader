@@ -41,6 +41,9 @@ const EXCEPTIONS: Record<string, string[]> = {
   // can be opened again. Never write access: the test below checks every permission asked for.
   'src/core/recent-capture.ts': ['File System Access pickers (write access to disk)', 'file handles that can write'],
   'src/core/recent.ts': ['file handles that can write'],
+  // Printing a whole ebook reads each chapter back from the book engine's in-memory blob:
+  // addresses. Only blob: is ever read (checked below); nothing goes to the network.
+  'src/categories/words/books/book-print.ts': ['fetch (only local blob/URL reads are allowed; add an explicit exception if ever needed)'],
   'src/categories/archives/archive/extract-all.ts': ['File System Access pickers (write access to disk)', 'file handles that can write', 'download links'],
 };
 
@@ -52,6 +55,12 @@ describe('read-only guarantee', () => {
       for (const [re, what] of FORBIDDEN) if (!EXCEPTIONS[rel]?.includes(what)) expect(re.test(code), `${rel} uses ${what}`).toBe(false);
     });
   }
+
+  test('Book printing reads only in-memory blob: addresses', () => {
+    const code = readFileSync(join(root, 'src/categories/words/books/book-print.ts'), 'utf8');
+    expect(code.match(/\bfetch\s*\(/g)).toHaveLength(1);
+    expect(code).toMatch(/if \(!url\.startsWith\('blob:'\)\) return READ_FAIL;\s*try \{\s*const blob = await \(await fetch\(url\)\)/);
+  });
 
   test('Recent files: links to files are view-only, never write access', () => {
     for (const rel of ['src/core/recent-capture.ts', 'src/core/recent.ts']) {
