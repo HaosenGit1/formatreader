@@ -148,7 +148,7 @@ export async function buildPrintHtml(book: PrintableBook, title: string, fixed: 
 <head>
 <meta charset="utf-8">
 <title>${escapeHtml(title)}</title>
-${[...styleLinks].map((href) => `<link rel="stylesheet" href="${escapeHtml(href)}">`).join('\n')}
+${[...styleLinks].map((href) => `<link href="${escapeHtml(href)}" rel="stylesheet">`).join('\n')}
 ${styleTexts.map((css) => `<style>${css.replace(/<\/style/gi, '<\\/style')}</style>`).join('\n')}
 <style>
   html { color-scheme: light; background: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
