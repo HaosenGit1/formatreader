@@ -35,6 +35,7 @@ const s = strings({
   readAny: { en: 'Any Format.\nOne Reader.', zh: '任何格式\n一处打开' },
   openAnother: { en: 'Open another', zh: '换个文件' },
   print: { en: 'Print / PDF', zh: '打印 / PDF' },
+  homeTitle: { en: 'FormatReader — open any file in your browser, free, nothing uploaded', zh: 'FormatReader — 任何文件，在浏览器里直接打开，免费、不上传' },
   printTitle: { en: 'Print, or save as PDF', zh: '打印，或另存为 PDF' },
   about: { en: 'About this file: format, where it comes from, how to open it elsewhere', zh: '关于此文件：格式、来源、在其他软件中怎么打开' },
   aboutShort: { en: 'About', zh: '文件说明' },
@@ -377,7 +378,7 @@ export function startApp(categoryViewers: ViewerEntry[]): void {
     active = null;
     ++token;
     app.replaceChildren(header(), tabStrip(), landing());
-    document.title = 'FormatReader';
+    document.title = s('homeTitle');
     prefetchCommonViewers();
   }
 
